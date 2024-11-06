@@ -40,7 +40,7 @@ function PublicProfilePage() {
             break;
     }
 
-    const [uriArray, setUriArray] = useState<any[]>([]);
+    const [uriArray, setUriArray] = useState<string[]>([]);
 
     const fetchTotalOwnerShitNFT = async () => {
         if (account.address) {

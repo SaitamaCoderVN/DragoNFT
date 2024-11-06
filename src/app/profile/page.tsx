@@ -39,7 +39,7 @@ export default function ProfilelPage() {
             break;
     }
 
-    const [uriArray, setUriArray] = useState<any[]>([]);
+    const [uriArray, setUriArray] = useState<string[]>([]);
 
     const fetchTotalOwnerShitNFT = async () => {
         if (account.address) {

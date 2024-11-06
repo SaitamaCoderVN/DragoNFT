@@ -64,7 +64,9 @@ function MintPage() {
                 abi: nftAbi,
                 functionName: "mint_SoulBound_Ranking_NFT",
                 args: [toAddress as `0x${string}`, uri, BigInt(level), codeContribute],
-            } as any);
+                chain: config[chainId],
+                account: toAddress as `0x${string}`,
+            });
         } catch (error) {
             toast({
                 variant: "destructive",

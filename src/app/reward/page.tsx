@@ -13,6 +13,7 @@ import {
     useChainId,
 } from "wagmi";
 import { useToast } from "@/components/ui/use-toast";
+import { config } from "@/components/contract/config";
 
 function RewardPage() {
     const [uri, setUri] = useState('');
@@ -75,7 +76,9 @@ function RewardPage() {
                     functionName: "rewardByTokenId",
                     args: [BigInt(tokenIdOfNFT), BigInt(amount * 1e18)],
                     value: BigInt(amount * 1e18),
-                } as any);
+                    chain: config[chainId],
+                    account: toAddress as `0x${string}`,
+                });
             } else if (rewardType === 'code_contribute') {
                 const byteData = Buffer.from(codeContribute, 'utf-8');  // Chuyển thành Buffer với mã hóa UTF-8
                 const hexRepresentation = "0x" + byteData.toString('hex'); // Chuyển Buffer thành chuỗi hex
@@ -84,9 +87,11 @@ function RewardPage() {
                     address: contractAddress,
                     abi: nftAbi,
                     functionName: "rewardByCodeContribute",
-                    args: [hexRepresentation, BigInt(amount * 1e18), levelFrom, levelTo],
+                    args: [hexRepresentation as `0x${string}`, BigInt(amount * 1e18), BigInt(levelFrom), BigInt(levelTo)],
                     value: BigInt(amount * 1e18),
-                } as any);
+                    chain: config[chainId],
+                    account: toAddress as `0x${string}`,
+                });
             }
         } catch (error) {
             toast({
