@@ -11,6 +11,7 @@ import {
     useWaitForTransactionReceipt,
     useWriteContract,
     useChainId,
+    useAccount,
 } from "wagmi";
 import { useToast } from "@/components/ui/use-toast";
 import { config } from "@/components/contract/config";
@@ -29,6 +30,7 @@ function RewardPage() {
     
     const { toast } = useToast();
     const chainId = useChainId();
+    const account = useAccount();
     let contractAddress: `0x${string}` | undefined;
     let blockexplorer: string | undefined;
 
@@ -77,7 +79,7 @@ function RewardPage() {
                     args: [BigInt(tokenIdOfNFT), BigInt(amount * 1e18)],
                     value: BigInt(amount * 1e18),
                     chain: config[chainId],
-                    account: toAddress as `0x${string}`,
+                    account: account.address as `0x${string}`,
                 });
             } else if (rewardType === 'code_contribute') {
                 const byteData = Buffer.from(codeContribute, 'utf-8');  // Chuyển thành Buffer với mã hóa UTF-8
@@ -90,7 +92,7 @@ function RewardPage() {
                     args: [hexRepresentation as `0x${string}`, BigInt(amount * 1e18), BigInt(levelFrom), BigInt(levelTo)],
                     value: BigInt(amount * 1e18),
                     chain: config[chainId],
-                    account: toAddress as `0x${string}`,
+                    account: account.address as `0x${string}`,
                 });
             }
         } catch (error) {
