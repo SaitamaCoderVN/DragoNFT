@@ -78,6 +78,9 @@ importers:
         specifier: ^2.5.19
         version: 2.12.24(@tanstack/query-core@5.59.16)(@tanstack/react-query@5.59.16(react@18.3.1))(@types/react@18.3.12)(bufferutil@4.0.8)(encoding@0.1.13)(immer@10.1.1)(react-dom@18.3.1(react@18.3.1))(react-native@0.75.4(@babel/core@7.25.9)(@babel/preset-env@7.25.9(@babel/core@7.25.9))(@types/react@18.3.12)(bufferutil@4.0.8)(encoding@0.1.13)(react@18.3.1)(typescript@5.6.3)(utf-8-validate@5.0.10))(react@18.3.1)(typescript@5.6.3)(utf-8-validate@5.0.10)(viem@2.21.33(bufferutil@4.0.8)(typescript@5.6.3)(utf-8-validate@5.0.10))
     devDependencies:
+      '@babel/plugin-proposal-private-property-in-object':
+        specifier: ^7.21.11
+        version: 7.21.11(@babel/core@7.25.9)
       '@types/node':
         specifier: ^20
         version: 20.17.0
@@ -265,36 +268,43 @@ packages:
     peerDependencies:
       '@babel/core': ^7.0.0
 
-  '@babel/plugin-profile-class-properties@7.18.6':
+  '@babel/plugin-proposal-class-properties@7.18.6':
     resolution: {integrity: sha512-cumfXOF0+nzZrrN8Rf0t7M+tF6sZc7vhQwYQck9q1/5w2OExlD+b4v4RpMJFaV1Z7WcDRgO6FqvxqxGlwo+RHQ==}
     engines: {node: '>=6.9.0'}
-    deprecated: This profile has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-class-properties instead.
+    deprecated: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-class-properties instead.
     peerDependencies:
       '@babel/core': ^7.0.0-0
 
-  '@babel/plugin-profile-export-default-from@7.25.9':
+  '@babel/plugin-proposal-export-default-from@7.25.9':
     resolution: {integrity: sha512-ykqgwNfSnNOB+C8fV5X4mG3AVmvu+WVxcaU9xHHtBb7PCrPeweMmPjGsn8eMaeJg6SJuoUuZENeeSWaarWqonQ==}
     engines: {node: '>=6.9.0'}
     peerDependencies:
       '@babel/core': ^7.0.0-0
 
-  '@babel/plugin-profile-nullish-coalescing-operator@7.18.6':
+  '@babel/plugin-proposal-nullish-coalescing-operator@7.18.6':
     resolution: {integrity: sha512-wQxQzxYeJqHcfppzBDnm1yAY0jSRkUXR2z8RePZYrKwMKgMlE8+Z6LUno+bd6LvbGh8Gltvy74+9pIYkr+XkKA==}
     engines: {node: '>=6.9.0'}
-    deprecated: This profile has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-nullish-coalescing-operator instead.
+    deprecated: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-nullish-coalescing-operator instead.
     peerDependencies:
       '@babel/core': ^7.0.0-0
 
-  '@babel/plugin-profile-optional-chaining@7.21.0':
+  '@babel/plugin-proposal-optional-chaining@7.21.0':
     resolution: {integrity: sha512-p4zeefM72gpmEe2fkUr/OnOXpWEf8nAgk7ZYVqqfFiyIG7oFfVZcCrU64hWn5xp4tQ9LkV4bTIa5rD0KANpKNA==}
     engines: {node: '>=6.9.0'}
-    deprecated: This profile has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-optional-chaining instead.
+    deprecated: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-optional-chaining instead.
     peerDependencies:
       '@babel/core': ^7.0.0-0
 
-  '@babel/plugin-profile-private-property-in-object@7.21.0-placeholder-for-preset-env.2':
+  '@babel/plugin-proposal-private-property-in-object@7.21.0-placeholder-for-preset-env.2':
     resolution: {integrity: sha512-SOSkfJDddaM7mak6cPEpswyTRnuRltl429hMraQEglW+OkovnCzsiszTmsrlY//qLFjCpQDFRvjdm2wA5pPm9w==}
     engines: {node: '>=6.9.0'}
+    peerDependencies:
+      '@babel/core': ^7.0.0-0
+
+  '@babel/plugin-proposal-private-property-in-object@7.21.11':
+    resolution: {integrity: sha512-0QZ8qP/3RLDVBwBFoWAwCtgcDZJVwA5LUJRZU8x2YFfKNuFq161wK3cuGrALu5yiPu+vzwTAg/sMWVNeWeNyaw==}
+    engines: {node: '>=6.9.0'}
+    deprecated: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-private-property-in-object instead.
     peerDependencies:
       '@babel/core': ^7.0.0-0
 
@@ -340,6 +350,12 @@ packages:
 
   '@babel/plugin-syntax-optional-chaining@7.8.3':
     resolution: {integrity: sha512-KoK9ErH1MBlCPxV0VANkXW2/dw4vlbGDrFgz8bmUsBGYkFRcbRwMh6cIJubdPrkxRwuGdtCk0v/wPTKbQgBjkg==}
+    peerDependencies:
+      '@babel/core': ^7.0.0-0
+
+  '@babel/plugin-syntax-private-property-in-object@7.14.5':
+    resolution: {integrity: sha512-0wVnp9dxJ72ZUJDV27ZfbSj6iHLoytYZmh3rFcxNnvsJF3ktkzLDZPy/mA17HGsaQT3/DQsWYX1f1QGWkCoVUg==}
+    engines: {node: '>=6.9.0'}
     peerDependencies:
       '@babel/core': ^7.0.0-0
 
@@ -5473,7 +5489,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@babel/plugin-profile-class-properties@7.18.6(@babel/core@7.25.9)':
+  '@babel/plugin-proposal-class-properties@7.18.6(@babel/core@7.25.9)':
     dependencies:
       '@babel/core': 7.25.9
       '@babel/helper-create-class-features-plugin': 7.25.9(@babel/core@7.25.9)
@@ -5481,18 +5497,18 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@babel/plugin-profile-export-default-from@7.25.9(@babel/core@7.25.9)':
+  '@babel/plugin-proposal-export-default-from@7.25.9(@babel/core@7.25.9)':
     dependencies:
       '@babel/core': 7.25.9
       '@babel/helper-plugin-utils': 7.25.9
 
-  '@babel/plugin-profile-nullish-coalescing-operator@7.18.6(@babel/core@7.25.9)':
+  '@babel/plugin-proposal-nullish-coalescing-operator@7.18.6(@babel/core@7.25.9)':
     dependencies:
       '@babel/core': 7.25.9
       '@babel/helper-plugin-utils': 7.25.9
       '@babel/plugin-syntax-nullish-coalescing-operator': 7.8.3(@babel/core@7.25.9)
 
-  '@babel/plugin-profile-optional-chaining@7.21.0(@babel/core@7.25.9)':
+  '@babel/plugin-proposal-optional-chaining@7.21.0(@babel/core@7.25.9)':
     dependencies:
       '@babel/core': 7.25.9
       '@babel/helper-plugin-utils': 7.25.9
@@ -5501,9 +5517,19 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@babel/plugin-profile-private-property-in-object@7.21.0-placeholder-for-preset-env.2(@babel/core@7.25.9)':
+  '@babel/plugin-proposal-private-property-in-object@7.21.0-placeholder-for-preset-env.2(@babel/core@7.25.9)':
     dependencies:
       '@babel/core': 7.25.9
+
+  '@babel/plugin-proposal-private-property-in-object@7.21.11(@babel/core@7.25.9)':
+    dependencies:
+      '@babel/core': 7.25.9
+      '@babel/helper-annotate-as-pure': 7.25.9
+      '@babel/helper-create-class-features-plugin': 7.25.9(@babel/core@7.25.9)
+      '@babel/helper-plugin-utils': 7.25.9
+      '@babel/plugin-syntax-private-property-in-object': 7.14.5(@babel/core@7.25.9)
+    transitivePeerDependencies:
+      - supports-color
 
   '@babel/plugin-syntax-dynamic-import@7.8.3(@babel/core@7.25.9)':
     dependencies:
@@ -5541,6 +5567,11 @@ snapshots:
       '@babel/helper-plugin-utils': 7.25.9
 
   '@babel/plugin-syntax-optional-chaining@7.8.3(@babel/core@7.25.9)':
+    dependencies:
+      '@babel/core': 7.25.9
+      '@babel/helper-plugin-utils': 7.25.9
+
+  '@babel/plugin-syntax-private-property-in-object@7.14.5(@babel/core@7.25.9)':
     dependencies:
       '@babel/core': 7.25.9
       '@babel/helper-plugin-utils': 7.25.9
@@ -5940,7 +5971,7 @@ snapshots:
       '@babel/plugin-bugfix-safari-id-destructuring-collision-in-function-expression': 7.25.9(@babel/core@7.25.9)
       '@babel/plugin-bugfix-v8-spread-parameters-in-optional-chaining': 7.25.9(@babel/core@7.25.9)
       '@babel/plugin-bugfix-v8-static-class-fields-redefine-readonly': 7.25.9(@babel/core@7.25.9)
-      '@babel/plugin-profile-private-property-in-object': 7.21.0-placeholder-for-preset-env.2(@babel/core@7.25.9)
+      '@babel/plugin-proposal-private-property-in-object': 7.21.0-placeholder-for-preset-env.2(@babel/core@7.25.9)
       '@babel/plugin-syntax-import-assertions': 7.25.9(@babel/core@7.25.9)
       '@babel/plugin-syntax-import-attributes': 7.25.9(@babel/core@7.25.9)
       '@babel/plugin-syntax-unicode-sets-regex': 7.18.6(@babel/core@7.25.9)
@@ -6857,7 +6888,7 @@ snapshots:
   '@react-native/babel-preset@0.75.4(@babel/core@7.25.9)(@babel/preset-env@7.25.9(@babel/core@7.25.9))':
     dependencies:
       '@babel/core': 7.25.9
-      '@babel/plugin-profile-export-default-from': 7.25.9(@babel/core@7.25.9)
+      '@babel/plugin-proposal-export-default-from': 7.25.9(@babel/core@7.25.9)
       '@babel/plugin-syntax-dynamic-import': 7.8.3(@babel/core@7.25.9)
       '@babel/plugin-syntax-export-default-from': 7.25.9(@babel/core@7.25.9)
       '@babel/plugin-syntax-flow': 7.25.9(@babel/core@7.25.9)
@@ -9490,9 +9521,9 @@ snapshots:
     dependencies:
       '@babel/core': 7.25.9
       '@babel/parser': 7.25.9
-      '@babel/plugin-profile-class-properties': 7.18.6(@babel/core@7.25.9)
-      '@babel/plugin-profile-nullish-coalescing-operator': 7.18.6(@babel/core@7.25.9)
-      '@babel/plugin-profile-optional-chaining': 7.21.0(@babel/core@7.25.9)
+      '@babel/plugin-proposal-class-properties': 7.18.6(@babel/core@7.25.9)
+      '@babel/plugin-proposal-nullish-coalescing-operator': 7.18.6(@babel/core@7.25.9)
+      '@babel/plugin-proposal-optional-chaining': 7.21.0(@babel/core@7.25.9)
       '@babel/plugin-transform-modules-commonjs': 7.25.9(@babel/core@7.25.9)
       '@babel/preset-env': 7.25.9(@babel/core@7.25.9)
       '@babel/preset-flow': 7.25.9(@babel/core@7.25.9)
