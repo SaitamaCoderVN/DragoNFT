@@ -107,6 +107,15 @@ export default function ProfilelPage() {
         fetchTotalOwnerShitNFT();
     }, [account.address, contractAddress]);
 
+    const handlePublishProfile = () => {
+        if (account.address) {
+            const profileUrl = `/profile/publish/${account.address}`;
+            window.open(profileUrl, '_blank');
+        } else {
+            alert('Please connect your wallet to publish your profile.');
+        }
+    };
+
     return (
         <>
             {/* <div className='v11e5678D'></div> */}
@@ -121,13 +130,20 @@ export default function ProfilelPage() {
                             Profile 
                         </div>
                     </div>
-                    <div className='flex items-center gap-[12px]'>
-                        <Link href="/profile/publish" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
-                          Publish Profile
-                        </Link>
+                    <div className='items-center'>
                         <div className='connect-btn text-primary font-pixel uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap'>
                             <CustomConnectButton />
                         </div>
+                        <Link href="/profile/add_id_discord" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                            Add ID Discord
+                        </Link>
+                        <Link
+                            href="#"
+                            onClick={handlePublishProfile}
+                            className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'
+                        >
+                            Publish Profile
+                        </Link>
                     </div>
                 </div>
                 <CardGrid>

@@ -11,16 +11,17 @@ import {
     useWaitForTransactionReceipt,
     useWriteContract,
     useChainId,
-    useAccount
+    useAccount,
 } from "wagmi";
 import { useToast } from "@/components/ui/use-toast";
 import { config } from "@/components/contract/config";
 
-function MintPage() {
+function UpgradePage() {
     const [uri, setUri] = useState('');
-    const [toAddress, setToAddress] = useState('');
-    const [level, setLevel] = useState('');
     const [codeContribute, setCodeContribute] = useState('');
+    const [levelFrom, setLevelFrom] = useState<number>(0);
+    const [levelTo, setLevelTo] = useState<number>(0);
+    const [tokenId, setTokenId] = useState<number>(0);
     
     const { toast } = useToast();
     const chainId = useChainId();
@@ -60,14 +61,15 @@ function MintPage() {
             });
             return;
         }
+        
         try {
             await writeContract({
                 address: contractAddress,
                 abi: nftAbi,
-                functionName: "mint_SoulBound_Ranking_NFT",
-                args: [toAddress as `0x${string}`, uri, BigInt(level), codeContribute],
+                functionName: "upgradeNFT",
+                args: [tokenId, BigInt(levelTo)],
                 chain: config[chainId],
-                account: account.address,
+                account: account.address as `0x${string}`,
             });
         } catch (error) {
             toast({
@@ -88,9 +90,11 @@ function MintPage() {
                         <Link href="/" className='text-primary mr-4 text-xl font-silkscreen'>
                             Home /
                         </Link>
-                        
+                        <Link href="/admin" className='text-primary mr-4 text-xl font-silkscreen'>
+                            Admin /
+                        </Link>
                         <div className='text-primary font-bold font-pixel uppercase text-[5.5vw] leading-[5.5vw] whitespace-nowrap'>
-                            mint 
+                            Upgrade NFT
                         </div>
                     </div>
                     
@@ -105,61 +109,30 @@ function MintPage() {
                     <div className="bg-secondary-background p-8 rounded-lg max-w-2xl mx-auto">
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div>
-                                <label htmlFor="uri" className="block text-lg font-medium text-gray-300 mb-2">
-                                    NFT Metadata URL
+                                <label htmlFor="tokenId" className="block text-lg font-medium text-gray-300 mb-2">
+                                    Token ID
                                 </label>
                                 <input
-                                    type="text"
-                                    id="uri"
-                                    value={uri}
-                                    onChange={(e) => setUri(e.target.value)}
-                                    placeholder="Enter URL link"
+                                    type="number"
+                                    id="tokenId"
+                                    placeholder="Enter token ID"
                                     className="w-full px-4 py-2 bg-background text-white rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
-                                />
-                                <p className="text-sm text-gray-400 mt-1">
-                                    We recommend using <a href="https://pinata.cloud" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Pinata.cloud</a> to store your NFT metadata.
-                                </p>
-                            </div>
-
-                            <div>
-                                <label htmlFor="level" className="block text-lg font-medium text-gray-300 mb-2">
-                                    Level
-                                </label>
-                                <input
-                                    type="text"
-                                    id="level"
-                                    value={level}
-                                    onChange={(e) => setLevel(e.target.value)}
-                                    placeholder="Enter level"
-                                    className="w-full px-4 py-2 bg-background text-white rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
+                                    value={tokenId}
+                                    onChange={(e) => setTokenId(parseInt(e.target.value, 10))}
                                 />
                             </div>
 
                             <div>
-                                <label htmlFor="codeContribute" className="block text-lg font-medium text-gray-300 mb-2">
-                                    Code Contribute
+                                <label htmlFor="levelTo" className="block text-lg font-medium text-gray-300 mb-2">
+                                    Level To
                                 </label>
                                 <input
-                                    type="text"
-                                    id="codeContribute"
-                                    value={codeContribute}
-                                    onChange={(e) => setCodeContribute(e.target.value)}
-                                    placeholder="Enter code contribute"
+                                    type="number"
+                                    id="levelTo"
+                                    placeholder="Enter ending level"
                                     className="w-full px-4 py-2 bg-background text-white rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
-                                />
-                            </div>
-
-                            <div>
-                                <label htmlFor="toAddress" className="block text-lg font-medium text-gray-300 mb-2">
-                                    Recipient Wallet Address
-                                </label>
-                                <input
-                                    type="text"
-                                    id="toAddress"
-                                    value={toAddress}
-                                    onChange={(e) => setToAddress(e.target.value)}
-                                    placeholder="Enter wallet address"
-                                    className="w-full px-4 py-2 bg-background text-white rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
+                                    value={levelTo}
+                                    onChange={(e) => setLevelTo(parseInt(e.target.value, 10))}
                                 />
                             </div>
 
@@ -168,7 +141,7 @@ function MintPage() {
                                     type="submit"
                                     className="w-full bg-black text-[#3f3c40] font-bold py-2 px-4 rounded-md hover:text-[#c7c1c9] transition duration-300"
                                 >
-                                    Mint SoulBound NFT
+                                    Upgrade NFT
                                 </button>
                             </div>
                         </form>
@@ -208,4 +181,4 @@ function MintPage() {
     );
 }
 
-export default MintPage;
+export default UpgradePage;

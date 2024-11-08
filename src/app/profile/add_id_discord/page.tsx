@@ -5,23 +5,23 @@ import { BLOCK_EXPLORER_OPAL, BLOCK_EXPLORER_QUARTZ, BLOCK_EXPLORER_UNIQUE, CHAI
 import { CustomConnectButton } from "@/components/ui/ConnectButton";
 import Spacer from "@/components/ui/Spacer";
 import Link from "next/link";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     type BaseError,
-    useWaitForTransactionReceipt,
-    useWriteContract,
     useChainId,
-    useAccount
+    useAccount,
+    useWriteContract,
+    useWaitForTransactionReceipt
 } from "wagmi";
 import { useToast } from "@/components/ui/use-toast";
+import { readContract } from '@wagmi/core/actions'; // Import hàm readContract
+import { isPending } from "@reduxjs/toolkit/react";
 import { config } from "@/components/contract/config";
 
-function MintPage() {
-    const [uri, setUri] = useState('');
-    const [toAddress, setToAddress] = useState('');
-    const [level, setLevel] = useState('');
-    const [codeContribute, setCodeContribute] = useState('');
-    
+function AddIDDiscordPage() {
+    const [discordId, setDiscordId] = useState('');
+    const [currentDiscordId, setCurrentDiscordId] = useState<string | null>(null); // State để lưu ID Discord hiện tại
+
     const { toast } = useToast();
     const chainId = useChainId();
     const account = useAccount();
@@ -50,6 +50,30 @@ function MintPage() {
       hash,
     })
 
+    useEffect(() => {
+        const fetchDiscordId = async () => {
+            if (!contractAddress || !account.address) return;
+
+            try {
+                const result = await readContract(config, {
+                    abi: nftAbi,
+                    address: contractAddress,
+                    functionName: 'getDiscordId',
+                    args: [],
+                });
+                setCurrentDiscordId(result as string);
+            } catch (error) {
+                console.error("Error fetching Discord ID:", error);
+            }
+        };
+
+        fetchDiscordId();
+    }, [account.address, contractAddress]);
+
+    useEffect(() => {
+        console.log("Current Discord ID:", currentDiscordId);
+    }, [currentDiscordId]);
+
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!contractAddress) {
@@ -64,8 +88,8 @@ function MintPage() {
             await writeContract({
                 address: contractAddress,
                 abi: nftAbi,
-                functionName: "mint_SoulBound_Ranking_NFT",
-                args: [toAddress as `0x${string}`, uri, BigInt(level), codeContribute],
+                functionName: "addOrUpdateDiscordId",
+                args: [discordId],
                 chain: config[chainId],
                 account: account.address,
             });
@@ -90,7 +114,7 @@ function MintPage() {
                         </Link>
                         
                         <div className='text-primary font-bold font-pixel uppercase text-[5.5vw] leading-[5.5vw] whitespace-nowrap'>
-                            mint 
+                            ADD ID DISCORD 
                         </div>
                     </div>
                     
@@ -100,75 +124,32 @@ function MintPage() {
                 </div>
 
                 <div className="w-full mt-10">
-                    
-
                     <div className="bg-secondary-background p-8 rounded-lg max-w-2xl mx-auto">
+                        {currentDiscordId && (
+                            <div className="mb-4">
+                                <p className="text-lg font-medium text-gray-300">Your current Discord ID: {currentDiscordId}</p>
+                            </div>
+                        )}
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div>
-                                <label htmlFor="uri" className="block text-lg font-medium text-gray-300 mb-2">
-                                    NFT Metadata URL
+                                <label htmlFor="discordId" className="block text-lg font-medium text-gray-300 mb-2">
+                                    Discord ID
                                 </label>
                                 <input
                                     type="text"
-                                    id="uri"
-                                    value={uri}
-                                    onChange={(e) => setUri(e.target.value)}
-                                    placeholder="Enter URL link"
-                                    className="w-full px-4 py-2 bg-background text-white rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
-                                />
-                                <p className="text-sm text-gray-400 mt-1">
-                                    We recommend using <a href="https://pinata.cloud" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Pinata.cloud</a> to store your NFT metadata.
-                                </p>
-                            </div>
-
-                            <div>
-                                <label htmlFor="level" className="block text-lg font-medium text-gray-300 mb-2">
-                                    Level
-                                </label>
-                                <input
-                                    type="text"
-                                    id="level"
-                                    value={level}
-                                    onChange={(e) => setLevel(e.target.value)}
-                                    placeholder="Enter level"
+                                    id="discordId"
+                                    value={discordId}
+                                    onChange={(e) => setDiscordId(e.target.value)}
+                                    placeholder="Enter Discord ID"
                                     className="w-full px-4 py-2 bg-background text-white rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
                                 />
                             </div>
-
-                            <div>
-                                <label htmlFor="codeContribute" className="block text-lg font-medium text-gray-300 mb-2">
-                                    Code Contribute
-                                </label>
-                                <input
-                                    type="text"
-                                    id="codeContribute"
-                                    value={codeContribute}
-                                    onChange={(e) => setCodeContribute(e.target.value)}
-                                    placeholder="Enter code contribute"
-                                    className="w-full px-4 py-2 bg-background text-white rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
-                                />
-                            </div>
-
-                            <div>
-                                <label htmlFor="toAddress" className="block text-lg font-medium text-gray-300 mb-2">
-                                    Recipient Wallet Address
-                                </label>
-                                <input
-                                    type="text"
-                                    id="toAddress"
-                                    value={toAddress}
-                                    onChange={(e) => setToAddress(e.target.value)}
-                                    placeholder="Enter wallet address"
-                                    className="w-full px-4 py-2 bg-background text-white rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
-                                />
-                            </div>
-
                             <div>
                                 <button
                                     type="submit"
                                     className="w-full bg-black text-[#3f3c40] font-bold py-2 px-4 rounded-md hover:text-[#c7c1c9] transition duration-300"
                                 >
-                                    Mint SoulBound NFT
+                                    Add Discord ID
                                 </button>
                             </div>
                         </form>
@@ -208,4 +189,4 @@ function MintPage() {
     );
 }
 
-export default MintPage;
+export default AddIDDiscordPage;
