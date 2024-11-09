@@ -12,8 +12,13 @@ import { BLOCK_EXPLORER_OPAL, BLOCK_EXPLORER_QUARTZ, BLOCK_EXPLORER_UNIQUE, CHAI
 import { nftAbi } from '@/components/contract/abi';
 import { readContract } from '@wagmi/core/actions';
 import { config } from '@/components/contract/config';
-import { useEffect, useState } from 'react';
-
+import { useEffect, useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+const ArrowDownIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" className="injected-svg" data-src="https://cdn.hugeicons.com/icons/arrow-down-01-stroke-sharp.svg"  role="img" color="#000000">
+    <path d="M5.99977 9.00005L11.9998 15L17.9998 9" stroke="#000000" stroke-width="2" stroke-miterlimit="16"></path>
+    </svg>
+);
 export default function ProfilelPage() {
     const dispatch = useAppDispatch();
     const { cards, activeCardId } = useAppSelector((state) => state.card);
@@ -23,6 +28,33 @@ export default function ProfilelPage() {
     const chainId = useChainId();
     let contractAddress: `0x${string}` | undefined;
     let blockexplorer: string | undefined;
+
+    const [isOptionsVisible, setOptionsVisible] = useState(false); 
+    const optionsRef = useRef<HTMLDivElement | null>(null); 
+
+    const dropdownVariants = {
+        hidden: { opacity: 0, y: -10 }, 
+        visible: { opacity: 1, y: 0 },   
+    };
+
+    const toggleOptions = () => {
+        setOptionsVisible(!isOptionsVisible); 
+    };
+    
+    // Function to handle clicks outside the dropdown
+    const handleClickOutside = (event: MouseEvent) => {
+        if (optionsRef.current && !optionsRef.current.contains(event.target as Node)) {
+            setOptionsVisible(false); 
+        }
+    };
+    
+    useEffect(() => {
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside); 
+        };
+    }, []);
+
 
     switch (chainId) {
         case CHAINID.UNIQUE:
@@ -102,10 +134,10 @@ export default function ProfilelPage() {
                     return result;
                 // }
             }));
-
+            
             console.log("tokenUriForContributorAndLevel", tokenUriForContributorAndLevel);
-
-            setUriArray(tokenUriForContributorAndLevel.filter(uri => uri !== ""));
+            
+            setUriArray(tokenUriForContributorAndLevel);
             // setTokenCodeContributes(tokenCodeContributes);
         }
     };
@@ -137,25 +169,59 @@ export default function ProfilelPage() {
                             Profile 
                         </div>
                     </div>
-                    <div className='items-center'>
+                    <div className='flex gap-3 flex-row-reverse'>
+                        <div className='relative' ref={optionsRef}> {/* Attach ref here */}
+                            <button 
+                                onClick={toggleOptions} 
+                                className=' fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'
+                            >
+                                <span>Options</span>
+                                <ArrowDownIcon className='ml-2' />
+                            </button>
+                            <AnimatePresence>
+                                {isOptionsVisible && ( // Conditionally render the buttons with animation
+                                    <motion.div
+                                        className='absolute top-14 right-0 z-10 shadow-lg rounded-md flex flex-col gap-3'
+                                        initial="hidden"
+                                        animate="visible"
+                                        exit="hidden"
+                                        variants={dropdownVariants}
+                                        transition={{ duration: 0.2 }} // Animation duration
+                                    >
+                                        <Link href="/profile/add_id_discord" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                                            Add ID Discord
+                                        </Link>
+                                        <Link
+                                            href="#"
+                                            onClick={handlePublishProfile}
+                                            className='publish-btn fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'
+                                        >
+                                            <span className='text-primary'>Publish Profile</span>
+                                        </Link>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
                         <div className='connect-btn text-primary font-pixel uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap'>
                             <CustomConnectButton />
                         </div>
-                        <Link href="/profile/add_id_discord" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
-                            Add ID Discord
-                        </Link>
-                        <Link
-                            href="#"
-                            onClick={handlePublishProfile}
-                            className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'
-                        >
-                            Publish Profile
-                        </Link>
+                        
                     </div>
                 </div>
                 <CardGrid>
-                    {cards.map((card) => (
-                        <Card key={card.id} {...card} />
+                    {uriArray.map((img, index) => (
+                        <Card 
+                            key={index} 
+                            id={`swsh12pt5-${index + 160}`} 
+                            name={cards[1].name} 
+                            number={cards[1].number} 
+                            img={img} // Using the image URL from uriArray
+                            set={cards[1].set} 
+                            types={cards[1].types} 
+                            subtypes={cards[1].subtypes} 
+                            supertype={cards[1].supertype} 
+                            rarity={cards[1].rarity} 
+                        />
                     ))}
                 </CardGrid>
             </div>

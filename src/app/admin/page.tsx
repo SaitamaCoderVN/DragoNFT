@@ -4,7 +4,7 @@ import { CustomConnectButton } from "@/components/ui/ConnectButton";
 import Spacer from "@/components/ui/Spacer";
 import Link from "next/link";
 import { Player } from "@/types/PlayerData";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from 'framer-motion';
 const API_BASE_URL = '/api/leaderboard';
 
@@ -66,13 +66,40 @@ const RankBadge = ({ rank }: { rank: number }) => {
       </div>
     );
 };
-
+const ArrowDownIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" className="injected-svg" data-src="https://cdn.hugeicons.com/icons/arrow-down-01-stroke-sharp.svg"  role="img" color="#000000">
+    <path d="M5.99977 9.00005L11.9998 15L17.9998 9" stroke="#000000" stroke-width="2" stroke-miterlimit="16"></path>
+    </svg>
+);
 function GetLevelPage() {
     const [serverUrl, setServerUrl] = useState('');
     const [players, setPlayers] = useState<Player[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    
+    const [isOptionsVisible, setOptionsVisible] = useState(false); 
+    const optionsRef = useRef<HTMLDivElement | null>(null); 
+    const dropdownVariants = {
+        hidden: { opacity: 0, y: -10 }, 
+        visible: { opacity: 1, y: 0 },   
+    };
 
+    const toggleOptions = () => {
+        setOptionsVisible(!isOptionsVisible); 
+    };
+    // Function to handle clicks outside the dropdown
+    const handleClickOutside = (event: MouseEvent) => {
+        if (optionsRef.current && !optionsRef.current.contains(event.target as Node)) {
+            setOptionsVisible(false); 
+        }
+    };
+    
+    useEffect(() => {
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside); 
+        };
+    }, []);
     const handleGetLevels = async () => {
         setLoading(true);
         setError(null);
@@ -118,21 +145,47 @@ function GetLevelPage() {
                             Admin
                         </div>
                     </div>
-                    <div className='connect-btn text-primary font-pixel uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap'>
-                        <CustomConnectButton />
-                        <Link href="/admin/config" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
-                            Config
-                        </Link>
-                        <Link href="/admin/upgrade" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
-                            Upgrade
-                        </Link>
-                        <Link href="/admin/replace" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
-                          Replace
-                        </Link>
-                        <Link href="/admin/reward" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
-                          Reward
-                        </Link>
+                    <div className='flex gap-3 flex-row-reverse'>
+                        <div className='relative' ref={optionsRef}> {/* Attach ref here */}
+                            <button 
+                                onClick={toggleOptions} 
+                                className=' fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'
+                            >
+                                <span>Options</span>
+                                <ArrowDownIcon className='ml-2' />
+                            </button>
+                            <AnimatePresence>
+                                {isOptionsVisible && ( // Conditionally render the buttons with animation
+                                    <motion.div
+                                        className='absolute top-14 right-0 z-10 shadow-lg rounded-md flex flex-col gap-3'
+                                        initial="hidden"
+                                        animate="visible"
+                                        exit="hidden"
+                                        variants={dropdownVariants}
+                                        transition={{ duration: 0.2 }} // Animation duration
+                                    >
+                                        <Link href="/admin/config" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                                            Config
+                                        </Link>
+                                        <Link href="/admin/upgrade" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                                            Upgrade
+                                        </Link>
+                                        <Link href="/admin/replace" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                                        Replace
+                                        </Link>
+                                        <Link href="/admin/reward" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                                        Reward
+                                        </Link>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                        <div className='connect-btn text-primary font-pixel uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap'>
+                            <CustomConnectButton />
+                        </div>
+                        
                     </div>
+                    
                 </div>
                 <Spacer size='3vw'/>
                 
@@ -152,11 +205,17 @@ function GetLevelPage() {
                         />
                         <button
                             onClick={handleGetLevels}
-                            className="bg-primary text-white px-4 py-2 rounded-md hover:scale-105 transition-all duration-300"
+                            className="bg-primary font-bold text-white px-4 py-2 rounded-md hover:scale-105 transition-all duration-300"
                             disabled={loading}
                         >
                             Get
                         </button>
+                        <Link
+                            href="/admin/applyall"
+                            className="bg-black font-bold text-primary px-4 py-2 rounded-md hover:scale-105 transition-all duration-300"
+                        >
+                            Apply all
+                        </Link>
                     </div>
 
                     <div className="w-full flex-grow overflow-y-auto p-4">

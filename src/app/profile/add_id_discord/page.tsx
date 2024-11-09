@@ -112,14 +112,15 @@ function AddIDDiscordPage() {
                         <Link href="/" className='text-primary mr-4 text-xl font-silkscreen'>
                             Home /
                         </Link>
-                        
-                        <div className='text-primary font-bold font-pixel uppercase text-[5.5vw] leading-[5.5vw] whitespace-nowrap'>
+                        <Link href="/profile" className='text-primary mr-4 text-xl font-silkscreen'>
+                            profile /
+                        </Link>
+                        <div className='text-primary font-bold font-pixel uppercase text-[4.5vw] leading-[5.5vw] whitespace-nowrap'>
                             ADD ID DISCORD 
                         </div>
                     </div>
-                    
-                    <div className='connect-btn text-primary flex flex-row items-center space-x-4'>
-                        <CustomConnectButton />
+                    <div className='connect-btn text-primary font-pixel uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap'>
+                            <CustomConnectButton />
                     </div>
                 </div>
 
