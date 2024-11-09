@@ -1,18 +1,5 @@
 export const nftAbi = [
 	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "discordId",
-				"type": "string"
-			}
-		],
-		"name": "addOrUpdateDiscordId",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
 		"inputs": [],
 		"stateMutability": "nonpayable",
 		"type": "constructor"
@@ -451,6 +438,24 @@ export const nftAbi = [
 	{
 		"inputs": [
 			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"internalType": "string",
+				"name": "discordId",
+				"type": "string"
+			}
+		],
+		"name": "setDiscordId",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
 				"internalType": "bytes",
 				"name": "code_contribute",
 				"type": "bytes"
@@ -540,25 +545,6 @@ export const nftAbi = [
 		"name": "upgradeNFTLevel",
 		"outputs": [],
 		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"name": "_addressToDiscordId",
-		"outputs": [
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			}
-		],
-		"stateMutability": "view",
 		"type": "function"
 	},
 	{
@@ -720,6 +706,25 @@ export const nftAbi = [
 	{
 		"inputs": [
 			{
+				"internalType": "string",
+				"name": "discordId",
+				"type": "string"
+			}
+		],
+		"name": "getAddressByDiscordId",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
 				"internalType": "uint256",
 				"name": "tokenId",
 				"type": "uint256"
@@ -737,7 +742,13 @@ export const nftAbi = [
 		"type": "function"
 	},
 	{
-		"inputs": [],
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			}
+		],
 		"name": "getDiscordId",
 		"outputs": [
 			{

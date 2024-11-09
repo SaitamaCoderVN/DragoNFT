@@ -15,6 +15,8 @@ export default function PublishProfilePage() {
 
     const fetchTotalOwnerShitNFT = async () => {
         if (address) {
+            console.log("result", address);
+            
             try {
                 setIsLoading(true);
                 const result = await readContract(config, {
@@ -23,6 +25,9 @@ export default function PublishProfilePage() {
                     functionName: 'getSoulBound_Ranking_NFTs',
                     args: [ address as `0x${string}`],
                 });
+            console.log("result", result);
+                
+
 
                 const tokenCodeContributes = await Promise.all(result.map(async (tokenId) => {
                     const tokenCode= await readContract(config, {
@@ -45,21 +50,27 @@ export default function PublishProfilePage() {
                 }));
 
                 const tokenUriForContributorAndLevel = await Promise.all(result.map(async (tokenId, index) => {
-                    try {
-                        return await readContract(config, {
-                            abi: nftAbi,
-                            address: CONTRACT_ADDRESS_UNIQUE,
-                            functionName: 'getUriForContributorAndLevel',
-                            args: [tokenCodeContributes[index], tokenLevel[index]],
-                        });
-                    } catch (error) {
-                        return await readContract(config, {
+                    // try {
+                        // console.log("kkkkkkkkk")
+                        // const result = await readContract(config, {
+                        //     abi: nftAbi,
+                        //     address: CONTRACT_ADDRESS_UNIQUE,
+                        //     functionName: 'getUriForContributorAndLevel',
+                        //     args: [tokenCodeContributes[index], tokenLevel[index]],
+                        // });
+                        // console.log("levelURI", result);
+                        // return result;
+                    // } catch (error) {
+                        // If getUriForContributorAndLevel cannot be called, call tokenURI
+                        const result = await readContract(config, {
                             abi: nftAbi,
                             address: CONTRACT_ADDRESS_UNIQUE,
                             functionName: 'tokenURI',
                             args: [tokenId],
                         });
-                    }
+                        console.log("tokenURI Link ảnh đây Đạt nhé", result);
+                        return result;
+                    // }
                 }));
 
                 setUriArray(tokenUriForContributorAndLevel.filter(uri => uri !== ""));

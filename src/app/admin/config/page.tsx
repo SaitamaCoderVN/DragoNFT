@@ -62,11 +62,14 @@ function ConfigPage() {
         }
         
         try {
+            const byteData = Buffer.from(codeContribute, 'utf-8');  // Chuyển thành Buffer với mã hóa UTF-8
+            const hexRepresentation = "0x" + byteData.toString('hex'); // Chuyển Buffer thành chuỗi hex
+            console.log(hexRepresentation);
             await writeContract({
                 address: contractAddress,
                 abi: nftAbi,
-                functionName: "setURIforLevel",
-                args: [codeContribute, uri, BigInt(levelFrom), BigInt(levelTo)],
+                functionName: "setUriForLevelRange",
+                args: [hexRepresentation as `0x${string}`, BigInt(levelFrom), BigInt(levelTo), uri],
                 chain: config[chainId],
                 account: account.address as `0x${string}`,
             });

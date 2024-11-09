@@ -50,21 +50,23 @@ export default function ProfilelPage() {
                 args: [ `${account.address}`],
             });
 
-            console.log("result", result);
 
             const tokenCodeContributes = await Promise.all(result.map(async (tokenId) => {
                 console.log("tokenId", tokenId);
-                const tokenCode= await readContract(config, {
-                    abi: nftAbi,
-                    address: contractAddress,
-                    functionName: 'getTokenCodeContribute',
-                    args: [tokenId],
-                });
-                console.log("tokenCode",tokenCode);
-                return tokenCode;
+                try {
+                    const tokenCode = await readContract(config, {
+                        abi: nftAbi,
+                        address: contractAddress,
+                        functionName: 'getTokenCodeContribute',
+                        args: [tokenId],
+                    });
+                    console.log("tokenCode", tokenCode);
+                    return tokenCode;
+                } catch (error) {
+                    console.error("Error fetching tokenCodeContribute:", error);
+                    return null;
+                }
             }));
-
-
 
             const tokenLevel = await Promise.all(result.map(async (tokenId) => {
                 const tokenLevel = await readContract(config, {
@@ -78,27 +80,32 @@ export default function ProfilelPage() {
             }));
 
             const tokenUriForContributorAndLevel = await Promise.all(result.map(async (tokenId, index) => {
-                try {
-                    return await readContract(config, {
-                        abi: nftAbi,
-                        address: contractAddress,
-                        functionName: 'getUriForContributorAndLevel',
-                        args: [tokenCodeContributes[index], tokenLevel[index]],
-                    });
-                } catch (error) {
+                // try {
+                //     console.log("kkkkkkkkk")
+                //     const result = await readContract(config, {
+                //         abi: nftAbi,
+                //         address: contractAddress,
+                //         functionName: 'getUriForContributorAndLevel',
+                //         args: [tokenCodeContributes[index], tokenLevel[index]],
+                //     });
+                //     console.log("levelURI", result);
+                //     return result;
+                // } catch (error) {
                     // If getUriForContributorAndLevel cannot be called, call tokenURI
-                    return await readContract(config, {
+                    const result = await readContract(config, {
                         abi: nftAbi,
                         address: contractAddress,
                         functionName: 'tokenURI',
                         args: [tokenId],
                     });
-                }
+                    console.log("tokenURI Link ảnh đây Đạt nhé", result);
+                    return result;
+                // }
             }));
 
             console.log("tokenUriForContributorAndLevel", tokenUriForContributorAndLevel);
 
-            setUriArray([...tokenUriForContributorAndLevel]);
+            setUriArray(tokenUriForContributorAndLevel.filter(uri => uri !== ""));
             // setTokenCodeContributes(tokenCodeContributes);
         }
     };
