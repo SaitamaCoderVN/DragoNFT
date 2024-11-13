@@ -34,6 +34,32 @@ const FileUploadIcon = (props: React.SVGProps<SVGSVGElement>) => (
 function ApplyAll() {
     const [userIds, setUserIds] = useState<string[]>([]); // State to store user IDs
 
+    const [link, setLink] = useState('');
+    const [isLoadingIds, setIsLoadingIds] = useState(false);
+    const fetchUserIdsFromLink = async (link: string) => {
+        const match = link.match(/(\d+)/); // Extract ID from the link
+        console.log(match);
+        if (match) {
+            const id = match[0]; // Get the matched ID
+            setIsLoadingIds(true); // Set loading state to true
+            try {
+                const response = await fetch(`/api/leaderboard?serverId=${id}`); // Fetch using the extracted ID
+                if (response.ok) {
+                    const data = await response.json();
+                    const ids = data.players.map((player: { id: string }) => player.id); // Extract IDs
+                    setUserIds(ids); 
+                } else {
+                    console.error('Failed to fetch user IDs');
+                }
+            } catch (error) {
+                console.error('Error fetching user IDs:', error);
+            } finally {
+                setIsLoadingIds(false); // Reset loading state
+            }
+        } else {
+            console.error('No valid ID found in the link');
+        }
+    };
     const [isOptionsVisible, setOptionsVisible] = useState(false); 
     const optionsRef = useRef<HTMLDivElement | null>(null); 
     const dropdownVariants = {
@@ -343,21 +369,21 @@ function ApplyAll() {
     };
 
 
-    useEffect(() => {
-        const fetchUserIds = async () => {
-            const serverId = '1170911030789029898'; 
-            const response = await fetch(`/api/leaderboard?serverId=${serverId}`);
-            if (response.ok) {
-                const data = await response.json();
-                const ids = data.players.map((player: { id: string }) => player.id); // Extract IDs
-                setUserIds(ids); 
-            } else {
-                console.error('Failed to fetch user IDs');
-            }
-        };
+    // useEffect(() => {
+    //     const fetchUserIds = async () => {
+    //         const serverId = '1170911030789029898'; 
+    //         const response = await fetch(`/api/leaderboard?serverId=${serverId}`);
+    //         if (response.ok) {
+    //             const data = await response.json();
+    //             const ids = data.players.map((player: { id: string }) => player.id); // Extract IDs
+    //             setUserIds(ids); 
+    //         } else {
+    //             console.error('Failed to fetch user IDs');
+    //         }
+    //     };
 
-        fetchUserIds();
-    }, []);
+    //     fetchUserIds();
+    // }, []);
     return (
         <>
         <div className='v11e5678D'></div>
@@ -521,6 +547,27 @@ function ApplyAll() {
                                 />
                             </div>
                             {/* ids place */}
+                            <div>
+                                <label htmlFor="link" className="block text-lg font-medium text-gray-300 mb-2">
+                                    Enter Link to Fetch User IDs
+                                </label>
+                                <input
+                                    type="text"
+                                    id="link"
+                                    value={link}
+                                    onChange={(e) => setLink(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            fetchUserIdsFromLink(link); // Fetch IDs when Enter is pressed
+                                        }
+                                    }}
+                                    placeholder="Enter link"
+                                    className="w-full px-4 py-2 bg-background text-white rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
+                                />
+                            </div>
+                            {/* Loading animation */}
+                            {isLoadingIds && <p className="text-yellow-300">Loading user IDs...</p>}
+                            {/* ids place */}
                             <div className="overflow-y-auto max-h-60 bg-background text-gray-300 rounded-md p-4">
                                 {userIds.length > 0 ? (
                                     userIds.map((id) => (
@@ -529,7 +576,7 @@ function ApplyAll() {
                                         </div>
                                     ))
                                 ) : (
-                                    <p className="text-gray-500">No user IDs found.</p>
+                                    !isLoadingIds && <p className="text-gray-500">No user IDs found.</p>
                                 )}
                             </div>
                             <div>

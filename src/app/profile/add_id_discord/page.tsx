@@ -1,5 +1,5 @@
 "use client";
-
+import { signIn } from "next-auth/react"; 
 import { nftAbi } from "@/components/contract/abi";
 import { BLOCK_EXPLORER_OPAL, BLOCK_EXPLORER_QUARTZ, BLOCK_EXPLORER_UNIQUE, CHAINID, CONTRACT_ADDRESS_OPAL, CONTRACT_ADDRESS_QUARTZ, CONTRACT_ADDRESS_UNIQUE } from "@/components/contract/contracts";
 import { CustomConnectButton } from "@/components/ui/ConnectButton";
@@ -17,8 +17,12 @@ import { useToast } from "@/components/ui/use-toast";
 import { readContract } from '@wagmi/core/actions'; // Import hàm readContract
 import { isPending } from "@reduxjs/toolkit/react";
 import { config } from "@/components/contract/config";
+import { useSearchParams } from "next/navigation";
 
 function AddIDDiscordPage() {
+    const searchParams = useSearchParams();
+    const [discordIdAuth, setDiscordIdAuth] = useState<string | null>(null); // State để lưu ID Discord đã xác thực
+
     const [discordId, setDiscordId] = useState('');
     const [currentDiscordId, setCurrentDiscordId] = useState<string | null>(null); // State để lưu ID Discord hiện tại
 
@@ -27,7 +31,21 @@ function AddIDDiscordPage() {
     const account = useAccount();
     let contractAddress: `0x${string}` | undefined;
     let blockexplorer: string | undefined;
+    const handleLogin = async () => {
+        const clientId = '1306227974579949568'; // Replace with your Discord client ID
+        const redirectUri = 'https://discord.com/oauth2/authorize?client_id=1306227974579949568&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fapi%2Fauth%2Fdiscord%2Fcallback&scope=identify'; // Replace with your redirect URI
+        const scope = 'identify'; // Add any other scopes you need
+        // const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${scope}`;
+        
+        window.location.href = redirectUri; // Redirect to Discord OAuth2
+    };
+    useEffect(() => {
+        const discordId = searchParams.get('discordId'); // Get the discordId from the search parameters
 
+        if (discordId) {
+            setDiscordIdAuth(discordId); // Set the authenticated Discord ID
+        }
+    }, [searchParams]);
     switch (chainId) {
         case CHAINID.UNIQUE:
             contractAddress = CONTRACT_ADDRESS_UNIQUE;
@@ -126,6 +144,23 @@ function AddIDDiscordPage() {
 
                 <div className="w-full mt-10">
                     <div className="bg-secondary-background p-8 rounded-lg max-w-2xl mx-auto">
+                        {discordIdAuth ? (
+                            <div className="mb-4">
+                                <p className="text-lg font-medium text-gray-300">Your Discord ID: {discordIdAuth}</p>
+                            </div>
+                        ) : (
+                            <div className="mb-4">
+                                <button
+                                    onClick={handleLogin}
+                                    className="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 transition duration-300"
+                                >
+                                    Login with Discord
+                                </button>
+                            </div>
+                        )}
+                        
+                        
+                        
                         {currentDiscordId && (
                             <div className="mb-4">
                                 <p className="text-lg font-medium text-gray-300">Your current Discord ID: {currentDiscordId}</p>
