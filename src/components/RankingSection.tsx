@@ -197,8 +197,8 @@ function RankingSection() {
                     {/* <div className='circles w-[17vw]'>
                       <Image src="/circles.svg" alt="" width={272} height={272} className='w-full h-full overflow-hidden'/>
                     </div> */}
-                    <Link href="/get-level" className='fu-btn profile flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
-                          Get level
+                    <Link href="/admin" className='fu-btn profile flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                          Admin
                     </Link>
                   </div>
                   <div className='flex w-full h-[85%] justify-center items-center'>
