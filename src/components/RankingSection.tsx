@@ -150,7 +150,7 @@ function RankingSection() {
                                   <RankBadge rank={index + 1} />
                                   <div className="relative">
                                     <Image
-                                        src={`https://cdn.discordapp.com/avatars/${player.id}/${player.avatar}.png`}
+                                        src={player.avatar ? `https://cdn.discordapp.com/avatars/${player.id}/${player.avatar}.png` : '/img/ancient.png'} // Check for null avatar
                                         alt={player.username}
                                         // layout="fill"
                                         width={40}
@@ -158,7 +158,7 @@ function RankingSection() {
                                         className="w-10 h-10 rounded-full object-cover"
                                         onError={(e) => {
                                         const target = e.target as HTMLImageElement;
-                                        target.src = '/api/placeholder/40/40';
+                                        target.src = '/img/ancient.png';
                                         }}
                                     />
                                    
