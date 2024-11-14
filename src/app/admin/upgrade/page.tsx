@@ -66,8 +66,8 @@ function UpgradePage() {
             await writeContract({
                 address: contractAddress,
                 abi: nftAbi,
-                functionName: "upgradeNFT",
-                args: [tokenId, BigInt(levelTo)],
+                functionName: "upgradeNFTLevel",
+                args: [BigInt(tokenId), BigInt(levelTo)],
                 chain: config[chainId],
                 account: account.address as `0x${string}`,
             });

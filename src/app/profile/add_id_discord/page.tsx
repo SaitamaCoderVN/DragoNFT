@@ -77,7 +77,7 @@ function AddIDDiscordPage() {
                     abi: nftAbi,
                     address: contractAddress,
                     functionName: 'getDiscordId',
-                    args: [],
+                    args: [account.address],
                 });
                 setCurrentDiscordId(result as string);
             } catch (error) {
@@ -106,8 +106,8 @@ function AddIDDiscordPage() {
             await writeContract({
                 address: contractAddress,
                 abi: nftAbi,
-                functionName: "addOrUpdateDiscordId",
-                args: [discordId],
+                functionName: "setDiscordId",
+                args: [account.address, discordId],
                 chain: config[chainId],
                 account: account.address,
             });

@@ -374,7 +374,7 @@ function AddProposalPage() {
                     <div className="mt-[9vh]">
                     <h1 className="text-primary font-pixel text-3xl">Profile of {address}</h1>
                     {uriArray.length === 0 ? (
-                        <p className="text-primary font-pixel text-3xl">You haven't got any NFTs yet</p>
+                        <p className="text-primary font-pixel text-3xl">You haven`t got any NFTs yet</p>
                     ) : (
                         <ul className="grid grid-cols-3 gap-4">
                             {uriArray.map((uri, index) => (
