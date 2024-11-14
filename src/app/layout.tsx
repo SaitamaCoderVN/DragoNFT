@@ -30,6 +30,7 @@ import { Providers } from "@/components/providers/Providers";
 import { CustomConnectButton } from "@/components/ui/ConnectButton";
 import { store } from "@/redux/store";
 import { GlobalDataProvider } from "@/components/providers/CardsProvider";
+import { Suspense } from "react";
 const pixelifySans = Pixelify_Sans({
   subsets: ['latin'],
   display: 'swap',
@@ -60,7 +61,9 @@ export default function RootLayout({
       >
         <Providers>
           <GlobalDataProvider>
+          <Suspense fallback={<div>Loading...</div>}>
             <main>{children}</main>
+          </Suspense>
           </GlobalDataProvider>
         </Providers>
       </body>
