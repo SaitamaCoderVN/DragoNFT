@@ -33,7 +33,7 @@ function AddIDDiscordPage() {
     let blockexplorer: string | undefined;
     const handleLogin = async () => {
         const clientId = '1306227974579949568'; // Replace with your Discord client ID
-        const redirectUri = 'https://discord.com/oauth2/authorize?client_id=1306227974579949568&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fapi%2Fauth%2Fdiscord%2Fcallback&scope=identify'; // Replace with your redirect URI
+        const redirectUri = 'https://discord.com/oauth2/authorize?client_id=1306227974579949568&response_type=code&redirect_uri=https%3A%2F%2Fdrago-nft.vercel.app%2Fapi%2Fauth%2Fdiscord%2Fcallback&scope=identify'; // Replace with your redirect URI
         const scope = 'identify'; // Add any other scopes you need
         // const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${scope}`;
         
