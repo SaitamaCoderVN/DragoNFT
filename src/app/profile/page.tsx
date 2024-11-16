@@ -113,14 +113,24 @@ export default function ProfilelPage() {
 
             const tokenUriForContributorAndLevel = await Promise.all(result.map(async (tokenId, index) => {
                 try {
-                    console.log("kkkkkkkkk")
                     const result = await readContract(config, {
                         abi: nftAbi,
                         address: contractAddress,
                         functionName: 'getUriForContributorAndLevel',
                         args: [tokenCodeContributes[index], tokenLevel[index]],
                     });
-                    console.log("levelURI", result);
+
+                    if (result === "") {
+                        const result = await readContract(config, {
+                            abi: nftAbi,
+                            address: contractAddress,
+                            functionName: 'tokenURI',
+                            args: [tokenId],
+                        });
+                        console.log("tokenURI Link ảnh đây Đạt nhé", result);
+                        return result;
+                    }
+
                     return result;
                 } catch (error) {
                     // If getUriForContributorAndLevel cannot be called, call tokenURI
