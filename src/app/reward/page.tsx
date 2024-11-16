@@ -5,7 +5,7 @@ import { BLOCK_EXPLORER_OPAL, BLOCK_EXPLORER_QUARTZ, BLOCK_EXPLORER_UNIQUE, CHAI
 import { CustomConnectButton } from "@/components/ui/ConnectButton";
 import Spacer from "@/components/ui/Spacer";
 import Link from "next/link";
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
     type BaseError,
     useWaitForTransactionReceipt,
@@ -15,6 +15,8 @@ import {
 } from "wagmi";
 import { useToast } from "@/components/ui/use-toast";
 import { config } from "@/components/contract/config";
+import { ArrowDownIcon } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 
 function RewardPage() {
     const [uri, setUri] = useState('');
@@ -33,6 +35,30 @@ function RewardPage() {
     const account = useAccount();
     let contractAddress: `0x${string}` | undefined;
     let blockexplorer: string | undefined;
+
+    const [isOptionsVisible, setOptionsVisible] = useState(false); 
+    const optionsRef = useRef<HTMLDivElement | null>(null); 
+    const dropdownVariants = {
+        hidden: { opacity: 0, y: -10 }, 
+        visible: { opacity: 1, y: 0 },   
+    };
+
+    const toggleOptions = () => {
+        setOptionsVisible(!isOptionsVisible); 
+    };
+    // Function to handle clicks outside the dropdown
+    const handleClickOutside = (event: MouseEvent) => {
+        if (optionsRef.current && !optionsRef.current.contains(event.target as Node)) {
+            setOptionsVisible(false); 
+        }
+    };
+    
+    useEffect(() => {
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside); 
+        };
+    }, []);
 
     switch (chainId) {
         case CHAINID.UNIQUE:
@@ -120,15 +146,45 @@ function RewardPage() {
                         </div>
                     </div>
                     
-                    <div className='connect-btn text-primary flex flex-row items-center space-x-4'>
-                        <Link href="/replace" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
-                          Replace
-                        </Link>
-                        <Link href="/reward" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
-                          Reward
-                        </Link>
+                    <div className='flex gap-3 flex-row-reverse'>
+                    <div className='relative' ref={optionsRef}> {/* Attach ref here */}
+                        <button 
+                            onClick={toggleOptions} 
+                            className=' fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'
+                        >
+                            <span>Options</span>
+                            <ArrowDownIcon className='ml-2' />
+                        </button>
+                        <AnimatePresence>
+                            {isOptionsVisible && ( // Conditionally render the buttons with animation
+                                <motion.div
+                                    className='absolute top-14 right-0 z-10 shadow-lg rounded-md flex flex-col gap-3'
+                                    initial="hidden"
+                                    animate="visible"
+                                    exit="hidden"
+                                    variants={dropdownVariants}
+                                    transition={{ duration: 0.2 }} // Animation duration
+                                >
+                                    <Link href="/admin" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                                        Admin
+                                    </Link>
+                                    <Link href="/config" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                                        Config
+                                    </Link>
+                                    <Link href="/upgrade" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                                        Upgrade
+                                    </Link>
+                                    <Link href="/replace" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                                        Replace
+                                    </Link>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+                    <div className='connect-btn text-primary font-pixel uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap'>
                         <CustomConnectButton />
                     </div>
+                </div>
                 </div>
 
                 <div className="w-full mt-10">

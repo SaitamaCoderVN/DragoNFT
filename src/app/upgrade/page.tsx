@@ -17,8 +17,10 @@ import { readContract } from "@wagmi/core/actions";
 import { config } from "@/components/contract/config";
 import { nftAbi } from "@/components/contract/abi";
 import { useToast } from "@/components/ui/use-toast";
-import { useAccount, useChainId } from "wagmi";
+import { useAccount, useChainId, useWriteContract } from "wagmi";
 import { BLOCK_EXPLORER_OPAL, BLOCK_EXPLORER_QUARTZ, BLOCK_EXPLORER_UNIQUE, CHAINID, CONTRACT_ADDRESS_OPAL, CONTRACT_ADDRESS_QUARTZ, CONTRACT_ADDRESS_UNIQUE } from "@/components/contract/contracts";
+import { ArrowDownIcon } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 const FileUploadIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg {...props} width="12" height="12" viewBox="0 0 24 24" fill="none" role="img" color="white"><path fillRule="evenodd" clipRule="evenodd" d="M13.25 1.26003C12.9109 1.25 12.5071 1.25 11.997 1.25H11.25C8.44974 1.25 7.04961 1.25 5.98005 1.79497C5.03924 2.27433 4.27433 3.03924 3.79497 3.98005C3.25 5.04961 3.25 6.44974 3.25 9.25V14.75C3.25 17.5503 3.25 18.9504 3.79497 20.02C4.27433 20.9608 5.03924 21.7257 5.98005 22.205C7.04961 22.75 8.44974 22.75 11.25 22.75H12.75C15.5503 22.75 16.9504 22.75 18.02 22.205C18.9608 21.7257 19.7257 20.9608 20.205 20.02C20.75 18.9504 20.75 17.5503 20.75 14.75V10.003C20.75 9.49288 20.75 9.08913 20.74 8.75001H17.2H17.1695H17.1695C16.6354 8.75002 16.1895 8.75003 15.8253 8.72027C15.4454 8.68924 15.0888 8.62212 14.7515 8.45028C14.2341 8.18663 13.8134 7.76593 13.5497 7.24849C13.3779 6.91122 13.3108 6.55457 13.2797 6.17468C13.25 5.81045 13.25 5.3646 13.25 4.83044V4.80001V1.26003ZM20.5164 7.25001C20.3941 6.86403 20.2252 6.4939 20.0132 6.14791C19.704 5.64333 19.2716 5.21096 18.4069 4.34621L18.4069 4.34619L17.6538 3.59315L17.6538 3.59314C16.789 2.72839 16.3567 2.29601 15.8521 1.9868C15.5061 1.77478 15.136 1.6059 14.75 1.48359V4.80001C14.75 5.37244 14.7506 5.75666 14.7748 6.05253C14.7982 6.33966 14.8401 6.47694 14.8862 6.5675C15.0061 6.8027 15.1973 6.99393 15.4325 7.11377C15.5231 7.15991 15.6604 7.2018 15.9475 7.22526C16.2434 7.24943 16.6276 7.25001 17.2 7.25001H20.5164ZM12.5303 10.4697C12.2374 10.1768 11.7626 10.1768 11.4697 10.4697L8.96967 12.9697C8.67678 13.2626 8.67678 13.7374 8.96967 14.0303C9.26256 14.3232 9.73744 14.3232 10.0303 14.0303L11.25 12.8107V17C11.25 17.4142 11.5858 17.75 12 17.75C12.4142 17.75 12.75 17.4142 12.75 17V12.8107L13.9697 14.0303C14.2626 14.3232 14.7374 14.3232 15.0303 14.0303C15.3232 13.7374 15.3232 13.2626 15.0303 12.9697L12.5303 10.4697Z" fill="currentColor"></path></svg>
 );
@@ -26,14 +28,40 @@ const FileUploadIcon = (props: React.SVGProps<SVGSVGElement>) => (
 function AddProposalPage() {
     const dispatch = useAppDispatch();
     const { cards } = useAppSelector((state) => state.card);
-    const [nftName, setNftName] = useState('');
-    const [nftTitle, setNftTitle] = useState('');
+    // const [nftName, setNftName] = useState('');
+    // const [nftTitle, setNftTitle] = useState('');
     const [address, setAddress] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [localImageFile, setLocalImageFile] = useState(null);
     const [localImagePreview, setLocalImagePreview] = useState('');
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [uriArray, setUriArray] = useState<string[]>([]);
+    const [uriArray, setUriArray] = useState<Array<[string | bigint, string, bigint]>>([]);
+    const [nftValue, setNftValue] = useState('');
+    const [nftLevel, setNftLevel] = useState(1);
+
+    const [isOptionsVisible, setOptionsVisible] = useState(false); 
+    const optionsRef = useRef<HTMLDivElement | null>(null); 
+    const dropdownVariants = {
+        hidden: { opacity: 0, y: -10 }, 
+        visible: { opacity: 1, y: 0 },   
+    };
+
+    const toggleOptions = () => {
+        setOptionsVisible(!isOptionsVisible); 
+    };
+    // Function to handle clicks outside the dropdown
+    const handleClickOutside = (event: MouseEvent) => {
+        if (optionsRef.current && !optionsRef.current.contains(event.target as Node)) {
+            setOptionsVisible(false); 
+        }
+    };
+    
+    useEffect(() => {
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside); 
+        };
+    }, []);
 
     const { toast } = useToast();
     const account = useAccount();
@@ -69,6 +97,9 @@ function AddProposalPage() {
         accept: {'image/*': []},
         multiple: false
     });
+
+
+    const { data: hash, error, isPending, writeContract } = useWriteContract();
 
     const generateCombinedImage = async (): Promise<Blob | null> => {
         return new Promise((resolve) => {
@@ -170,7 +201,7 @@ function AddProposalPage() {
                 ctx.fillStyle = '#ce8eeb';
                 ctx.font = 'bold 24px "Courier New", monospace';
                 ctx.textAlign = 'center';
-                ctx.fillText(nftName, cardWidth / 2, 28);
+                // ctx.fillText(nftName, cardWidth / 2, 28);
     
                 // Draw title at the bottom
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
@@ -178,7 +209,7 @@ function AddProposalPage() {
                 ctx.fillStyle = '#E6E6FA';
                 ctx.font = '20px "Courier New", monospace';
                 ctx.textAlign = 'center';
-                ctx.fillText(nftTitle, cardWidth / 2, cardHeight - 15);
+                // ctx.fillText(nftTitle, cardWidth / 2, cardHeight - 15);
     
                 // Add some tech-inspired details
                 ctx.strokeStyle = 'rgba(147, 112, 219, 0.5)';
@@ -218,46 +249,27 @@ function AddProposalPage() {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            let cloudinaryUrl = '';
-            if (localImageFile) {
-                const combinedImageBlob = await generateCombinedImage();
-                if (combinedImageBlob) {
-                    const formData = new FormData();
-                    formData.append('file', combinedImageBlob, 'combined_image.png');
 
-                    const response = await fetch('/api/upload', {
-                        method: 'POST',
-                        body: formData,
-                    });
-
-                    if (!response.ok) {
-                        throw new Error('Upload failed');
-                    }
-
-                    const data = await response.json();
-                    cloudinaryUrl = data.url;
-                }
+            // dispatch(setCards(updatedCards));
+            try {
+                await writeContract({
+                    address: contractAddress,
+                    abi: nftAbi,
+                    functionName: "upgradeNFTLevel",
+                    args: [BigInt(nftValue), BigInt(nftLevel)],
+                    chain: config[chainId],
+                    account: account.address,
+                });
+            } catch (error) {
+                console.error('Error during contract write:', error);
+                toast({
+                    title: 'Error',
+                    description: 'Failed to upgrade NFT level. Please try again.',
+                    variant: 'destructive',
+                });
             }
-
-            // Simulating API call for form submission
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            console.log('Form submitted:', { nftName, nftTitle, imageUrl: cloudinaryUrl });
-            const newCard = {
-                id: uuidv4(), // Generate a unique ID
-                name: nftName,
-                number: "160", 
-                set: "custom", 
-                types: [getRandomType()],
-                subtypes: ["Basic"],
-                supertype: "card",
-                rarity: getRandomRarity(),
-                img: cloudinaryUrl,
-            };
-            const updatedCards = [newCard, ...cards];
-            dispatch(setCards(updatedCards));
-
-            setNftName('');
-            setNftTitle('');
+            // setNftName('');
+            // setNftTitle('');
             setLocalImageFile(null);
             setLocalImagePreview('');
             setAddress('');
@@ -276,24 +288,12 @@ function AddProposalPage() {
                         abi: nftAbi,
                         address: contractAddress,
                         functionName: 'getSoulBound_Ranking_NFTs',
-                        args: [ `${account.address}`],
+                        args: [address as `0x${string}`],
                     });
 
                     console.log("result", result);
 
-                    const tokenCodeContributes = await Promise.all(result.map(async (tokenId) => {
-                        console.log("tokenId", tokenId);
-                        const tokenCode= await readContract(config, {
-                            abi: nftAbi,
-                            address: contractAddress,
-                            functionName: 'getTokenCodeContribute',
-                            args: [tokenId],
-                        });
-                        console.log("tokenCode",tokenCode);
-                        return tokenCode;
-                    }));
-
-                    const tokenLevel = await Promise.all(result.map(async (tokenId) => {
+                    const tokenLevels = await Promise.all(result.map(async (tokenId) => {
                         const tokenLevel = await readContract(config, {
                             abi: nftAbi,
                             address: contractAddress,
@@ -304,28 +304,28 @@ function AddProposalPage() {
                         return tokenLevel;
                     }));
 
-                    const tokenUriForContributorAndLevel = await Promise.all(result.map(async (tokenId, index) => {
-                        try {
-                            return await readContract(config, {
-                                abi: nftAbi,
-                                address: contractAddress,
-                                functionName: 'getUriForContributorAndLevel',
-                                args: [tokenCodeContributes[index], tokenLevel[index]],
-                            });
-                        } catch (error) {
-                            // If getUriForContributorAndLevel cannot be called, call tokenURI
-                            return await readContract(config, {
-                                abi: nftAbi,
-                                address: contractAddress,
-                                functionName: 'tokenURI',
-                                args: [tokenId],
-                            });
-                        }
+                    // Lọc các tokenId có tokenLevel khác 0
+                    const tokenIdsWithLevelNonZero = result.filter((_, index) => tokenLevels[index] !== BigInt(0));
+
+                    const tokenUriForContributorAndLevel = await Promise.all(tokenIdsWithLevelNonZero.map(async (tokenId) => {
+                        const uri = await readContract(config, {
+                            abi: nftAbi,
+                            address: contractAddress,
+                            functionName: 'tokenURI',
+                            args: [tokenId],
+                        });
+                        const level = await readContract(config, {
+                            abi: nftAbi,
+                            address: contractAddress,
+                            functionName: 'getTokenLevel',
+                            args: [tokenId],
+                        });
+                        return [tokenId, uri, level] as [string | bigint, string, bigint];
                     }));
 
                     console.log("tokenUriForContributorAndLevel", tokenUriForContributorAndLevel);
 
-                    setUriArray(tokenUriForContributorAndLevel.filter(uri => uri !== ""));
+                    setUriArray(tokenUriForContributorAndLevel);
                 } catch (error) {
                     console.error('Error reading from contract:', error);
                 }
@@ -348,13 +348,49 @@ function AddProposalPage() {
                         </Link>
                     </div>
                     <div className='text-primary font-bold font-pixel uppercase text-[5.5vw] leading-[5.5vw] whitespace-nowrap'>
-                        Replace NFT
+                        Upgrade NFT
+                    </div>
+                </div>
+                <div className='flex gap-3 flex-row-reverse'>
+                    <div className='relative' ref={optionsRef}> {/* Attach ref here */}
+                        <button 
+                            onClick={toggleOptions} 
+                            className=' fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'
+                        >
+                            <span>Options</span>
+                            <ArrowDownIcon className='ml-2' />
+                        </button>
+                        <AnimatePresence>
+                            {isOptionsVisible && ( // Conditionally render the buttons with animation
+                                <motion.div
+                                    className='absolute top-14 right-0 z-10 shadow-lg rounded-md flex flex-col gap-3'
+                                    initial="hidden"
+                                    animate="visible"
+                                    exit="hidden"
+                                    variants={dropdownVariants}
+                                    transition={{ duration: 0.2 }} // Animation duration
+                                >
+                                    <Link href="/admin" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                                        Admin
+                                    </Link>
+                                    <Link href="/config" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                                        Config
+                                    </Link>
+                                    <Link href="/replace" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                                        Replace
+                                    </Link>
+                                    <Link href="/reward" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                                        Reward
+                                    </Link>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+                    <div className='connect-btn text-primary font-pixel uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap'>
+                        <CustomConnectButton />
                     </div>
                 </div>
                 
-                <div className='connect-btn text-primary font-pixel uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap'>
-                    <CustomConnectButton />
-                </div>
             </div>
             <Spacer size='3vw'/>
 
@@ -377,9 +413,11 @@ function AddProposalPage() {
                         <p className="text-primary font-pixel text-3xl">You haven`t got any NFTs yet</p>
                     ) : (
                         <ul className="grid grid-cols-3 gap-4">
-                            {uriArray.map((uri, index) => (
-                                <li key={index}>
-                                    <img src={uri} alt={`Image ${index}`} style={{ maxWidth: '80%', height: 'auto' }} />
+                            {uriArray.map((item, index) => (
+                                <li key={index} className="text-center">
+                                    <img src={item[1]} alt={`Image ${index}`} style={{ maxWidth: '80%', height: 'auto' }} />
+                                    <p className="text-primary font-pixel">Token ID: {item[0].toString()}</p>
+                                    <p className="text-primary font-pixel">Level: {item[2].toString()}</p>
                                 </li>
                             ))}
                         </ul>
@@ -389,9 +427,9 @@ function AddProposalPage() {
                 </div>
                 <div className="right-column w-[35%] pl-4 overflow-y-auto">
                     <div className="add-profile-form">
-                        <h2 className="text-primary font-pixel text-2xl mb-4">Add Profile Form</h2>
+                        <h2 className="text-primary font-pixel text-2xl mb-4">Upgrade OG NFT</h2>
                         <form onSubmit={handleSubmit} className="space-y-4">
-                            <div>
+                            {/* <div>
                                 <label htmlFor="nftName" className="block text-primary font-pixel mb-2">NFT Name</label>
                                 <input
                                     type="text"
@@ -402,44 +440,29 @@ function AddProposalPage() {
                                     required
                                     disabled={isSubmitting}
                                 />
-                            </div>
+                            </div> */}
                             <div className="flex flex-col">
-                                <div className="relative w-full pt-[24px]">
-                                    <div className="absolute z-0 top-0 left-0 flex items-center gap-[4px] pt-[4px] pb-[32px] px-[8px] rounded-tl-[12px] rounded-tr-[12px] bg-primary">
-                                        <FileUploadIcon className="w-[12px] h-[12px]"/>
-                                        <span className="text-white font-pixel text-[1vw] leading-[1vw]">
-                                            Upload Image
-                                        </span>
-                                    </div>
-                                    <div className="upload__frame rounded-md flex relative overflow-visible before:rounded-md before:z-0 before:absolute before:bg-gradient-to-br before:p-12 before:inset-0 before:from-primary before:from-0% before:via-primary before:via-26% before:to-[#ffffff21] before:to-40%">
-                                        <div {...getRootProps()} className="z-[1]  w-full p-4 text-center font-pixel font-semibold text-primary cursor-pointer relative min-h-[15vw] flex flex-col items-center justify-center">
-                                            <input {...getInputProps()} disabled={isSubmitting} />
-                                            {isDragActive ? (
-                                                <p>Drop the image here ...</p>
-                                            ) : (
-                                                <p>Drag and drop an image here, or click to select a file</p>
-                                            )}
-                                            {localImagePreview && (
-                                                <div className="mt-4">
-                                                    <img src={localImagePreview} alt="Preview" className="max-w-full h-auto" />
-                                                    <p className="mt-2 text-sm">Click or drag a new image to replace</p>
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="absolute left-[1px] top-[1px] right-[1px] bottom-[1px] rounded-md overflow-hidden p-[20px] border-image min-w-0 flex flex-col gap-300 bg-background outline-dashed outline-[1.5px] outline-background"></div>
-                                    </div>
-                                </div>
-                                
-                            </div>
-                            <div>
-                                <label htmlFor="nftTitle" className="block text-primary font-pixel mb-2">NFT Title</label>
+                                <label htmlFor="nftValue" className="block text-primary font-pixel mb-2">NFT of your choice</label>
                                 <input
                                     type="text"
-                                    id="nftTitle"
-                                    value={nftTitle}
-                                    onChange={(e) => setNftTitle(e.target.value)}
+                                    id="nftValue"
+                                    value={nftValue}
+                                    onChange={(e) => setNftValue(e.target.value)}
                                     className="w-full px-4 py-2 bg-black text-white rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
                                     required
+                                    disabled={isSubmitting}
+                                />
+                            </div>
+                            <div className="flex flex-col">
+                                <label htmlFor="nftLevel" className="block text-primary font-pixel mb-2">Level to Update (must be `{'>'}` 0)</label>
+                                <input
+                                    type="number"
+                                    id="nftLevel"
+                                    value={nftLevel}
+                                    onChange={(e) => setNftLevel(Number(e.target.value))}
+                                    className="w-full px-4 py-2 bg-black text-white rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
+                                    required
+                                    min="1"
                                     disabled={isSubmitting}
                                 />
                             </div>
@@ -451,10 +474,10 @@ function AddProposalPage() {
                                 {isSubmitting ? (
                                     <>
                                         <FaSpinner className="animate-spin mr-2" />
-                                        Submitting...
+                                        Upgrade...
                                     </>
                                 ) : (
-                                    'Submit'
+                                    'Upgrade'
                                 )}
                             </button>
                         </form>

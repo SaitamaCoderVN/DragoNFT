@@ -29,11 +29,13 @@ const FileUploadIcon = (props: React.SVGProps<SVGSVGElement>) => (
 function MintPage() {
     const [uri, setUri] = useState('');
     const [toAddress, setToAddress] = useState('');
+    const [level, setLevel] = useState('');
     const [codeContribute, setCodeContribute] = useState('');
     const [localImageFile, setLocalImageFile] = useState<File | null>(null);
     const [localImagePreview, setLocalImagePreview] = useState<string>('');
     const [isUploading, setIsUploading] = useState(false);
     const [uploadSuccess, setUploadSuccess] = useState(false); // New state for upload success
+    const [levelError, setLevelError] = useState<string>(''); // Thêm state để theo dõi lỗi
 
     const { toast } = useToast();
     const chainId = useChainId();
@@ -309,7 +311,7 @@ function MintPage() {
                 address: contractAddress,
                 abi: nftAbi,
                 functionName: "mint_SoulBound_Ranking_NFT",
-                args: [toAddress as `0x${string}`, uri, BigInt(0), codeContribute],
+                args: [toAddress as `0x${string}`, uri, BigInt(level), codeContribute],
                 chain: config[chainId],
                 account: account.address,
             });
@@ -331,6 +333,7 @@ function MintPage() {
         setLocalImagePreview('');
         setUri('');
         setToAddress('');
+        setLevel('');
         setCodeContribute('');
         setUploadSuccess(false);
     };
@@ -372,7 +375,7 @@ function MintPage() {
                                         <Link href="/mint" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
                                             Mint Certificate NFT
                                         </Link>
-                                        <Link href="/mint-dynamic-NFT" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                                        <Link href="/mint-dynamic-nft" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
                                             Mint OG NFT
                                         </Link>
                                     </motion.div>
@@ -443,6 +446,32 @@ function MintPage() {
                             </div>
 
                             <div>
+                                <label htmlFor="level" className="block text-lg font-medium text-gray-300 mb-2">
+                                    Level
+                                </label>
+                                <input
+                                    type="number"
+                                    id="level"
+                                    value={level}
+                                    onChange={(e) => {
+                                        const value = Number(e.target.value);
+                                        if (value < 1) {
+                                            setLevelError('Level must be 1 or higher'); // Thiết lập thông báo lỗi
+                                        } else {
+                                            setLevelError(''); // Xóa thông báo lỗi nếu giá trị hợp lệ
+                                            setLevel(e.target.value);
+                                        }
+                                    }}
+                                    placeholder="Enter level"
+                                    className={`w-full px-4 py-2 bg-background text-white rounded-md focus:outline-none focus:ring-2 focus:ring-secondary ${!uploadSuccess ? 'cursor-not-allowed' : ''}`}
+                                    disabled={!uploadSuccess} // Disable input if upload is not successful
+                                />
+                                {levelError && ( // Hiển thị thông báo lỗi nếu có
+                                    <p className="text-red-500 mt-2">{levelError}</p>
+                                )}
+                            </div>
+
+                            <div>
                                 <label htmlFor="codeContribute" className="block text-lg font-medium text-gray-300 mb-2">
                                     Code Contribute
                                 </label>
@@ -478,7 +507,7 @@ function MintPage() {
                                     className="w-full bg-black text-[#3f3c40] font-bold py-2 px-4 rounded-md hover:text-[#c7c1c9] transition duration-300"
                                     disabled={!uploadSuccess} // Disable submit button if upload is not successful
                                 >
-                                    Mint Certificate NFT
+                                    Mint OG NFT
                                 </button>
                             </div>
                         </form>
