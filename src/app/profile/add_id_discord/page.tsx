@@ -21,9 +21,8 @@ import { useSearchParams } from "next/navigation";
 
 function AddIDDiscordPage() {
     const searchParams = useSearchParams();
-    const [discordIdAuth, setDiscordIdAuth] = useState<string | null>(null); // State để lưu ID Discord đã xác thực
+    const [discordIdAuth, setDiscordIdAuth] = useState<string | null>(null); // State để lưu ID Discord đã xác thc
 
-    const [discordId, setDiscordId] = useState('');
     const [currentDiscordId, setCurrentDiscordId] = useState<string | null>(null); // State để lưu ID Discord hiện tại
 
     const { toast } = useToast();
@@ -46,6 +45,13 @@ function AddIDDiscordPage() {
             setDiscordIdAuth(discordId); // Set the authenticated Discord ID
         }
     }, [searchParams]);
+
+    useEffect(() => {
+        if (discordIdAuth && currentDiscordId === null) {
+            handleSubmit();
+        }
+    }, [discordIdAuth, currentDiscordId]);
+
     switch (chainId) {
         case CHAINID.UNIQUE:
             contractAddress = CONTRACT_ADDRESS_UNIQUE;
@@ -73,12 +79,15 @@ function AddIDDiscordPage() {
             if (!contractAddress || !account.address) return;
 
             try {
+                console.log(account.address);
                 const result = await readContract(config, {
                     abi: nftAbi,
                     address: contractAddress,
                     functionName: 'getDiscordId',
                     args: [account.address],
                 });
+                console.log("result", result);
+
                 setCurrentDiscordId(result as string);
             } catch (error) {
                 console.error("Error fetching Discord ID:", error);
@@ -92,8 +101,8 @@ function AddIDDiscordPage() {
         console.log("Current Discord ID:", currentDiscordId);
     }, [currentDiscordId]);
 
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
+    const handleSubmit = async (e?: React.FormEvent<HTMLFormElement>) => {
+        if (e) e.preventDefault();
         if (!contractAddress) {
             toast({
                 variant: "destructive",
@@ -107,7 +116,7 @@ function AddIDDiscordPage() {
                 address: contractAddress,
                 abi: nftAbi,
                 functionName: "setDiscordId",
-                args: [account.address, discordId],
+                args: [account.address, discordIdAuth],
                 chain: config[chainId],
                 account: account.address,
             });
@@ -118,6 +127,11 @@ function AddIDDiscordPage() {
                 description: `${(error as BaseError).shortMessage || "An unknown error occurred"}`,
             });
         }
+    };
+
+    const handleChangeDiscordId = () => {
+        setCurrentDiscordId(null); // Reset current Discord ID to allow re-authentication
+        handleLogin(); // Redirect to Discord login
     };
 
     return (
@@ -144,9 +158,15 @@ function AddIDDiscordPage() {
 
                 <div className="w-full mt-10">
                     <div className="bg-secondary-background p-8 rounded-lg max-w-2xl mx-auto">
-                        {discordIdAuth ? (
+                        {currentDiscordId ? (
                             <div className="mb-4">
-                                <p className="text-lg font-medium text-gray-300">Your Discord ID: {discordIdAuth}</p>
+                                <p className="text-lg font-medium text-gray-300">Your Discord ID: {currentDiscordId}</p>
+                                <button
+                                    onClick={handleChangeDiscordId}
+                                    className="w-full bg-red-600 text-white font-bold py-2 px-4 rounded-md hover:bg-red-700 transition duration-300 mt-4"
+                                >
+                                    Change ID Discord
+                                </button>
                             </div>
                         ) : (
                             <div className="mb-4">
@@ -158,37 +178,6 @@ function AddIDDiscordPage() {
                                 </button>
                             </div>
                         )}
-                        
-                        
-                        
-                        {currentDiscordId && (
-                            <div className="mb-4">
-                                <p className="text-lg font-medium text-gray-300">Your current Discord ID: {currentDiscordId}</p>
-                            </div>
-                        )}
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            <div>
-                                <label htmlFor="discordId" className="block text-lg font-medium text-gray-300 mb-2">
-                                    Discord ID
-                                </label>
-                                <input
-                                    type="text"
-                                    id="discordId"
-                                    value={discordId}
-                                    onChange={(e) => setDiscordId(e.target.value)}
-                                    placeholder="Enter Discord ID"
-                                    className="w-full px-4 py-2 bg-background text-white rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
-                                />
-                            </div>
-                            <div>
-                                <button
-                                    type="submit"
-                                    className="w-full bg-black text-[#3f3c40] font-bold py-2 px-4 rounded-md hover:text-[#c7c1c9] transition duration-300"
-                                >
-                                    Add Discord ID
-                                </button>
-                            </div>
-                        </form>
                     </div>
 
                     <div className="mt-8 bg-secondary p-6 rounded-lg max-w-2xl mx-auto">
