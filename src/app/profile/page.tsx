@@ -194,9 +194,9 @@ export default function ProfilelPage() {
                                         <Link
                                             href="#"
                                             onClick={handlePublishProfile}
-                                            className='publish-btn fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'
+                                            className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'
                                         >
-                                            <span className='text-primary'>Publish Profile</span>
+                                            <span className='text-black'>Publish Profile</span>
                                         </Link>
                                     </motion.div>
                                 )}
