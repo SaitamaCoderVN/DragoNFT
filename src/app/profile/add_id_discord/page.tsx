@@ -30,27 +30,30 @@ function AddIDDiscordPage() {
     const account = useAccount();
     let contractAddress: `0x${string}` | undefined;
     let blockexplorer: string | undefined;
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false); // Thêm biến trạng thái để theo dõi xác thực
+
     const handleLogin = async () => {
         const clientId = '1306227974579949568'; // Replace with your Discord client ID
         const redirectUri = 'https://discord.com/oauth2/authorize?client_id=1306227974579949568&response_type=code&redirect_uri=https%3A%2F%2Fdrago-nft.vercel.app%2Fapi%2Fauth%2Fdiscord%2Fcallback&scope=identify'; // Replace with your redirect URI
         const scope = 'identify'; // Add any other scopes you need
-        // const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${scope}`;
         
         window.location.href = redirectUri; // Redirect to Discord OAuth2
+        setIsAuthenticated(true); // Đánh dấu là đã xác thực
     };
     useEffect(() => {
         const discordId = searchParams.get('discordId'); // Get the discordId from the search parameters
 
         if (discordId) {
             setDiscordIdAuth(discordId); // Set the authenticated Discord ID
+            setIsAuthenticated(false); // Đặt lại trạng thái xác thực
         }
     }, [searchParams]);
 
     useEffect(() => {
-        if (discordIdAuth && currentDiscordId === null) {
-            handleSubmit();
+        if (isAuthenticated && discordIdAuth && currentDiscordId === null) {
+            handleSubmit(); // Gọi handleSubmit chỉ khi đã xác thực
         }
-    }, [discordIdAuth, currentDiscordId]);
+    }, [isAuthenticated, discordIdAuth, currentDiscordId]);
 
     switch (chainId) {
         case CHAINID.UNIQUE:
@@ -121,6 +124,7 @@ function AddIDDiscordPage() {
                 account: account.address,
             });
         } catch (error) {
+            console.error("Error during transaction:", error);
             toast({
                 variant: "destructive",
                 title: "Transaction Cancelled",
