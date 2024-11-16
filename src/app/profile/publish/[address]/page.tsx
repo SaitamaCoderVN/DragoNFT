@@ -32,41 +32,44 @@ export default function PublishProfilePage() {
                 });
             console.log("result", result);
                 
-
-
-                const tokenCodeContributes = await Promise.all(result.map(async (tokenId) => {
-                    const tokenCode= await readContract(config, {
+            const tokenCodeContributes = await Promise.all(result.map(async (tokenId) => {
+                console.log("tokenId", tokenId);
+                try {
+                    const tokenCode = await readContract(config, {
                         abi: nftAbi,
                         address: CONTRACT_ADDRESS_UNIQUE,
                         functionName: 'getTokenCodeContribute',
                         args: [tokenId],
                     });
+                    console.log("tokenCode", tokenCode);
                     return tokenCode;
-                }));
+                } catch (error) {
+                    console.error("Error fetching tokenCodeContribute:", error);
+                    return null;
+                }
+            }));
 
-                const tokenLevel = await Promise.all(result.map(async (tokenId) => {
-                    const tokenLevel = await readContract(config, {
+            const tokenLevel = await Promise.all(result.map(async (tokenId) => {
+                const tokenLevel = await readContract(config, {
+                    abi: nftAbi,
+                    address: CONTRACT_ADDRESS_UNIQUE,
+                    functionName: 'getTokenLevel',
+                    args: [tokenId],
+                });
+                console.log("tokenLevel", tokenLevel);
+                return tokenLevel;
+            }));
+
+            const tokenUriForContributorAndLevel = await Promise.all(result.map(async (tokenId, index) => {
+                try {
+                    const result = await readContract(config, {
                         abi: nftAbi,
                         address: CONTRACT_ADDRESS_UNIQUE,
-                        functionName: 'getTokenLevel',
-                        args: [tokenId],
+                        functionName: 'getUriForContributorAndLevel',
+                        args: [tokenCodeContributes[index], tokenLevel[index]],
                     });
-                    return tokenLevel;
-                }));
 
-                const tokenUriForContributorAndLevel = await Promise.all(result.map(async (tokenId, index) => {
-                    // try {
-                        // console.log("kkkkkkkkk")
-                        // const result = await readContract(config, {
-                        //     abi: nftAbi,
-                        //     address: CONTRACT_ADDRESS_UNIQUE,
-                        //     functionName: 'getUriForContributorAndLevel',
-                        //     args: [tokenCodeContributes[index], tokenLevel[index]],
-                        // });
-                        // console.log("levelURI", result);
-                        // return result;
-                    // } catch (error) {
-                        // If getUriForContributorAndLevel cannot be called, call tokenURI
+                    if (result === "") {
                         const result = await readContract(config, {
                             abi: nftAbi,
                             address: CONTRACT_ADDRESS_UNIQUE,
@@ -75,7 +78,20 @@ export default function PublishProfilePage() {
                         });
                         console.log("tokenURI Link ảnh đây Đạt nhé", result);
                         return result;
-                    // }
+                    }
+
+                    return result;
+                } catch (error) {
+                    // If getUriForContributorAndLevel cannot be called, call tokenURI
+                    const result = await readContract(config, {
+                        abi: nftAbi,
+                        address: CONTRACT_ADDRESS_UNIQUE,
+                        functionName: 'tokenURI',
+                        args: [tokenId],
+                    });
+                    console.log("tokenURI Link ảnh đây Đạt nhé", result);
+                    return result;
+                }
                 }));
 
                 setUriArray(tokenUriForContributorAndLevel);
