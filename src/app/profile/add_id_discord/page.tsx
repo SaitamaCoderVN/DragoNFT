@@ -45,6 +45,7 @@ function AddIDDiscordPage() {
 
         if (discordId) {
             setDiscordIdAuth(discordId); // Set the authenticated Discord ID
+            console.log("discord Id", discordIdAuth)
             setIsAuthenticated(true); // Đặt trạng thái xác thực thành true
         }
     }, [searchParams]);
