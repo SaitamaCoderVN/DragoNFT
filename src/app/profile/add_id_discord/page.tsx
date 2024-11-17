@@ -45,6 +45,7 @@ function AddIDDiscordPage() {
 
         if (discordId) {
             setDiscordIdAuth(discordId); // Set the authenticated Discord ID
+            console.log("discord Id", discordIdAuth)
             setIsAuthenticated(true); // Đặt trạng thái xác thực thành true
         }
     }, [searchParams]);
@@ -141,6 +142,13 @@ function AddIDDiscordPage() {
                 title: "Transaction Cancelled",
                 description: `${(error as BaseError).shortMessage || "An unknown error occurred"}`,
             });
+            if (error instanceof Error) {
+                toast({
+                    variant: "destructive",
+                    title: "Error Details",
+                    description: error.message,
+                });
+            }
         }
     };
 
