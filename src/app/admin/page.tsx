@@ -211,7 +211,7 @@ function GetLevelPage() {
                             Get
                         </button>
                         <Link
-                            href="/admin/applyall"
+                            href="/applyall"
                             className="bg-black font-bold text-primary px-4 py-2 rounded-md hover:scale-105 transition-all duration-300"
                         >
                             Apply all
