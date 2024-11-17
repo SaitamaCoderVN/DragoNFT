@@ -7,6 +7,7 @@ import {
   getDefaultConfig,
   RainbowKitProvider,
   getDefaultWallets,
+  darkTheme,
 } from '@rainbow-me/rainbowkit';
 import { http, WagmiProvider } from 'wagmi';
 import {
@@ -118,7 +119,16 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider>
+        <RainbowKitProvider
+          initialChain={uniqueChain}
+          showRecentTransactions={true}
+          theme={darkTheme({
+            accentColor: "#b373d0",
+            accentColorForeground: "white",
+            borderRadius: "none",
+          })}
+          locale="en-US"
+        >
           <Provider store={store}>{children}</Provider>
         </RainbowKitProvider>
       </QueryClientProvider>
