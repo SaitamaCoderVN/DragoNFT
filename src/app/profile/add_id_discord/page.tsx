@@ -50,10 +50,10 @@ function AddIDDiscordPage() {
     }, [searchParams]);
 
     useEffect(() => {
-        if (isAuthenticated && discordIdAuth && currentDiscordId === null) {
-            handleSubmit(); // Gọi handleSubmit chỉ khi đã xác thực và có discordIdAuth
+        if (isAuthenticated && discordIdAuth && currentDiscordId === null && account.address) {
+            handleSubmit(); // Gọi handleSubmit chỉ khi đã xác thực, có discordIdAuth và ví đã được kết nối
         }
-    }, [isAuthenticated, discordIdAuth, currentDiscordId]);
+    }, [isAuthenticated, discordIdAuth, currentDiscordId, account.address]);
 
     switch (chainId) {
         case CHAINID.UNIQUE:
@@ -114,6 +114,17 @@ function AddIDDiscordPage() {
             });
             return;
         }
+
+        // Kiểm tra xem ví đã được kết nối chưa
+        if (!account.address) {
+            toast({
+                variant: "destructive",
+                title: "Wallet Not Connected",
+                description: "Please connect your wallet before proceeding.",
+            });
+            return;
+        }
+
         try {
             await writeContract({
                 address: contractAddress,
