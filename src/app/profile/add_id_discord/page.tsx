@@ -141,6 +141,13 @@ function AddIDDiscordPage() {
                 title: "Transaction Cancelled",
                 description: `${(error as BaseError).shortMessage || "An unknown error occurred"}`,
             });
+            if (error instanceof Error) {
+                toast({
+                    variant: "destructive",
+                    title: "Error Details",
+                    description: error.message,
+                });
+            }
         }
     };
 
