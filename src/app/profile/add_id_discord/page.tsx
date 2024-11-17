@@ -127,6 +127,7 @@ function AddIDDiscordPage() {
         }
 
         try {
+            console.log("Calling setDiscordId on contract:", contractAddress); // Ghi log địa chỉ hợp đồng
             await writeContract({
                 address: contractAddress,
                 abi: nftAbi,
