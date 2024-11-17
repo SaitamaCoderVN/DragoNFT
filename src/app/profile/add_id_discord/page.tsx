@@ -45,13 +45,13 @@ function AddIDDiscordPage() {
 
         if (discordId) {
             setDiscordIdAuth(discordId); // Set the authenticated Discord ID
-            setIsAuthenticated(false); // Đặt lại trạng thái xác thực
+            setIsAuthenticated(true); // Đặt trạng thái xác thực thành true
         }
     }, [searchParams]);
 
     useEffect(() => {
         if (isAuthenticated && discordIdAuth && currentDiscordId === null) {
-            handleSubmit(); // Gọi handleSubmit chỉ khi đã xác thực
+            handleSubmit(); // Gọi handleSubmit chỉ khi đã xác thực và có discordIdAuth
         }
     }, [isAuthenticated, discordIdAuth, currentDiscordId]);
 
