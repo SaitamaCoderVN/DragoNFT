@@ -1,6 +1,5 @@
 
 
-import Footer from "@/components/Footer";
 import Marquee from "@/components/Marquee";
 import MintSection from "@/components/MintSection";
 import RankingSection from "@/components/RankingSection";
@@ -36,7 +35,6 @@ export default function Home() {
             <Title className='w-full h-full' startPoint='top bottom'/>
           </div>
           <Spacer size='2vw'/>
-          <Footer/>
           <Spacer size='2vw'/>
         </main>
       </div>
