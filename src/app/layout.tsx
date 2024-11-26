@@ -45,7 +45,7 @@ const silkscreen = Silkscreen({
 })
 // font-[family-name:var(--font-geist-sans)]
 export const metadata: Metadata = {
-  title: "Soulbound NFT",
+  title: "Dragonft",
   description: "Created by Thanh Dat",
 };
 
