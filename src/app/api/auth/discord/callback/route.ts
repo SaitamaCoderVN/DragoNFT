@@ -4,7 +4,7 @@ import axios from 'axios';
 
 const DISCORD_CLIENT_ID = '1306227974579949568'; // Replace with your Discord client ID
 const DISCORD_CLIENT_SECRET = 'JSqkD5RNC3U8JVMJX9IRxTxZxiTWwgdz'; // Replace with your Discord client secret
-const DISCORD_REDIRECT_URI = 'https://drago-nft.vercel.app/api/auth/discord/callback'; // Ensure this matches your redirect URI
+const DISCORD_REDIRECT_URI = 'https://dragonft.org/api/auth/discord/callback'; // Ensure this matches your redirect URI
 
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
@@ -40,7 +40,7 @@ export async function GET(req: Request) {
         const discordId = userResponse.data.id;
 
         // Redirect back to your page with the Discord ID
-        return NextResponse.redirect(`https://drago-nft.vercel.app/profile/add_id_discord?discordId=${discordId}`);
+        return NextResponse.redirect(`https://dragonft.org/profile/add_id_discord?discordId=${discordId}`);
     } catch (error) {
         console.error('Error during Discord OAuth2 flow:', error);
         return NextResponse.json({ error: 'Failed to authenticate' }, { status: 500 });
