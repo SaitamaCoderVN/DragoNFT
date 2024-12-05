@@ -24,13 +24,15 @@
     .cardGrid > :global(.card) {
       --row: 1;
       grid-column: 1;
-      grid-row: var(--row);
+      /* grid-row: var(--row); */
+      /* center grid item vertically */
+      
       transition: opacity 0.2s ease, transform 0.2s ease;
     }
   
     .cardGrid > :global(.card:nth-child(1n)) {
       position: relative;
-      left: -50px;
+      /* left: -50px; */
       top: 10px;
       z-index: calc(var(--card-scale) * 10 + 50);
       transform: translate3d(0, 0, 0.1px) rotateZ(-5deg);
@@ -44,7 +46,7 @@
       opacity: 0.99;
     }
     .cardGrid > :global(.card:nth-child(3n)) {
-      left: 50px;
+      /* left: 50px; */
       top: 0px;
       z-index: calc(var(--card-scale) * 10 + 48);
       transform: translate3d(0, 0, 0.1px) rotateZ(5deg);
@@ -75,7 +77,7 @@
       margin: auto;
     }
     .cardGrid > :global(.card:nth-child(1n)) {
-      left: -100px;
+      /* left: -100px; */
       top: 10px;
       transform: translate3d(0, 0, 0.1px) rotateZ(-5deg);
     }
@@ -85,7 +87,7 @@
       transform: translate3d(0, 0, 0.1px) rotateZ(0deg);
     }
     .cardGrid > :global(.card:nth-child(3n)) {
-      left: 100px;
+      /* left: 100px; */
       top: 0px;
       transform: translate3d(0, 0, 0.1px) rotateZ(5deg);
     }

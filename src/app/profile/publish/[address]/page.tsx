@@ -118,7 +118,8 @@ export default function PublishProfilePage() {
     return (
         <>
             <div className='background-container min-h-[100vh] border-2 border-solid border-primary rounded-[20px] bg-background overflow-hidden bg-custom-bg bg-custom-pos bg-custom-size bg-custom-repeat bg-custom-attachment'>
-                <Spacer size='3vw'/>
+            <Spacer className='h-[3vw] max-phonescreen:h-[4vw]' />
+
                 <div className='flex justify-between items-center px-[3vw]'>
                     <div className='flex items-center'>
                         <div className='text-primary font-bold font-pixel uppercase text-[3.5vw] leading-[5.5vw] whitespace-nowrap'>

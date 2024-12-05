@@ -150,21 +150,56 @@ border-radius: .25rem;
 
 .connect-btn .iekbcc0.ju367va.ju367v1s button{
     background-color: var(--main-color);
-    -webkit-clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
-    clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
-    border-radius: 0;
+
     color: var(--secondary-color);
     font-family: var(--font-silkscreen);
+    padding: 0 7px;
+    -webkit-clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
+  clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
 }
 .connect-btn .iekbcc0.ju367va.ju367v1s button:nth-child(2) div:nth-child(2){
     border: none;
 }
-.fu-btn{
-  -webkit-clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
-  clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
+
+@media (max-width: 479px) {
+  .connect-btn .ju367v2g,
+  .connect-btn .ju367v2a{
+      height: 27px !important;
+  }
+  .connect-btn .iekbcc0.ju367va.ju367v1s{
+    gap: 5px
+  }
+  .connect-btn .iekbcc0.ju367va.ju367v1s button:nth-child(2) .iekbcc0{
+    padding: 0;
+    background: none;
+    border: none;
+    color: var(--secondary-background);
+  }
+  .userCard{
+    height: 25px;
+    padding: 25px 10px;
+    
+  }
 }
 
+/* DragoNFT/src/app/globals.css */
+.fu-btn {
+  -webkit-clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
+  clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
+}
 
+@media (min-width: 479px) {
+  .connect-btn .iekbcc0.ju367va.ju367v1s button{
+    padding: 0 14px;
+    border-radius: 0;
+    -webkit-clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
+    clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
+}
+  .fu-btn{
+    -webkit-clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
+    clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
+  }
+}
 .flip__man {
     
     transform-style: preserve-3d;

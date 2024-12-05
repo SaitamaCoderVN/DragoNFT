@@ -86,7 +86,8 @@ function QuestPage() {
         <>
             <div className='v11e5678D'></div>
             <div className='background-container min-h-[100vh] border-2 border-solid border-primary rounded-[20px] bg-background overflow-hidden bg-custom-bg bg-custom-pos bg-custom-size bg-custom-repeat bg-custom-attachment'>
-                <Spacer size='3vw'/>
+            <Spacer className='h-[3vw] max-phonescreen:h-[4vw]' />
+
                 <div className='flex justify-between items-center px-[3vw]'>
                     <div className='flex items-center'>
                         <Link href="/" className='text-primary mr-4 text-xl font-silkscreen'>
@@ -266,7 +267,8 @@ function QuestPage() {
                         )}
                     </div>
                 </div>
-                <Spacer size='3vw'/>
+                <Spacer className='h-[3vw] max-phonescreen:h-[4vw]' />
+
 
             </div>
         </>

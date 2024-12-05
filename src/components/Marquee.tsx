@@ -113,6 +113,21 @@ function Marquee({startEdge, startPoint}: MarqueeProps) {
           flickerTimeline.to(element, { opacity: 1, duration: 0.1, ease: 'none' });
         });
   
+
+        tl.to(
+          bannerContent.current,
+          { x: startEdge === 'left' ? -390 : 500,
+            duration: 0.6, ease: 'power2.out',
+          scrollTrigger: {
+            trigger: bannerContent.current,
+            start: "top 40%", 
+            end: "bottom top",
+            // markers: true,
+            scrub: 1
+          }
+           },
+          'startAnimation'
+        )
         return () => {
           ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
         };
@@ -121,7 +136,7 @@ function Marquee({startEdge, startPoint}: MarqueeProps) {
 
     const renderMarqueeItem = (text: string, imageSrc: string) => (
         <>
-          <div className="font-pixel uppercase flex-none text-primary text-[1.5vw] leading-[1.5vw] whitespace-nowrap">
+          <div className="font-pixel uppercase flex-none text-primary max-phonescreen:text-[3.5vw] max-phonescreen:leading-[3.5vw]  text-[2.5vw] leading-[2.5vw] whitespace-nowrap">
             {text}
           </div>
           <div className="seper flex h-full w-[2vw]" />
@@ -139,19 +154,25 @@ function Marquee({startEdge, startPoint}: MarqueeProps) {
         <>
         <div
             ref={bannerContainer}
-            className="relative flex overflow-hidden w-full h-[5vw] p-[2px] flex-row justify-center items-center flex-none border-0 border-solid border-border-transparent rounded-[20px] bg-secondary-background"
+            className="relative max-phonescreen:h-[9vw] max-phonescreen:p-[0] max-phonescreen:rounded-[10px] flex overflow-hidden w-full h-[5vw] p-[2px] flex-row justify-center items-center flex-none border-0 border-solid border-border-transparent rounded-[20px] bg-secondary-background max-phonescreen:bg-primary"
             >
-            <div className="overflow-hidden rounded-[20px]">
+            <div className="overflow-hidden rounded-[20px] max-phonescreen:hidden">
                 <div ref={topBorder} className="absolute left-0 top-0 right-0 w-full h-[20px] rounded-none bg-primary" />
                 <div ref={bottomBorder} className="absolute top-auto right-0 bottom-0 w-full h-[20px] rounded-none bg-primary" />
                 <div ref={leftBorder} className="absolute left-0 bottom-0 w-[4px] h-full rounded-none bg-primary" />
                 <div ref={rightBorder} className="absolute left-auto right-0 top-0 bottom-0 w-[4px] h-full rounded-none bg-primary" />
             </div>
-            <div className="relative z-[2] flex overflow-hidden w-full h-full justify-center items-center rounded-[20px] bg-secondary-background">
+            <div className="max-phonescreen:border max-phonescreen:rounded-[10px] max-phonescreen:border-primary relative z-[2] flex overflow-hidden w-full h-full justify-center items-center rounded-[20px] bg-secondary-background">
                 <div
                 ref={bannerContent}
                 className="flex width-auto h-full justify-start items-center flex-none rounded-[20px] bg-secondary-background"
                 >
+                    {renderMarqueeItem("Dragon NFT", "/pattern.svg")}
+                    {renderMarqueeItem("welcome to soulbound", "/pattern2.svg")}
+                    {renderMarqueeItem("mint your nft now", "/pattern.svg")}
+                    {renderMarqueeItem("Dragon NFT", "/pattern.svg")}
+                    {renderMarqueeItem("welcome to soulbound", "/pattern2.svg")}
+                    {renderMarqueeItem("mint your nft now", "/pattern.svg")}
                     {renderMarqueeItem("Dragon NFT", "/pattern.svg")}
                     {renderMarqueeItem("welcome to soulbound", "/pattern2.svg")}
                     {renderMarqueeItem("mint your nft now", "/pattern.svg")}

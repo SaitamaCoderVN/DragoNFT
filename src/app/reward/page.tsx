@@ -15,9 +15,12 @@ import {
 } from "wagmi";
 import { useToast } from "@/components/ui/use-toast";
 import { config } from "@/components/contract/config";
-import { ArrowDownIcon } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-
+const ArrowDownIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" className="injected-svg" data-src="https://cdn.hugeicons.com/icons/arrow-down-01-stroke-sharp.svg"  role="img" color="#000000">
+    <path d="M5.99977 9.00005L11.9998 15L17.9998 9" stroke="#000000" strokeWidth="2" stroke-miterlimit="16"></path>
+    </svg>
+);
 function RewardPage() {
     const [uri, setUri] = useState('');
     const [toAddress, setToAddress] = useState('');
@@ -134,23 +137,39 @@ function RewardPage() {
         <>
             <div className='v11e5678D'></div>
             <div className='background-container min-h-[100vh] border-2 border-solid border-primary rounded-[20px] bg-background overflow-hidden bg-custom-bg bg-custom-pos bg-custom-size bg-custom-repeat bg-custom-attachment'>
-                <Spacer size='3vw'/>
-                <div className='flex justify-between items-center px-[3vw]'>
+            <Spacer className='h-[3vw] max-phonescreen:h-[4vw]' />
+
+                <div className='
+                max-phonescreen:flex-col max-phonescreen:items-start max-phonescreen:gap-2
+                
+                flex justify-between items-center px-[3vw]'>
                     <div className='flex items-center'>
-                        <Link href="/" className='text-primary mr-4 text-xl font-silkscreen'>
+                        <Link href="/" className='
+                        max-phonescreen:text-[4vw] max-phonescreen:leading-[4vw]
+                        
+                        text-primary mr-4 text-xl font-silkscreen'>
                             Home /
                         </Link>
                         
-                        <div className='text-primary font-bold font-pixel uppercase text-[5.5vw] leading-[5.5vw] whitespace-nowrap'>
-                            reward 
+                        <div className='
+                        max-phonescreen:text-[5.5vw] max-phonescreen:leading-[5.5vw]
+                        
+                        text-primary font-bold font-pixel uppercase text-[5.5vw] leading-[5.5vw] whitespace-nowrap'>
+                            Reward 
                         </div>
                     </div>
                     
-                    <div className='flex gap-3 flex-row-reverse'>
+                    <div className='
+                    max-phonescreen:gap-1
+                    
+                    flex gap-3 flex-row-reverse'>
                     <div className='relative' ref={optionsRef}> {/* Attach ref here */}
                         <button 
                             onClick={toggleOptions} 
-                            className=' fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'
+                            className=' 
+                            max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw] max-phonescreen:h-[27px]
+                            
+                            fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'
                         >
                             <span>Options</span>
                             <ArrowDownIcon className='ml-2' />
@@ -165,23 +184,38 @@ function RewardPage() {
                                     variants={dropdownVariants}
                                     transition={{ duration: 0.2 }} // Animation duration
                                 >
-                                    <Link href="/admin" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                                    <Link href="/admin" className='
+                                        max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw] max-phonescreen:h-[27px]
+                                    
+                                    fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
                                         Admin
                                     </Link>
-                                    <Link href="/config" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                                    <Link href="/config" className='
+                                        max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw] max-phonescreen:h-[27px]
+                                    
+                                    fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
                                         Config
                                     </Link>
-                                    <Link href="/upgrade" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                                    <Link href="/upgrade" className='
+                                        max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw] max-phonescreen:h-[27px]
+                                    
+                                    fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
                                         Upgrade
                                     </Link>
-                                    <Link href="/replace" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                                    <Link href="/replace" className='
+                                        max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw] max-phonescreen:h-[27px]
+                                    
+                                    fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
                                         Replace
                                     </Link>
                                 </motion.div>
                             )}
                         </AnimatePresence>
                     </div>
-                    <div className='connect-btn text-primary font-pixel uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap'>
+                    <div className='
+                    max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw] max-phonescreen:h-[27px]
+                    
+                    connect-btn text-primary font-pixel uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap'>
                         <CustomConnectButton />
                     </div>
                 </div>
@@ -190,7 +224,10 @@ function RewardPage() {
                 <div className="w-full mt-10">
                     
 
-                    <div className="bg-secondary-background p-8 rounded-lg max-w-2xl mx-auto">
+                    <div className="
+                    max-phonescreen:w-[calc(100%-20px)]
+                    
+                    bg-secondary-background p-8 rounded-lg max-w-2xl mx-auto">
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div>
                                 <label htmlFor="rewardType" className="block text-lg font-medium text-gray-300 mb-2">
@@ -277,9 +314,12 @@ function RewardPage() {
                             </div>
 
                             <div id="levelFields">
-                                <div className="flex space-x-4">
+                                <div className="
+                                max-phonescreen:flex-col max-phonescreen:space-x-0
+                                flex space-x-4
+                                ">
                                     <div className="flex-1">
-                                        <label htmlFor="codeContribute" className="block text-lg font-medium text-gray-300 mb-2">
+                                        <label htmlFor="codeContribute" className="block text-lg font-medium text-gray-300 mb-2 whitespace-nowrap">
                                             Code Contribute
                                         </label>
                                         <input
@@ -293,7 +333,7 @@ function RewardPage() {
                                     </div>
 
                                     <div className="flex-1">
-                                        <label htmlFor="levelFrom" className="block text-lg font-medium text-gray-300 mb-2">
+                                        <label htmlFor="levelFrom" className="block text-lg font-medium text-gray-300 mb-2 whitespace-nowrap">
                                             Level From
                                         </label>
                                         <input
@@ -307,7 +347,7 @@ function RewardPage() {
                                     </div>
 
                                     <div className="flex-1">
-                                        <label htmlFor="levelTo" className="block text-lg font-medium text-gray-300 mb-2">
+                                        <label htmlFor="levelTo" className="block text-lg font-medium text-gray-300 mb-2 whitespace-nowrap">
                                             Level To
                                         </label>
                                         <input
@@ -333,7 +373,10 @@ function RewardPage() {
                         </form>
                     </div>
 
-                    <div className="mt-8 bg-secondary p-6 rounded-lg max-w-2xl mx-auto">
+                    <div className="
+                    max-phonescreen:w-[calc(100%-20px)]
+                    
+                    mt-8 bg-secondary p-6 rounded-lg max-w-2xl mx-auto">
                         <h3 className="text-xl font-semibold text-white mb-4">Transaction Status</h3>
                         {isPending && <p className="text-yellow-300">Waiting for signature...</p>}
                         {isConfirming && <p className="text-yellow-300">Confirming...</p>}
@@ -360,7 +403,8 @@ function RewardPage() {
                         )}
                     </div>
                 </div>
-                <Spacer size='3vw'/>
+                <Spacer className='h-[3vw] max-phonescreen:h-[4vw]' />
+
 
             </div>
         </>
