@@ -8,6 +8,9 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      screens: {
+        'phonescreen': '479px',
+      },
       fontFamily: {
         pixel: ['var(--font-pixelify-sans)', 'sans-serif'],
         silkscreen: ['var(--font-silkscreen)', 'sans-serif'],

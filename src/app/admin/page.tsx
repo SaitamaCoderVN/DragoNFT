@@ -135,21 +135,32 @@ function GetLevelPage() {
         <>
         <div className='v11e5678D'></div>
             <div className='background-container min-h-[100vh] border-2 border-solid border-primary rounded-[20px] bg-background overflow-hidden bg-custom-bg bg-custom-pos bg-custom-size bg-custom-repeat bg-custom-attachment'>
-                <Spacer size='3vw'/>
-                <div className='flex justify-between items-center px-[3vw]'>
+            <Spacer className='h-[3vw] max-phonescreen:h-[4vw]' />
+
+                <div className='
+                max-phonescreen:flex-col max-phonescreen:items-start max-phonescreen:gap-2
+                flex justify-between items-center px-[3vw]'>
                     <div className='flex items-center'>
-                        <Link href="/" className='text-primary mr-4 text-xl font-silkscreen'>
+                        <Link href="/" className='
+                        max-phonescreen:text-[5vw] max-phonescreen:leading-[5vw]
+                        text-primary mr-4 text-xl font-silkscreen'>
                             Home /
                         </Link>
-                        <div className='text-primary font-bold font-pixel uppercase text-[5.5vw] leading-[5.5vw] whitespace-nowrap'>
+                        <div className='
+                        max-phonescreen:text-[8.5vw] max-phonescreen:leading-[8.5vw]
+                        text-primary font-bold font-pixel uppercase text-[5.5vw] leading-[5.5vw] whitespace-nowrap'>
                             Admin
                         </div>
                     </div>
-                    <div className='flex gap-3 flex-row-reverse'>
+                    <div className='
+                    max-phonescreen:gap-1
+                    flex gap-3 flex-row-reverse'>
                         <div className='relative' ref={optionsRef}> {/* Attach ref here */}
                             <button 
                                 onClick={toggleOptions} 
-                                className=' fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'
+                                className=' 
+                                max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw] max-phonescreen:h-[27px]
+                                fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'
                             >
                                 <span>Options</span>
                                 <ArrowDownIcon className='ml-2' />
@@ -164,37 +175,52 @@ function GetLevelPage() {
                                         variants={dropdownVariants}
                                         transition={{ duration: 0.2 }} // Animation duration
                                     >
-                                        <Link href="/config" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                                        <Link href="/config" className='
+                                        max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw] max-phonescreen:h-[27px]
+                                        fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
                                             Config
                                         </Link>
-                                        <Link href="/upgrade" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                                        <Link href="/upgrade" className='
+                                        max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw] max-phonescreen:h-[27px]
+                                        fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
                                             Upgrade
                                         </Link>
-                                        <Link href="/replace" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                                        <Link href="/replace" className='
+                                        max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw] max-phonescreen:h-[27px]
+                                        fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
                                         Replace
                                         </Link>
-                                        <Link href="/reward" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                                        <Link href="/reward" className='
+                                        max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw] max-phonescreen:h-[27px]
+                                        fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
                                         Reward
                                         </Link>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
                         </div>
-                        <div className='connect-btn text-primary font-pixel uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap'>
+                        <div className='
+                        max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw] max-phonescreen:h-[27px]
+                        connect-btn text-primary font-pixel uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap'>
                             <CustomConnectButton />
                         </div>
                         
                     </div>
                     
                 </div>
-                <Spacer size='3vw'/>
+                <Spacer className='h-[3vw] max-phonescreen:h-[4vw]' />
+
                 
                 <motion.div 
                 initial={{ height: "150px" }}
                 animate={{ height: players.length > 0 ? "555px" : "150px" }}
                 transition={{ duration: 0.5, ease: "easeInOut" }}
-                className="get-level-container relative flex flex-col justify-center items-center overflow-hidden w-[60vw] p-[2px] border-0 border-solid border-border-transparent rounded-[20px] bg-secondary-background mx-auto">
-                    <div className="w-full p-4 flex items-center justify-between gap-4">
+                className="
+                max-phonescreen:w-[calc(100%-20px)]
+                max-phonescreen:mx-auto 
+                get-level-container relative flex flex-col justify-center items-center overflow-hidden w-[60vw] p-[2px] border-0 border-solid border-border-transparent rounded-[20px] bg-secondary-background mx-auto">
+                    <div className="
+                    w-full p-4 flex items-center justify-between gap-4">
                         <input
                             type="text"
                             value={serverUrl}
@@ -203,16 +229,19 @@ function GetLevelPage() {
                             placeholder="Enter Discord server URL"
                             className="flex-grow px-4 py-2 bg-background text-white rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
                         />
+                        
                         <button
                             onClick={handleGetLevels}
-                            className="bg-primary font-bold text-white px-4 py-2 rounded-md hover:scale-105 transition-all duration-300"
+                            className="
+                            
+                            bg-primary font-bold text-white px-4 py-2 rounded-md hover:scale-105 transition-all duration-300"
                             disabled={loading}
                         >
                             Get
                         </button>
                         <Link
                             href="/applyall"
-                            className="bg-black font-bold text-primary px-4 py-2 rounded-md hover:scale-105 transition-all duration-300"
+                            className="bg-black font-bold text-primary px-4 py-2 rounded-md hover:scale-105 transition-all duration-300 whitespace-nowrap"
                         >
                             Apply all
                         </Link>

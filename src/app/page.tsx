@@ -12,30 +12,30 @@ export default function Home() {
   return (
     <>
       <div className='v11e5678D'></div>
-      <div className='background-container border-2 border-solid border-primary rounded-[20px] bg-background overflow-hidden bg-custom-bg bg-custom-pos bg-custom-size bg-custom-repeat bg-custom-attachment'>
+      <div className='background-container max-phonescreen:border-[1px] border-2 border-solid border-primary max-phonescreen:rounded-[10px] rounded-[20px] bg-background overflow-hidden bg-custom-bg bg-custom-pos bg-custom-size bg-custom-repeat bg-custom-attachment'>
         <main className='main-container mx-auto flex flex-col justify-center items-stretch'>
-          <Spacer size='2vw'/>
+          <Spacer className='h-[2vw] max-phonescreen:h-[4vw]' />
           <Marquee startEdge="left" startPoint='top 80%'/>
-          <Spacer size='2vw'/>
+          <Spacer className='h-[2vw] max-phonescreen:h-[4vw]' />
           <div className='w-full h-[16vw] mx-auto'>
             <Title className='w-full h-full' startPoint='top 80%'/>
           </div>
-          <Spacer size='2vw'/>
+          <Spacer className='h-[2vw] max-phonescreen:h-[4vw]' />
           <Marquee startEdge="right" startPoint='top 80%'/>
-          <Spacer size='2vw'/>
+          <Spacer className='h-[2vw] max-phonescreen:h-[4vw]' />
           <MintSection/>
-          <Spacer size='2vw'/>
+          <Spacer className='h-[2vw] max-phonescreen:h-[4vw]' />
           <RankMarquee startEdge='left'/>
-          <Spacer size='2vw'/>
+          <Spacer className='h-[2vw] max-phonescreen:h-[4vw]' />
           <RankingSection/>
-          <Spacer size='2vw'/>
+          <Spacer className='h-[2vw] max-phonescreen:h-[4vw]' />
           <Marquee startEdge="left" startPoint='top bottom'/>
-          <Spacer size='2vw'/>
+          <Spacer className='h-[2vw] max-phonescreen:h-[4vw]' />
           <div className='w-full h-[16vw] mx-auto'>
             <Title className='w-full h-full' startPoint='top bottom'/>
           </div>
-          <Spacer size='2vw'/>
-          <Spacer size='2vw'/>
+          <Spacer className='h-[2vw] max-phonescreen:h-[4vw]' />
+          <Spacer className='h-[2vw] max-phonescreen:h-[4vw]' />
         </main>
       </div>
     </>

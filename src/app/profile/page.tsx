@@ -169,21 +169,31 @@ export default function ProfilelPage() {
         <>
             {/* <div className='v11e5678D'></div> */}
             <div className='background-container min-h-[100vh] border-2 border-solid border-primary rounded-[20px] bg-background overflow-hidden bg-custom-bg bg-custom-pos bg-custom-size bg-custom-repeat bg-custom-attachment'>
-                <Spacer size='3vw'/>
-                <div className='flex justify-between items-center px-[3vw]'>
+                <Spacer className='h-[3vw] max-phonescreen:h-[4vw]' />
+                <div className='
+                max-phonescreen:flex-col max-phonescreen:items-start max-phonescreen:gap-2
+                flex justify-between items-center px-[3vw]'>
                     <div className='flex items-center'>
-                        <Link href="/" className='text-primary mr-4 text-xl font-silkscreen'>
+                        <Link href="/" className='
+                        max-phonescreen:text-[5vw] max-phonescreen:leading-[5vw]
+                        text-primary mr-4 text-xl font-silkscreen'>
                             Home /
                         </Link>
-                        <div className='text-primary font-bold font-pixel uppercase text-[5.5vw] leading-[5.5vw] whitespace-nowrap'>
+                        <div className='
+                        max-phonescreen:text-[8.5vw] max-phonescreen:leading-[8.5vw]
+                        text-primary font-bold font-pixel uppercase text-[5.5vw] leading-[5.5vw] whitespace-nowrap'>
                             Profile 
                         </div>
                     </div>
-                    <div className='flex gap-3 flex-row-reverse'>
+                    <div className='
+                    max-phonescreen:gap-1
+                    flex gap-3 flex-row-reverse'>
                         <div className='relative' ref={optionsRef}> {/* Attach ref here */}
                             <button 
                                 onClick={toggleOptions} 
-                                className=' fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'
+                                className=' 
+                                max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw] max-phonescreen:h-[27px]
+                                fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'
                             >
                                 <span>Options</span>
                                 <ArrowDownIcon className='ml-2' />
@@ -198,13 +208,17 @@ export default function ProfilelPage() {
                                         variants={dropdownVariants}
                                         transition={{ duration: 0.2 }} // Animation duration
                                     >
-                                        <Link href="/profile/add_id_discord" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                                        <Link href="/profile/add_id_discord" className='
+                                        max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw] max-phonescreen:h-[27px]
+                                        fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
                                             Add ID Discord
                                         </Link>
                                         <Link
                                             href="#"
                                             onClick={handlePublishProfile}
-                                            className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'
+                                            className='
+                                            max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw] max-phonescreen:h-[27px]
+                                            fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'
                                         >
                                             <span className='text-black'>Publish Profile</span>
                                         </Link>
@@ -212,28 +226,31 @@ export default function ProfilelPage() {
                                 )}
                             </AnimatePresence>
                         </div>
-                        <div className='connect-btn text-primary font-pixel uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap'>
+                        <div className='
+                        max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw] max-phonescreen:h-[27px]
+                        connect-btn text-primary font-pixel uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap'>
                             <CustomConnectButton />
                         </div>
                         
                     </div>
                 </div>
-                <CardGrid>
-                    {uriArray.map((img, index) => (
-                        <Card 
-                            key={index} 
-                            id={`swsh12pt5-${index + 160}`} 
-                            name={cards[1].name} 
-                            number={cards[1].number} 
-                            img={img} // Using the image URL from uriArray
-                            set={cards[1].set} 
-                            types={cards[1].types} 
-                            subtypes={cards[1].subtypes} 
-                            supertype={cards[1].supertype} 
-                            rarity={cards[1].rarity} 
-                        />
-                    ))}
-                </CardGrid>
+
+                    <CardGrid>
+                        {uriArray.map((img, index) => (
+                            <Card 
+                                key={index} 
+                                id={`swsh12pt5-${index + 160}`} 
+                                name={cards[1].name} 
+                                number={cards[1].number} 
+                                img={img} // Using the image URL from uriArray
+                                set={cards[1].set} 
+                                types={cards[1].types} 
+                                subtypes={cards[1].subtypes} 
+                                supertype={cards[1].supertype} 
+                                rarity={cards[1].rarity} 
+                            />
+                        ))}
+                    </CardGrid>
             </div>
         
         </>

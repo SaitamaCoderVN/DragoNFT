@@ -8,23 +8,23 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 gsap.registerPlugin(ScrollTrigger);
 
 const images = [
-  { src: "/heart.svg", width: 40, className: "w-[4vw]" },
-  { src: "/planet.svg", width: 60, className: "w-[6vw]" },
-  { src: "/triangle.svg", width: 70, className: "w-[7vw]" },
-  { src: "/heart.svg", width: 55, className: "w-[5.5vw]" },
-  { src: "/planet.svg", width: 60, className: "w-[6vw]" },
-  { src: "/heart.svg", width: 40, className: "w-[4vw]" },
-  { src: "/planet.svg", width: 60, className: "w-[6vw]" },
+  { src: "/heart.svg", width: 40, className: "w-[4vw] max-phonescreen:w-[12vw]" },
+  { src: "/planet.svg", width: 60, className: "w-[6vw] max-phonescreen:w-[12vw]" },
+  { src: "/triangle.svg", width: 70, className: "w-[7vw] max-phonescreen:w-[15vw]" },
+  { src: "/heart.svg", width: 55, className: "w-[5.5vw] max-phonescreen:w-[12vw]" },
+  { src: "/planet.svg", width: 60, className: "w-[6vw] max-phonescreen:w-[12vw]" },
+  { src: "/heart.svg", width: 40, className: "w-[4vw] max-phonescreen:w-[12vw]" },
+  { src: "/planet.svg", width: 60, className: "w-[6vw] max-phonescreen:w-[12vw]" },
 ];
 
 const textGroups = [
-  { title: "ranking", subtitle: "mint", titleClass: "text-[3.2vw] -mt-[1vw]", subtitleClass: "text-[4vw]" },
-  { title: "hot", subtitle: "users", titleClass: "text-[5.5vw]", subtitleClass: "text-[2.3vw] mt-[0.8vw]" },
-  { title: "dragon", subtitle: "nft", titleClass: "text-[3.5vw]", subtitleClass: "text-[3.5vw]" },
-  { title: "top", subtitle: "10 users", titleClass: "text-[5.5vw]", subtitleClass: "text-[2.3vw] mt-[0.8vw]" },
-  { title: "ranking", subtitle: "mint", titleClass: "text-[3.2vw] -mt-[1vw]", subtitleClass: "text-[4vw]" },
-  { title: "ranking", subtitle: "mint", titleClass: "text-[3.2vw] -mt-[1vw]", subtitleClass: "text-[4vw]" },
-  { title: "hot", subtitle: "users", titleClass: "text-[5.5vw]", subtitleClass: "text-[2.3vw] mt-[0.8vw]" },
+  { title: "ranking", subtitle: "mint", titleClass: "text-[3.2vw] -mt-[1vw] max-phonescreen:text-[8vw] max-phonescreen:leading-[8vw]", subtitleClass: "text-[4vw] max-phonescreen:text-[12vw] max-phonescreen:leading-[12vw] max-phonescreen:-mt-[3vw]" },
+  { title: "hot", subtitle: "users", titleClass: "text-[5.5vw] max-phonescreen:text-[12vw] max-phonescreen:leading-[12vw]", subtitleClass: "text-[2.3vw] mt-[0.8vw] max-phonescreen:text-[5vw] max-phonescreen:leading-[5vw]" },
+  { title: "dragon", subtitle: "nft", titleClass: "text-[3.5vw] max-phonescreen:text-[7vw] max-phonescreen:leading-[7vw]", subtitleClass: "text-[3.5vw] max-phonescreen:text-[7vw] max-phonescreen:leading-[7vw]" },
+  { title: "top", subtitle: "10 users", titleClass: "text-[5.5vw] max-phonescreen:text-[7vw] max-phonescreen:leading-[7vw]", subtitleClass: "text-[2.3vw] mt-[0.8vw] max-phonescreen:text-[5vw] max-phonescreen:leading-[5vw]" },
+  { title: "ranking", subtitle: "mint", titleClass: "text-[3.2vw] -mt-[1vw] max-phonescreen:text-[8vw] max-phonescreen:leading-[8vw]", subtitleClass: "text-[4vw] max-phonescreen:text-[12vw] max-phonescreen:leading-[12vw] max-phonescreen:-mt-[3vw]" },
+  { title: "hot", subtitle: "users", titleClass: "text-[5.5vw] max-phonescreen:text-[12vw] max-phonescreen:leading-[12vw]", subtitleClass: "text-[2.3vw] mt-[0.8vw] max-phonescreen:text-[5vw] max-phonescreen:leading-[5vw]" },
+  { title: "top", subtitle: "10 users", titleClass: "text-[5.5vw] max-phonescreen:text-[7vw] max-phonescreen:leading-[7vw]", subtitleClass: "text-[2.3vw] mt-[0.8vw] max-phonescreen:text-[5vw] max-phonescreen:leading-[5vw]" },
 ];
 
 function RankMarquee({ startEdge }: { startEdge: string }) {
@@ -109,8 +109,9 @@ function RankMarquee({ startEdge }: { startEdge: string }) {
           const flickerTimeline = gsap.timeline({
             scrollTrigger: {
               trigger: element,
-              start: 'top 80%',
+              start: 'top bottom',
               toggleActions: 'play reset play reset',
+              // markers: true,
             },
           });
   
@@ -132,6 +133,20 @@ function RankMarquee({ startEdge }: { startEdge: string }) {
           flickerTimeline.to(element, { opacity: 1, duration: 0.1, ease: 'none' });
         });
 
+        tl.to(
+          bannerContent.current,
+          { x: startEdge === 'left' ? -390 : 500,
+            duration: 0.6, ease: 'power2.out',
+          scrollTrigger: {
+            trigger: bannerContent.current,
+            start: "top bottom", 
+            end: "bottom top",
+            // markers: true,
+            scrub: 1
+          }
+           },
+          'startAnimation'
+        )
       return () => {
         ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
       };
@@ -141,20 +156,22 @@ function RankMarquee({ startEdge }: { startEdge: string }) {
   return (
     <div
       ref={bannerContainer}
-      className='h-[10vw] relative flex flex-row justify-center items-center overflow-hidden w-full p-[2px] border-0 border-solid border-border-transparent rounded-[20px] bg-secondary-background'
+      className='h-[10vw] max-phonescreen:h-[25vw] 
+      max-phonescreen:rounded-[10px] max-phonescreen:bg-primary max-phonescreen:p-0
+      relative flex flex-row justify-center items-center overflow-hidden w-full p-[2px] border-0 border-solid border-border-transparent rounded-[20px] bg-secondary-background'
     >
-      <div ref={topBorder} className='absolute left-0 top-0 right-0 w-full h-[20px] rounded-none bg-primary'></div>
-      <div ref={bottomBorder} className='absolute top-auto right-0 bottom-0 w-full h-[20px] rounded-none bg-primary'></div>
-      <div ref={leftBorder} className='absolute left-0 bottom-0 w-[4px] h-full rounded-none bg-primary'></div>
-      <div ref={rightBorder} className='absolute left-auto right-0 top-0 bottom-0 w-[4px] h-full rounded-none bg-primary'></div>
-      <div className='relative z-[2] flex justify-center items-center overflow-hidden w-full h-full rounded-[20px] bg-secondary-background'>
+      <div ref={topBorder} className='max-phonescreen:hidden absolute left-0 top-0 right-0 w-full h-[20px] rounded-none bg-primary'></div>
+      <div ref={bottomBorder} className='max-phonescreen:hidden absolute top-auto right-0 bottom-0 w-full h-[20px] rounded-none bg-primary'></div>
+      <div ref={leftBorder} className='max-phonescreen:hidden absolute left-0 bottom-0 w-[4px] h-full rounded-none bg-primary'></div>
+      <div ref={rightBorder} className='max-phonescreen:hidden absolute left-auto right-0 top-0 bottom-0 w-[4px] h-full rounded-none bg-primary'></div>
+      <div className='max-phonescreen:border max-phonescreen:rounded-[10px] max-phonescreen:border-primary relative z-[2] flex justify-center items-center overflow-hidden w-full h-full rounded-[20px] bg-secondary-background'>
         <div
           ref={bannerContent}
           className='flex w-auto h-full justify-start items-center rounded-[20px] bg-secondary-background'
         >
           {images.map((image, index) => (
             <React.Fragment key={`group-${index}`}>
-              <div className='seper flex w-[5vw] h-full'></div>
+              <div className='seper flex w-[5vw] max-phonescreen:w-[10vw] h-full'></div>
               <Image
                 src={image.src}
                 alt=""
@@ -162,7 +179,7 @@ function RankMarquee({ startEdge }: { startEdge: string }) {
                 height={image.width}
                 className={`${image.className} max-w-full align-middle inline-block`}
               />
-              <div className='seper flex w-[5vw] h-full'></div>
+              <div className='seper flex w-[5vw] max-phonescreen:w-[10vw] h-full'></div>
               <div>
                 <h2 className={`text-primary ${textGroups[index].titleClass} leading-[3vw] whitespace-nowrap font-pixel uppercase`}>
                   {textGroups[index].title}

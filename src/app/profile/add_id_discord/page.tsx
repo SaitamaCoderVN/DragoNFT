@@ -167,26 +167,38 @@ function AddIDDiscordPage() {
         <>
             <div className='v11e5678D'></div>
             <div className='background-container min-h-[100vh] border-2 border-solid border-primary rounded-[20px] bg-background overflow-hidden bg-custom-bg bg-custom-pos bg-custom-size bg-custom-repeat bg-custom-attachment'>
-                <Spacer size='3vw'/>
-                <div className='flex justify-between items-center px-[3vw]'>
+            <Spacer className='h-[3vw] max-phonescreen:h-[4vw]' />
+                <div className='
+                max-phonescreen:flex-col max-phonescreen:items-start max-phonescreen:gap-2
+                flex justify-between items-center px-[3vw]'>
                     <div className='flex items-center'>
-                        <Link href="/" className='text-primary mr-4 text-xl font-silkscreen'>
+                        <Link href="/" className='
+                        max-phonescreen:text-[4vw] max-phonescreen:leading-[4vw]
+                        text-primary mr-4 text-xl font-silkscreen'>
                             Home /
                         </Link>
-                        <Link href="/profile" className='text-primary mr-4 text-xl font-silkscreen'>
+                        <Link href="/profile" className='
+                        max-phonescreen:text-[4vw] max-phonescreen:leading-[4vw]
+                        text-primary mr-4 text-xl font-silkscreen'>
                             profile /
                         </Link>
-                        <div className='text-primary font-bold font-pixel uppercase text-[4.5vw] leading-[5.5vw] whitespace-nowrap'>
+                        <div className='
+                        max-phonescreen:text-[5.5vw] max-phonescreen:leading-[5.5vw]
+                        text-primary font-bold font-pixel uppercase text-[4.5vw] leading-[5.5vw] whitespace-nowrap'>
                             ADD ID DISCORD 
                         </div>
                     </div>
-                    <div className='connect-btn text-primary font-pixel uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap'>
+                    <div className='
+                    max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw] max-phonescreen:h-[27px]
+                    connect-btn text-primary font-pixel uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap'>
                             <CustomConnectButton />
                     </div>
                 </div>
 
                 <div className="w-full mt-10">
-                    <div className="bg-secondary-background p-8 rounded-lg max-w-2xl mx-auto">
+                    <div className="
+                    max-phonescreen:w-[calc(100%-20px)]
+                    bg-secondary-background p-8 rounded-lg max-w-2xl mx-auto">
                         {currentDiscordId ? (
                             <div className="mb-4">
                                 <p className="text-lg font-medium text-gray-300">Your Discord ID: {currentDiscordId}</p>
@@ -209,7 +221,9 @@ function AddIDDiscordPage() {
                         )}
                     </div>
 
-                    <div className="mt-8 bg-secondary p-6 rounded-lg max-w-2xl mx-auto">
+                    <div className="
+                    max-phonescreen:w-[calc(100%-20px)]
+                    mt-8 bg-secondary p-6 rounded-lg max-w-2xl mx-auto">
                         <h3 className="text-xl font-semibold text-white mb-4">Transaction Status</h3>
                         {isPending && <p className="text-yellow-300">Waiting for signature...</p>}
                         {isConfirming && <p className="text-yellow-300">Confirming...</p>}
@@ -236,7 +250,8 @@ function AddIDDiscordPage() {
                         )}
                     </div>
                 </div>
-                <Spacer size='3vw'/>
+                <Spacer className='h-[3vw] max-phonescreen:h-[4vw]' />
+
 
             </div>
         </>

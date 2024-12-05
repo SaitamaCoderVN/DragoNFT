@@ -17,7 +17,6 @@ import {
 } from "wagmi";
 import { useToast } from "@/components/ui/use-toast";
 import { config } from "@/components/contract/config";
-import { ArrowDownIcon } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 const FileUploadIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -25,7 +24,11 @@ const FileUploadIcon = (props: React.SVGProps<SVGSVGElement>) => (
         <path fillRule="evenodd" clipRule="evenodd" d="M13.25 1.26003C12.9109 1.25 12.5071 1.25 11.997 1.25H11.25C8.44974 1.25 7.04961 1.25 5.98005 1.79497C5.03924 2.27433 4.27433 3.03924 3.79497 3.98005C3.25 5.04961 3.25 6.44974 3.25 9.25V14.75C3.25 17.5503 3.25 18.9504 3.79497 20.02C4.27433 20.9608 5.03924 21.7257 5.98005 22.205C7.04961 22.75 8.44974 22.75 11.25 22.75H12.75C15.5503 22.75 16.9504 22.75 18.02 22.205C18.9608 21.7257 19.7257 20.9608 20.205 20.02C20.75 18.9504 20.75 17.5503 20.75 14.75V10.003C20.75 9.49288 20.75 9.08913 20.74 8.75001H17.2H17.1695H17.1695C16.6354 8.75002 16.1895 8.75003 15.8253 8.72027C15.4454 8.68924 15.0888 8.62212 14.7515 8.45028C14.2341 8.18663 13.8134 7.76593 13.5497 7.24849C13.3779 6.91122 13.3108 6.55457 13.2797 6.17468C13.25 5.81045 13.25 5.3646 13.25 4.83044V4.80001V1.26003ZM20.5164 7.25001C20.3941 6.86403 20.2252 6.4939 20.0132 6.14791C19.704 5.64333 19.2716 5.21096 18.4069 4.34621L18.4069 4.34619L17.6538 3.59315L17.6538 3.59314C16.789 2.72839 16.3567 2.29601 15.8521 1.9868C15.5061 1.77478 15.136 1.6059 14.75 1.48359V4.80001C14.75 5.37244 14.7506 5.75666 14.7748 6.05253C14.7982 6.33966 14.8401 6.47694 14.8862 6.5675C15.0061 6.8027 15.1973 6.99393 15.4325 7.11377C15.5231 7.15991 15.6604 7.2018 15.9475 7.22526C16.2434 7.24943 16.6276 7.25001 17.2 7.25001H20.5164ZM12.5303 10.4697C12.2374 10.1768 11.7626 10.1768 11.4697 10.4697L8.96967 12.9697C8.67678 13.2626 8.67678 13.7374 8.96967 14.0303C9.26256 14.3232 9.73744 14.3232 10.0303 14.0303L11.25 12.8107V17C11.25 17.4142 11.5858 17.75 12 17.75C12.4142 17.75 12.75 17.4142 12.75 17V12.8107L13.9697 14.0303C14.2626 14.3232 14.7374 14.3232 15.0303 14.0303C15.3232 13.7374 15.3232 13.2626 15.0303 12.9697L12.5303 10.4697Z" fill="currentColor"></path>
     </svg>
 );
-
+const ArrowDownIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" className="injected-svg" data-src="https://cdn.hugeicons.com/icons/arrow-down-01-stroke-sharp.svg"  role="img" color="#000000">
+    <path d="M5.99977 9.00005L11.9998 15L17.9998 9" stroke="#000000" strokeWidth="2" stroke-miterlimit="16"></path>
+    </svg>
+);
 function ConfigPage() {
     const [uri, setUri] = useState('');
     const [codeContribute, setCodeContribute] = useState('');
@@ -347,22 +350,37 @@ function ConfigPage() {
         <>
             <div className='v11e5678D'></div>
             <div className='background-container min-h-[100vh] border-2 border-solid border-primary rounded-[20px] bg-background overflow-hidden bg-custom-bg bg-custom-pos bg-custom-size bg-custom-repeat bg-custom-attachment'>
-                <Spacer size='3vw'/>
-                <div className='flex justify-between items-center px-[3vw]'>
+            <Spacer className='h-[3vw] max-phonescreen:h-[4vw]' />
+
+                <div className='
+                max-phonescreen:flex-col max-phonescreen:items-start max-phonescreen:gap-2
+                
+                flex justify-between items-center px-[3vw]'>
                     <div className='flex items-center'>
-                        <Link href="/" className='text-primary mr-4 text-xl font-silkscreen'>
+                        <Link href="/" className='
+                        max-phonescreen:text-[4vw] max-phonescreen:leading-[4vw]
+                        
+                        text-primary mr-4 text-xl font-silkscreen'>
                             Home /
                         </Link>
-                        <div className='text-primary font-bold font-pixel uppercase text-[5.5vw] leading-[5.5vw] whitespace-nowrap'>
+                        <div className='
+                        max-phonescreen:text-[5.5vw] max-phonescreen:leading-[5.5vw]
+                        
+                        text-primary font-bold font-pixel uppercase text-[5.5vw] leading-[5.5vw] whitespace-nowrap'>
                             Config URI
                         </div>
                     </div>
                     
-                    <div className='flex gap-3 flex-row-reverse'>
+                    <div className='
+                    max-phonescreen:gap-1
+                    
+                    flex gap-3 flex-row-reverse'>
                     <div className='relative' ref={optionsRef}> {/* Attach ref here */}
                         <button 
                             onClick={toggleOptions} 
-                            className=' fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'
+                            className=' 
+                            max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw] max-phonescreen:h-[27px]
+                            fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'
                         >
                             <span>Options</span>
                             <ArrowDownIcon className='ml-2' />
@@ -377,23 +395,38 @@ function ConfigPage() {
                                     variants={dropdownVariants}
                                     transition={{ duration: 0.2 }} // Animation duration
                                 >
-                                    <Link href="/admin" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                                    <Link href="/admin" className='
+                                        max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw] max-phonescreen:h-[27px]
+                                    
+                                    fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
                                         Admin
                                     </Link>
-                                    <Link href="/config" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                                    <Link href="/config" className='
+                                        max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw] max-phonescreen:h-[27px]
+                                    
+                                    fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
                                         Config
                                     </Link>
-                                    <Link href="/replace" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                                    <Link href="/replace" className='
+                                        max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw] max-phonescreen:h-[27px]
+                                    
+                                    fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
                                         Replace
                                     </Link>
-                                    <Link href="/reward" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                                    <Link href="/reward" className='
+                                        max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw] max-phonescreen:h-[27px]
+                                    
+                                    fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
                                         Reward
                                     </Link>
                                 </motion.div>
                             )}
                         </AnimatePresence>
                     </div>
-                    <div className='connect-btn text-primary font-pixel uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap'>
+                    <div className='
+                    max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw] max-phonescreen:h-[27px]
+                    
+                    connect-btn text-primary font-pixel uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap'>
                         <CustomConnectButton />
                     </div>
                 </div>
@@ -402,7 +435,9 @@ function ConfigPage() {
                 <div className="w-full mt-10">
                     
 
-                    <div className="bg-secondary-background p-8 rounded-lg max-w-2xl mx-auto">
+                    <div className="
+                    max-phonescreen:w-[calc(100%-20px)]
+                    bg-secondary-background p-8 rounded-lg max-w-2xl mx-auto">
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div>
                                 <label htmlFor="codeContribute" className="block text-lg font-medium text-gray-300 mb-2">
@@ -425,11 +460,14 @@ function ConfigPage() {
                                 <div className="relative w-full pt-[24px]">
                                     <div className="absolute z-0 top-0 left-0 flex items-center gap-[4px] pt-[4px] pb-[32px] px-[8px] rounded-tl-[12px] rounded-tr-[12px] bg-primary">
                                         <FileUploadIcon className="w-[12px] h-[12px]" />
-                                        <span className="text-white font-pixel text-[1vw] leading-[1vw]">
+                                        <span className="
+                                        max-phonescreen:text-[2.5vw] max-phonescreen:leading-[2.5vw]
+                                        
+                                        text-white font-pixel text-[1vw] leading-[1vw]">
                                             Upload Image
                                         </span>
                                     </div>
-                                    <div className="upload__frame rounded-md flex relative overflow-visible before:rounded-md before:z-0 before:absolute before:bg-gradient-to-br before:p-12 before:inset-0 before:from-primary before:from-0% before:via-primary before:via-26% before:to-[#ffffff21] before:to-40%">
+                                    <div className="upload__frame rounded-md flex relative overflow-visible before:rounded-md before:z-0 before:absolute before:bg-gradient-to-br max-phonescreen:before:p-0 before:p-12 before:inset-0 before:from-primary before:from-0% before:via-primary before:via-26% before:to-[#ffffff21] before:to-40%">
                                         <div {...getRootProps()} className="z-[1] w-full p-4 text-center font-pixel font-semibold text-primary cursor-pointer relative min-h-[15vw] flex flex-col items-center justify-center">
                                             <input {...getInputProps()} />
                                             
@@ -510,7 +548,10 @@ function ConfigPage() {
                         </form>
                     </div>
 
-                    <div className="mt-8 bg-secondary p-6 rounded-lg max-w-2xl mx-auto">
+                    <div className="
+                    max-phonescreen:w-[calc(100%-20px)]
+                    
+                    mt-8 bg-secondary p-6 rounded-lg max-w-2xl mx-auto">
                         <h3 className="text-xl font-semibold text-white mb-4">Transaction Status</h3>
                         {isPending && <p className="text-yellow-300">Waiting for signature...</p>}
                         {isConfirming && <p className="text-yellow-300">Confirming...</p>}
@@ -537,7 +578,8 @@ function ConfigPage() {
                         )}
                     </div>
                 </div>
-                <Spacer size='3vw'/>
+                <Spacer className='h-[3vw] max-phonescreen:h-[4vw]' />
+
 
             </div>
             <canvas ref={canvasRef} style={{ display: 'none' }} />
