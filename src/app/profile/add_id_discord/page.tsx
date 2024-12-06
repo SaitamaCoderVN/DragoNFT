@@ -34,7 +34,7 @@ function AddIDDiscordPage() {
 
     const handleLogin = async () => {
         const clientId = '1306227974579949568'; // Replace with your Discord client ID
-        const redirectUri = 'https://discord.com/oauth2/authorize?client_id=1306227974579949568&response_type=code&redirect_uri=https%3A%2F%2Fdrago-nft.vercel.app%2Fapi%2Fauth%2Fdiscord%2Fcallback&scope=identify'; // Replace with your redirect URI
+        const redirectUri = 'https://discord.com/oauth2/authorize?client_id=1306227974579949568&response_type=code&redirect_uri=https%3A%2F%2Fdragonft.org%2Fapi%2Fauth%2Fdiscord%2Fcallback&scope=identify'; // Replace with your redirect URI
         const scope = 'identify'; // Add any other scopes you need
         
         window.location.href = redirectUri; // Redirect to Discord OAuth2
