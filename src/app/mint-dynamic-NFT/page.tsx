@@ -1,7 +1,7 @@
 "use client";
 
 import { nftAbi } from "@/components/contract/abi";
-import { BLOCK_EXPLORER_OPAL, BLOCK_EXPLORER_QUARTZ, BLOCK_EXPLORER_UNIQUE, CHAINID, CONTRACT_ADDRESS_OPAL, CONTRACT_ADDRESS_QUARTZ, CONTRACT_ADDRESS_UNIQUE } from "@/components/contract/contracts";
+import { BLOCK_EXPLORER_OPAL, CHAINID, CONTRACT_ADDRESS_OPAL_EVM } from "@/components/contract/contracts";
 import { CustomConnectButton } from "@/components/ui/ConnectButton";
 import Spacer from "@/components/ui/Spacer";
 import Link from "next/link";
@@ -72,16 +72,8 @@ function MintPage() {
     }, []);
 
     switch (chainId) {
-        case CHAINID.UNIQUE:
-            contractAddress = CONTRACT_ADDRESS_UNIQUE;
-            blockexplorer = BLOCK_EXPLORER_UNIQUE;
-            break;
-        case CHAINID.QUARTZ:
-            contractAddress = CONTRACT_ADDRESS_QUARTZ;
-            blockexplorer = BLOCK_EXPLORER_QUARTZ;
-            break;
         case CHAINID.OPAL:
-            contractAddress = CONTRACT_ADDRESS_OPAL;
+            contractAddress = CONTRACT_ADDRESS_OPAL_EVM;
             blockexplorer = BLOCK_EXPLORER_OPAL;
             break;
     }
@@ -307,11 +299,19 @@ function MintPage() {
             return;
         }
         try {
+            const byteData = Buffer.from(codeContribute, 'utf-8');  // Chuyển thành Buffer với mã hóa UTF-8
+            let hexRepresentation = "0x" + byteData.toString('hex'); // Chuyển Buffer thành chuỗi hex
+
+            // Đệm chuỗi hex với các byte 0 cho đến khi đạt độ dài 64 ký tự (32 byte)
+            while (hexRepresentation.length < 66) { // 2 ký tự cho '0x' và 64 ký tự cho 32 byte
+                hexRepresentation += '0';
+            }
+            console.log("hexRepresentation", hexRepresentation);
             await writeContract({
                 address: contractAddress,
                 abi: nftAbi,
-                functionName: "mint_SoulBound_Ranking_NFT",
-                args: [toAddress as `0x${string}`, uri, BigInt(level), codeContribute],
+                functionName: "mint_DragonNFT",
+                args: [{ eth: account.address as `0x${string}`, sub: BigInt(0) }, hexRepresentation as `0x${string}`, Number(level), uri],
                 chain: config[chainId],
                 account: account.address,
             });
@@ -350,7 +350,7 @@ function MintPage() {
                         </Link>
                         
                         <div className='text-primary font-bold font-pixel uppercase text-[5.5vw] leading-[5.5vw] whitespace-nowrap'>
-                            mint 
+                            MINT OG
                         </div>
                     </div>
                     
@@ -376,7 +376,7 @@ function MintPage() {
                                         <Link href="/mint" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
                                             Mint Certificate NFT
                                         </Link>
-                                        <Link href="/mint-dynamic-nft" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                                        <Link href="/mint-dynamic-NFT" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
                                             Mint OG NFT
                                         </Link>
                                     </motion.div>

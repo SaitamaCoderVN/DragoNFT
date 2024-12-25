@@ -1,11 +1,11 @@
 "use client";
 
 import { nftAbi } from "@/components/contract/abi";
-import { BLOCK_EXPLORER_OPAL, BLOCK_EXPLORER_QUARTZ, BLOCK_EXPLORER_UNIQUE, CHAINID, CONTRACT_ADDRESS_OPAL, CONTRACT_ADDRESS_QUARTZ, CONTRACT_ADDRESS_UNIQUE } from "@/components/contract/contracts";
+import { BLOCK_EXPLORER_OPAL, CHAINID, CONTRACT_ADDRESS_OPAL_EVM, CONTRACT_ADDRESS_OPAL_POLKADOT } from "@/components/contract/contracts";
 import { CustomConnectButton } from "@/components/ui/ConnectButton";
 import Spacer from "@/components/ui/Spacer";
 import Link from "next/link";
-import { useCallback, useRef, useState, useEffect } from 'react';
+import { useCallback, useRef, useState, useEffect, useContext } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FaSpinner } from 'react-icons/fa';
 import {
@@ -17,9 +17,17 @@ import {
 } from "wagmi";
 import { useToast } from "@/components/ui/use-toast";
 import { config } from "@/components/contract/config";
-
+import { ethers } from "ethers";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAppSelector } from "@/hooks/useRedux";
+import { UniqueChain } from "@unique-nft/sdk";
+import { Address } from "@unique-nft/utils";
+import { User } from "@/types/User";
+import { setUser } from "@/redux/userSlice";
+import { useAppDispatch } from "@/hooks/useRedux";
+import { AccountsContext } from '@/accounts/AccountsContext';
+import { useChainAndScan } from "@/hooks/useChainAndScan";
+
 
 const FileUploadIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg {...props} width="12" height="12" viewBox="0 0 24 24" fill="none" role="img" color="white">
@@ -32,26 +40,36 @@ const ArrowDownIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
 );
 function MintPage() {
+    const { selectedAccount } = useContext(AccountsContext);
+    console.log("Selected AccountMMMMMMMMMMMMMMMMMMMMMMM:", selectedAccount);
+    const { chain, scan } = useChainAndScan();
+    
+    const dispatch = useAppDispatch();
     const [uri, setUri] = useState('');
     const [toAddress, setToAddress] = useState('');
     const [codeContribute, setCodeContribute] = useState('');
     const [localImageFile, setLocalImageFile] = useState<File | null>(null);
     const [localImagePreview, setLocalImagePreview] = useState<string>('');
     const [isUploading, setIsUploading] = useState(false);
-    const [uploadSuccess, setUploadSuccess] = useState(false); // New state for upload success
+    const [uploadSuccess, setUploadSuccess] = useState(false);
+    const [walletType, setWalletType] = useState<string | null>(null);
+    // AccountsContext to access user's account details
+    
 
     const { toast } = useToast();
     const chainId = useChainId();
-    const account = useAccount();
+
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    let contractAddress: `0x${string}` | undefined;
+    let contractAddressEVM: `0x${string}` | undefined;
+    let contractAddressPOLKADOT: `0x${string}` | undefined;
     let blockexplorer: string | undefined;
 
     const [isOptionsVisible, setOptionsVisible] = useState(false); 
     const optionsRef = useRef<HTMLDivElement | null>(null);
     const currentUser = useAppSelector((state) => state.user.currentUser);
 
-
+    const [isLoading, setIsLoading] = useState(false);
+    
     const dropdownVariants = {
         hidden: { opacity: 0, y: -10 }, 
         visible: { opacity: 1, y: 0 },   
@@ -61,7 +79,6 @@ function MintPage() {
         setOptionsVisible(!isOptionsVisible); 
     };
     
-    // Function to handle clicks outside the dropdown
     const handleClickOutside = (event: MouseEvent) => {
         if (optionsRef.current && !optionsRef.current.contains(event.target as Node)) {
             setOptionsVisible(false); 
@@ -76,16 +93,9 @@ function MintPage() {
     }, []);
 
     switch (chainId) {
-        case CHAINID.UNIQUE:
-            contractAddress = CONTRACT_ADDRESS_UNIQUE;
-            blockexplorer = BLOCK_EXPLORER_UNIQUE;
-            break;
-        case CHAINID.QUARTZ:
-            contractAddress = CONTRACT_ADDRESS_QUARTZ;
-            blockexplorer = BLOCK_EXPLORER_QUARTZ;
-            break;
         case CHAINID.OPAL:
-            contractAddress = CONTRACT_ADDRESS_OPAL;
+            contractAddressEVM = CONTRACT_ADDRESS_OPAL_EVM;
+            contractAddressPOLKADOT = CONTRACT_ADDRESS_OPAL_POLKADOT;
             blockexplorer = BLOCK_EXPLORER_OPAL;
             break;
     }
@@ -100,7 +110,7 @@ function MintPage() {
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop: (acceptedFiles) => {
-            if (uploadSuccess) return; // Prevent file upload if uploadSuccess is true
+            if (uploadSuccess) return;
             const file = acceptedFiles[0];
             if (!file) return;
     
@@ -134,14 +144,12 @@ function MintPage() {
                 canvas.width = cardWidth;
                 canvas.height = cardHeight;
 
-                // Create gradient background for the frame
                 const gradient = ctx.createLinearGradient(0, 0, cardWidth, cardHeight);
                 gradient.addColorStop(0, '#2a0845');
                 gradient.addColorStop(1, '#6441A5');
                 ctx.fillStyle = gradient;
                 ctx.fillRect(0, 0, cardWidth, cardHeight);
 
-                // Draw image with object-fit: cover
                 const frameMargin = 20;
                 const imageWidth = cardWidth - frameMargin * 2;
                 const imageHeight = cardHeight - frameMargin * 3;
@@ -167,46 +175,38 @@ function MintPage() {
                 ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
                 ctx.restore();
 
-                // Outer frame
                 ctx.strokeStyle = '#8A2BE2';
                 ctx.lineWidth = 8;
                 ctx.strokeRect(10, 10, cardWidth - 20, cardHeight - 20);
 
-                // Inner frame
                 ctx.strokeStyle = '#4B0082';
                 ctx.lineWidth = 4;
                 ctx.strokeRect(frameMargin, frameMargin, cardWidth - frameMargin * 2, cardHeight - frameMargin * 2);
 
-                // Corner accents
                 const cornerSize = 30;
                 ctx.strokeStyle = '#9370DB';
                 ctx.lineWidth = 2;
-                // Top-left
                 ctx.beginPath();
                 ctx.moveTo(5, 35);
                 ctx.lineTo(5, 5);
                 ctx.lineTo(35, 5);
                 ctx.stroke();
-                // Top-right
                 ctx.beginPath();
                 ctx.moveTo(cardWidth - 35, 5);
                 ctx.lineTo(cardWidth - 5, 5);
                 ctx.lineTo(cardWidth - 5, 35);
                 ctx.stroke();
-                // Bottom-left
                 ctx.beginPath();
                 ctx.moveTo(5, cardHeight - 35);
                 ctx.lineTo(5, cardHeight - 5);
                 ctx.lineTo(35, cardHeight - 5);
                 ctx.stroke();
-                // Bottom-right
                 ctx.beginPath();
                 ctx.moveTo(cardWidth - 35, cardHeight - 5);
                 ctx.lineTo(cardWidth - 5, cardHeight - 5);
                 ctx.lineTo(cardWidth - 5, cardHeight - 35);
                 ctx.stroke();
 
-                // Draw name at the top
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
                 ctx.fillRect(0, 0, cardWidth, 40);
                 ctx.fillStyle = '#ce8eeb';
@@ -214,7 +214,6 @@ function MintPage() {
                 ctx.textAlign = 'center';
                 ctx.fillText("", cardWidth / 2, 28);
 
-                // Draw title at the bottom
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
                 ctx.fillRect(0, cardHeight - 40, cardWidth, 40);
                 ctx.fillStyle = '#E6E6FA';
@@ -222,7 +221,6 @@ function MintPage() {
                 ctx.textAlign = 'center';
                 ctx.fillText("", cardWidth / 2, cardHeight - 15);
 
-                // Add some tech-inspired details
                 ctx.strokeStyle = 'rgba(147, 112, 219, 0.5)';
                 ctx.lineWidth = 1;
                 for (let i = 0; i < 3; i++) {
@@ -232,13 +230,11 @@ function MintPage() {
                     ctx.stroke();
                 }
 
-                // Circular element
                 ctx.strokeStyle = '#9370DB';
                 ctx.beginPath();
                 ctx.arc(cardWidth - 40, 60, 15, 0, Math.PI * 2);
                 ctx.stroke();
 
-                // Data-like lines
                 ctx.beginPath();
                 ctx.moveTo(40, 60);
                 ctx.lineTo(cardWidth - 70, 60);
@@ -268,7 +264,7 @@ function MintPage() {
 
         setIsUploading(true);
         try {
-            const combinedImageBlob = await generateCombinedImage(); // Use the existing function
+            const combinedImageBlob = await generateCombinedImage();
             if (combinedImageBlob) {
                 const formData = new FormData();
                 formData.append('file', combinedImageBlob, 'combined_image.png');
@@ -283,8 +279,8 @@ function MintPage() {
                 }
 
                 const data = await response.json();
-                setUri(data.url); // Set the uri to the uploaded image URL
-                setUploadSuccess(true); // Set upload success to true
+                setUri(data.url);
+                setUploadSuccess(true);
             }
         } catch (error) {
             console.error('Error uploading image:', error);
@@ -296,37 +292,109 @@ function MintPage() {
     const handleCancel = () => {
         setLocalImageFile(null);
         setLocalImagePreview('');
-        setUri(''); // Reset uri if cancelled
-        setUploadSuccess(false); // Reset upload success state
+        setUri('');
+        setUploadSuccess(false);
     };
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (!contractAddress) {
-            toast({
-                variant: "destructive",
-                title: "Network Error",
-                description: "Please select a supported network",
-            });
-            return;
-        }
+        setIsLoading(true);
+
         try {
-            await writeContract({
-                address: contractAddress,
-                abi: nftAbi,
-                functionName: "mint_SoulBound_Ranking_NFT",
-                args: [toAddress as `0x${string}`, uri, BigInt(0), codeContribute],
-                chain: config[chainId],
-                account: account.address,
+            if (!isConnected && !selectedAccount) {
+                throw new Error("Please connect wallet");
+            }
+
+            const byteData = Buffer.from(codeContribute, 'utf-8');
+            let hexRepresentation = "0x" + byteData.toString('hex');
+            while (hexRepresentation.length < 66) {
+                hexRepresentation += '0';
+            }
+
+            if (selectedAccount) {
+                await mintWithPolkadot(hexRepresentation);
+            } else if (isConnected) {
+                await mintWithEVM(hexRepresentation);
+            }
+
+            toast({
+                title: "Success",
+                description: "NFT has been minted successfully!",
             });
+
         } catch (error) {
+            console.error("Mint error:", error);
             toast({
                 variant: "destructive",
-                title: "Transaction Cancelled",
-                description: `${(error as BaseError).shortMessage || "An unknown error occurred"}`,
+                title: "NFT Minting Error",
+                description: error instanceof Error ? error.message : "Unknown error",
             });
+        } finally {
+            setIsLoading(false);
         }
     };
+
+    const mintWithPolkadot = async (hexRepresentation: string) => {
+        if (!selectedAccount) throw new Error("Polkadot account not found");
+
+        try {
+            const result = await chain.evm.send(
+                {
+                    contract: {
+                        address: contractAddressPOLKADOT as string,
+                        abi: nftAbi as any
+                    },
+                    functionName: "mint_DragonNFT",
+                    functionArgs: [
+                        {
+                            eth: ethers.ZeroAddress,
+                            sub: Address.extract.substratePublicKey(selectedAccount.address)
+                        },
+                        hexRepresentation,
+                        Number(0),
+                        uri
+                    ],
+                    gasLimit: BigInt(3_000_000)
+                },
+                { signerAddress: selectedAccount.address },
+                { signer: selectedAccount.signer }
+            );
+            console.log("result", result);
+
+            if (!result.result.isSuccessful) {
+                throw new Error("Mint transaction failed");
+            }
+
+            return result;
+
+        } catch (error) {
+            console.error("Error during minting:", error);
+            throw new Error("Cannot mint NFT: " + (error as Error).message);
+        }
+    };
+
+    const mintWithEVM = async (hexRepresentation: string) => {
+        if (!wagmiAddress) throw new Error("EVM address not found");
+        console.log("evmAddress", wagmiAddress);
+
+        await writeContract({
+            address: contractAddressEVM,
+            abi: nftAbi,
+            functionName: "mint_DragonNFT",
+            args: [
+                { 
+                    eth: wagmiAddress, 
+                    sub: BigInt(0) 
+                }, 
+                hexRepresentation as `0x${string}`, 
+                Number(0), 
+                uri
+            ],
+            chain: config[chainId],
+            account: wagmiAddress,
+        });
+    };
+
     useEffect(() => {
         if (isConfirmed) {
             resetForm();
@@ -340,75 +408,60 @@ function MintPage() {
         setCodeContribute('');
         setUploadSuccess(false);
     };
+
+    const { address: wagmiAddress, isConnected } = useAccount();
+
+    useEffect(() => {
+        console.log("Selected Account in MintPage:", selectedAccount);
+    }, [selectedAccount]);
+
     return (
         <>
             <div className='v11e5678D'></div>
             <div className='background-container min-h-[100vh] border-2 border-solid border-primary rounded-[20px] bg-background overflow-hidden bg-custom-bg bg-custom-pos bg-custom-size bg-custom-repeat bg-custom-attachment'>
                 <Spacer className='h-[3vw] max-phonescreen:h-[4vw]' />
 
-                <div className='
-                max-phonescreen:flex-col max-phonescreen:items-start max-phonescreen:gap-2
-                flex justify-between items-center px-[3vw]'>
+                <div className='flex justify-between items-center px-[3vw]'>
                     <div className='flex items-center'>
-                        <Link href="/" className='
-                        max-phonescreen:text-[5vw] max-phonescreen:leading-[5vw]
-                        text-primary mr-4 text-xl font-silkscreen'>
+                        <Link href="/" className='text-primary mr-4 text-xl font-silkscreen'>
                             Home /
                         </Link>
                         
-                        <div className='
-                        max-phonescreen:text-[8.5vw] max-phonescreen:leading-[8.5vw]
-                        text-primary font-bold font-pixel uppercase text-[5.5vw] leading-[5.5vw] whitespace-nowrap'>
-                            mint 
+                        <div className='text-primary font-bold font-pixel uppercase text-[5.5vw] leading-[5.5vw] whitespace-nowrap'>
+                            MINT CT
                         </div>
                     </div>
                     
-                    <div className='
-                    max-phonescreen:gap-1
-                    flex gap-3 flex-row-reverse'>
-                        <div className='relative' ref={optionsRef}> {/* Attach ref here */}
-                            {currentUser && (
-                                <>
-                                <button 
-                                    onClick={toggleOptions} 
-                                    className='
-                                    max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw] max-phonescreen:h-[27px]
-                                    fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'
-                                >
-                                    <span>Options</span>
-                                    <ArrowDownIcon className='ml-2' />
-                                </button>
-                                
-                                </>
-                            )}
-                            
+                    <div className='flex gap-3 flex-row-reverse'>
+                        <div className='relative' ref={optionsRef}>
+                            <button 
+                                onClick={toggleOptions} 
+                                className=' fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'
+                            >
+                                <span>Options</span>
+                                <ArrowDownIcon className='ml-2' />
+                            </button>
                             <AnimatePresence>
-                                {isOptionsVisible && ( // Conditionally render the buttons with animation
+                                {isOptionsVisible && (
                                     <motion.div
                                         className='absolute top-14 right-0 z-10 shadow-lg rounded-md flex flex-col gap-3'
                                         initial="hidden"
                                         animate="visible"
                                         exit="hidden"
                                         variants={dropdownVariants}
-                                        transition={{ duration: 0.2 }} // Animation duration
+                                        transition={{ duration: 0.2 }}
                                     >
-                                        <Link href="/mint" className='
-                                        max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw] max-phonescreen:h-[27px]
-                                        fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                                        <Link href="/mint" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
                                             Mint Certificate NFT
                                         </Link>
-                                        <Link href="/mint-dynamic-NFT" className='
-                                        max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw] max-phonescreen:h-[27px]
-                                        fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                                        <Link href="/mint-dynamic-NFT" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
                                             Mint OG NFT
                                         </Link>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
                         </div>
-                        <div className='
-                        max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw] max-phonescreen:h-[27px]
-                        connect-btn text-primary font-pixel uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap'>
+                        <div className='connect-btn text-primary font-pixel uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap'>
                             <CustomConnectButton />
                         </div>
                         
@@ -486,7 +539,7 @@ function MintPage() {
                                     onChange={(e) => setCodeContribute(e.target.value)}
                                     placeholder="Enter code contribute"
                                     className={`w-full px-4 py-2 bg-background text-white rounded-md focus:outline-none focus:ring-2 focus:ring-secondary ${!uploadSuccess ? 'cursor-not-allowed' : ''}`}
-                                    disabled={!uploadSuccess} // Disable input if upload is not successful
+                                    disabled={!uploadSuccess}
                                 />
                             </div>
 
@@ -501,7 +554,7 @@ function MintPage() {
                                     onChange={(e) => setToAddress(e.target.value)}
                                     placeholder="Enter wallet address"
                                     className={`w-full px-4 py-2 bg-background text-white rounded-md focus:outline-none focus:ring-2 focus:ring-secondary ${!uploadSuccess ? 'cursor-not-allowed' : ''}`}
-                                    disabled={!uploadSuccess} // Disable input if upload is not successful
+                                    disabled={!uploadSuccess}
                                 />
                             </div>
 
@@ -509,7 +562,7 @@ function MintPage() {
                                 <button
                                     type="submit"
                                     className="w-full bg-black text-[#3f3c40] font-bold py-2 px-4 rounded-md hover:text-[#c7c1c9] transition duration-300"
-                                    disabled={!uploadSuccess} // Disable submit button if upload is not successful
+                                    disabled={!uploadSuccess}
                                 >
                                     Mint Certificate NFT
                                 </button>

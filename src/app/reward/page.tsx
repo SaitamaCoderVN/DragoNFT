@@ -1,7 +1,7 @@
 "use client";
 
 import { nftAbi } from "@/components/contract/abi";
-import { BLOCK_EXPLORER_OPAL, BLOCK_EXPLORER_QUARTZ, BLOCK_EXPLORER_UNIQUE, CHAINID, CONTRACT_ADDRESS_OPAL, CONTRACT_ADDRESS_QUARTZ, CONTRACT_ADDRESS_UNIQUE } from "@/components/contract/contracts";
+import { BLOCK_EXPLORER_OPAL, CHAINID, CONTRACT_ADDRESS_OPAL } from "@/components/contract/contracts";
 import { CustomConnectButton } from "@/components/ui/ConnectButton";
 import Spacer from "@/components/ui/Spacer";
 import Link from "next/link";
@@ -64,14 +64,6 @@ function RewardPage() {
     }, []);
 
     switch (chainId) {
-        case CHAINID.UNIQUE:
-            contractAddress = CONTRACT_ADDRESS_UNIQUE;
-            blockexplorer = BLOCK_EXPLORER_UNIQUE;
-            break;
-        case CHAINID.QUARTZ:
-            contractAddress = CONTRACT_ADDRESS_QUARTZ;
-            blockexplorer = BLOCK_EXPLORER_QUARTZ;
-            break;
         case CHAINID.OPAL:
             contractAddress = CONTRACT_ADDRESS_OPAL;
             blockexplorer = BLOCK_EXPLORER_OPAL;
@@ -112,8 +104,13 @@ function RewardPage() {
                 });
             } else if (rewardType === 'code_contribute') {
                 const byteData = Buffer.from(codeContribute, 'utf-8');  // Chuyển thành Buffer với mã hóa UTF-8
-                const hexRepresentation = "0x" + byteData.toString('hex'); // Chuyển Buffer thành chuỗi hex
-                console.log(hexRepresentation);
+                let hexRepresentation = "0x" + byteData.toString('hex'); // Chuyển Buffer thành chuỗi hex
+
+                // Đệm chuỗi hex với các byte 0 cho đến khi đạt độ dài 64 ký tự (32 byte)
+                while (hexRepresentation.length < 66) { // 2 ký tự cho '0x' và 64 ký tự cho 32 byte
+                    hexRepresentation += '0';
+                }
+                
                 await writeContract({
                     address: contractAddress,
                     abi: nftAbi,

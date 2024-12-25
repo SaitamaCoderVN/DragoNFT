@@ -18,7 +18,7 @@ import { config } from "@/components/contract/config";
 import { nftAbi } from "@/components/contract/abi";
 import { useToast } from "@/components/ui/use-toast";
 import { useAccount, useChainId, useWriteContract } from "wagmi";
-import { BLOCK_EXPLORER_OPAL, BLOCK_EXPLORER_QUARTZ, BLOCK_EXPLORER_UNIQUE, CHAINID, CONTRACT_ADDRESS_OPAL, CONTRACT_ADDRESS_QUARTZ, CONTRACT_ADDRESS_UNIQUE } from "@/components/contract/contracts";
+import { BLOCK_EXPLORER_OPAL, CHAINID, CONTRACT_ADDRESS_OPAL_EVM, CONTRACT_ADDRESS_OPAL_POLKADOT } from "@/components/contract/contracts";
 
 import { AnimatePresence, motion } from "framer-motion";
 const FileUploadIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -45,7 +45,8 @@ function AddProposalPage() {
     const { toast } = useToast();
     const account = useAccount();
     const chainId = useChainId();
-    let contractAddress: `0x${string}` | undefined;
+    let contractAddressEVM: `0x${string}` | undefined;
+    let contractAddressPOLKADOT: `0x${string}` | undefined;
     let blockexplorer: string | undefined;
 
     const [isOptionsVisible, setOptionsVisible] = useState(false); 
@@ -73,16 +74,9 @@ function AddProposalPage() {
     }, []);
 
     switch (chainId) {
-        case CHAINID.UNIQUE:
-            contractAddress = CONTRACT_ADDRESS_UNIQUE;
-            blockexplorer = BLOCK_EXPLORER_UNIQUE;
-            break;
-        case CHAINID.QUARTZ:
-            contractAddress = CONTRACT_ADDRESS_QUARTZ;
-            blockexplorer = BLOCK_EXPLORER_QUARTZ;
-            break;
         case CHAINID.OPAL:
-            contractAddress = CONTRACT_ADDRESS_OPAL;
+            contractAddressEVM = CONTRACT_ADDRESS_OPAL_EVM;
+            contractAddressPOLKADOT = CONTRACT_ADDRESS_OPAL_POLKADOT;
             blockexplorer = BLOCK_EXPLORER_OPAL;
             break;
     }
@@ -271,11 +265,30 @@ function AddProposalPage() {
                     const data = await response.json();
                     cloudinaryUrl = data.url;
                     console.log("cloudinaryUrl", cloudinaryUrl);
-                    await writeContract({
-                        address: contractAddress,
+                    
+                    const code_contribute = await readContract(config, {
+                        address: contractAddressEVM,
                         abi: nftAbi,
-                        functionName: "replayURI",
-                        args: [BigInt(nftValue), cloudinaryUrl],
+                        functionName: "getTokenCodeContribute",
+                        args: [BigInt(nftValue)],
+                    });
+
+                    const byteData = Buffer.from(code_contribute as string, 'utf-8');  // Chuyển thành Buffer với mã hóa UTF-8
+                    let hexRepresentation = "0x" + byteData.toString('hex'); // Chuyển Buffer thành chuỗi hex
+
+                    // Đệm chuỗi hex với các byte 0 cho đến khi đạt độ dài 64 ký tự (32 byte)
+                    while (hexRepresentation.length < 66) { // 2 ký tự cho '0x' và 64 ký tự cho 32 byte
+                        hexRepresentation += '0';
+                    }
+
+                    console.log("hexRepresentation", hexRepresentation);
+
+
+                    await writeContract({
+                        address: contractAddressEVM,
+                        abi: nftAbi,
+                        functionName: "setImageForLevelZero",
+                        args: [BigInt(nftValue), hexRepresentation as `0x${string}`, cloudinaryUrl],
                         chain: config[chainId],
                         account: account.address,
                     });
@@ -302,8 +315,8 @@ function AddProposalPage() {
                 try {
                     const result = await readContract(config, {
                         abi: nftAbi,
-                        address: contractAddress,
-                        functionName: 'getSoulBound_Ranking_NFTs',
+                        address: contractAddressEVM,
+                        functionName: 'getTokenIdsByOwner',
                         args: [address as `0x${string}`],
                     });
 
@@ -312,7 +325,7 @@ function AddProposalPage() {
                     const tokenLevels = await Promise.all(result.map(async (tokenId) => {
                         const tokenLevel = await readContract(config, {
                             abi: nftAbi,
-                            address: contractAddress,
+                            address: contractAddressEVM,
                             functionName: 'getTokenLevel',
                             args: [tokenId],
                         });
@@ -321,13 +334,13 @@ function AddProposalPage() {
                     }));
 
                     // Lọc các tokenId có tokenLevel bằng 0
-                    const tokenIdsWithLevelZero = result.filter((_, index) => tokenLevels[index] === BigInt(0));
+                    const tokenIdsWithLevelZero = result.filter((_, index) => tokenLevels[index] === Number(0));
 
                     const tokenUriForContributorAndLevel = await Promise.all(tokenIdsWithLevelZero.map(async (tokenId) => {
                         const uri = await readContract(config, {
                             abi: nftAbi,
-                            address: contractAddress,
-                            functionName: 'tokenURI',
+                            address: contractAddressEVM,
+                            functionName: 'getTokenImage',
                             args: [tokenId],
                         });
                         return [tokenId, uri] as [string | bigint, string];

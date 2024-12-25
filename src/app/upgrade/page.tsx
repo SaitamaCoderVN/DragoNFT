@@ -18,7 +18,7 @@ import { config } from "@/components/contract/config";
 import { nftAbi } from "@/components/contract/abi";
 import { useToast } from "@/components/ui/use-toast";
 import { useAccount, useChainId, useWriteContract } from "wagmi";
-import { BLOCK_EXPLORER_OPAL, BLOCK_EXPLORER_QUARTZ, BLOCK_EXPLORER_UNIQUE, CHAINID, CONTRACT_ADDRESS_OPAL, CONTRACT_ADDRESS_QUARTZ, CONTRACT_ADDRESS_UNIQUE } from "@/components/contract/contracts";
+import { BLOCK_EXPLORER_OPAL, CHAINID, CONTRACT_ADDRESS_OPAL } from "@/components/contract/contracts";
 
 import { AnimatePresence, motion } from "framer-motion";
 const FileUploadIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -41,6 +41,7 @@ function AddProposalPage() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [uriArray, setUriArray] = useState<Array<[string | bigint, string, bigint]>>([]);
     const [nftValue, setNftValue] = useState('');
+    const [code_contribute, setCodeContribute] = useState('');
     const [nftLevel, setNftLevel] = useState(1);
 
     const [isOptionsVisible, setOptionsVisible] = useState(false); 
@@ -74,14 +75,6 @@ function AddProposalPage() {
     let blockexplorer: string | undefined;
 
     switch (chainId) {
-        case CHAINID.UNIQUE:
-            contractAddress = CONTRACT_ADDRESS_UNIQUE;
-            blockexplorer = BLOCK_EXPLORER_UNIQUE;
-            break;
-        case CHAINID.QUARTZ:
-            contractAddress = CONTRACT_ADDRESS_QUARTZ;
-            blockexplorer = BLOCK_EXPLORER_QUARTZ;
-            break;
         case CHAINID.OPAL:
             contractAddress = CONTRACT_ADDRESS_OPAL;
             blockexplorer = BLOCK_EXPLORER_OPAL;
@@ -256,11 +249,27 @@ function AddProposalPage() {
 
             // dispatch(setCards(updatedCards));
             try {
+
+                const code_contribute = await readContract(config, {
+                    abi: nftAbi,
+                    address: contractAddress,
+                    functionName: 'getTokenCodeContribute',
+                    args: [BigInt(nftValue)],
+                });
+                
+                const byteData = Buffer.from(code_contribute, 'utf-8');  // Chuyển thành Buffer với mã hóa UTF-8
+                let hexRepresentation = "0x" + byteData.toString('hex'); // Chuyển Buffer thành chuỗi hex
+
+                // Đệm chuỗi hex với các byte 0 cho đến khi đạt độ dài 64 ký tự (32 byte)
+                while (hexRepresentation.length < 66) { // 2 ký tự cho '0x' và 64 ký tự cho 32 byte
+                    hexRepresentation += '0';
+                }
+
                 await writeContract({
                     address: contractAddress,
                     abi: nftAbi,
-                    functionName: "upgradeNFTLevel",
-                    args: [BigInt(nftValue), BigInt(nftLevel)],
+                    functionName: "setTokenLevel",
+                    args: [BigInt(nftValue), hexRepresentation as `0x${string}`, BigInt(nftLevel)],
                     chain: config[chainId],
                     account: account.address,
                 });
@@ -291,7 +300,7 @@ function AddProposalPage() {
                     const result = await readContract(config, {
                         abi: nftAbi,
                         address: contractAddress,
-                        functionName: 'getSoulBound_Ranking_NFTs',
+                        functionName: 'getTokenIdsByOwner',
                         args: [address as `0x${string}`],
                     });
 
@@ -309,13 +318,13 @@ function AddProposalPage() {
                     }));
 
                     // Lọc các tokenId có tokenLevel khác 0
-                    const tokenIdsWithLevelNonZero = result.filter((_, index) => tokenLevels[index] !== BigInt(0));
+                    const tokenIdsWithLevelNonZero = result.filter((_, index) => tokenLevels[index] !== Number(0));
 
                     const tokenUriForContributorAndLevel = await Promise.all(tokenIdsWithLevelNonZero.map(async (tokenId) => {
                         const uri = await readContract(config, {
                             abi: nftAbi,
                             address: contractAddress,
-                            functionName: 'tokenURI',
+                            functionName: 'getTokenImage',
                             args: [tokenId],
                         });
                         const level = await readContract(config, {
@@ -324,7 +333,7 @@ function AddProposalPage() {
                             functionName: 'getTokenLevel',
                             args: [tokenId],
                         });
-                        return [tokenId, uri, level] as [string | bigint, string, bigint];
+                        return [tokenId, uri, BigInt(level.toString())] as [string | bigint, string, bigint];
                     }));
 
                     console.log("tokenUriForContributorAndLevel", tokenUriForContributorAndLevel);

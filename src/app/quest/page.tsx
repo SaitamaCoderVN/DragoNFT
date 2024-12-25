@@ -1,7 +1,7 @@
 "use client";
 
 import { nftAbi } from "@/components/contract/abi";
-import { BLOCK_EXPLORER_OPAL, BLOCK_EXPLORER_QUARTZ, BLOCK_EXPLORER_UNIQUE, CHAINID, CONTRACT_ADDRESS_OPAL, CONTRACT_ADDRESS_QUARTZ, CONTRACT_ADDRESS_UNIQUE } from "@/components/contract/contracts";
+import { BLOCK_EXPLORER_OPAL, CHAINID, CONTRACT_ADDRESS_OPAL } from "@/components/contract/contracts";
 import { CustomConnectButton } from "@/components/ui/ConnectButton";
 import Spacer from "@/components/ui/Spacer";
 import Link from "next/link";
@@ -11,6 +11,7 @@ import {
     useWaitForTransactionReceipt,
     useWriteContract,
     useChainId,
+    useAccount,
 } from "wagmi";
 import { useToast } from "@/components/ui/use-toast";
 import { config } from "@/components/contract/config";
@@ -19,7 +20,7 @@ function QuestPage() {
     const [uri, setUri] = useState('');
     const [toAddress, setToAddress] = useState('');
     const [level, setLevel] = useState('');
-    const [codeContribute, setCodeContribute] = useState('');
+    const [codeContribute, setCodeContribute] = useState<`0x${string}`>('0x0000000000000000000000000000000000000000000000000000000000000000');
     const [amount, setAmount] = useState('');
     const [token, setToken] = useState('');
     const [tokenAddress, setTokenAddress] = useState('');
@@ -29,18 +30,11 @@ function QuestPage() {
     
     const { toast } = useToast();
     const chainId = useChainId();
+    const account = useAccount();
     let contractAddress: `0x${string}` | undefined;
     let blockexplorer: string | undefined;
 
     switch (chainId) {
-        case CHAINID.UNIQUE:
-            contractAddress = CONTRACT_ADDRESS_UNIQUE;
-            blockexplorer = BLOCK_EXPLORER_UNIQUE;
-            break;
-        case CHAINID.QUARTZ:
-            contractAddress = CONTRACT_ADDRESS_QUARTZ;
-            blockexplorer = BLOCK_EXPLORER_QUARTZ;
-            break;
         case CHAINID.OPAL:
             contractAddress = CONTRACT_ADDRESS_OPAL;
             blockexplorer = BLOCK_EXPLORER_OPAL;
@@ -68,8 +62,8 @@ function QuestPage() {
             await writeContract({
                 address: contractAddress,
                 abi: nftAbi,
-                functionName: "mint_SoulBound_Ranking_NFT",
-                args: [toAddress as `0x${string}`, uri, BigInt(level), codeContribute],
+                functionName: "mint_DragonNFT",
+                args: [{ eth: account.address as `0x${string}`, sub: BigInt(0) }, codeContribute, Number(level), uri],
                 chain: config[chainId],
                 account: toAddress as `0x${string}`,
             });

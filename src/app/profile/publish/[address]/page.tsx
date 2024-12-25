@@ -3,7 +3,7 @@
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { nftAbi } from "@/components/contract/abi";
-import { CONTRACT_ADDRESS_UNIQUE } from "@/components/contract/contracts";
+import { CONTRACT_ADDRESS_OPAL } from "@/components/contract/contracts";
 import { readContract } from '@wagmi/core/actions';
 import { config } from '@/components/contract/config';
 import Spacer from '@/components/ui/Spacer';
@@ -26,18 +26,18 @@ export default function PublishProfilePage() {
                 setIsLoading(true);
                 const result = await readContract(config, {
                     abi: nftAbi,
-                    address: CONTRACT_ADDRESS_UNIQUE,
-                    functionName: 'getSoulBound_Ranking_NFTs',
+                    address: CONTRACT_ADDRESS_OPAL,
+                    functionName: 'getTokenIdsByOwner',
                     args: [ address as `0x${string}`],
                 });
-            console.log("result", result);
+                console.log("result", result);
                 
             const tokenCodeContributes = await Promise.all(result.map(async (tokenId) => {
                 console.log("tokenId", tokenId);
                 try {
                     const tokenCode = await readContract(config, {
                         abi: nftAbi,
-                        address: CONTRACT_ADDRESS_UNIQUE,
+                        address: CONTRACT_ADDRESS_OPAL,
                         functionName: 'getTokenCodeContribute',
                         args: [tokenId],
                     });
@@ -52,7 +52,7 @@ export default function PublishProfilePage() {
             const tokenLevel = await Promise.all(result.map(async (tokenId) => {
                 const tokenLevel = await readContract(config, {
                     abi: nftAbi,
-                    address: CONTRACT_ADDRESS_UNIQUE,
+                    address: CONTRACT_ADDRESS_OPAL,
                     functionName: 'getTokenLevel',
                     args: [tokenId],
                 });
@@ -64,37 +64,23 @@ export default function PublishProfilePage() {
                 try {
                     const result = await readContract(config, {
                         abi: nftAbi,
-                        address: CONTRACT_ADDRESS_UNIQUE,
-                        functionName: 'getUriForContributorAndLevel',
-                        args: [tokenCodeContributes[index], tokenLevel[index]],
+                        address: CONTRACT_ADDRESS_OPAL,
+                        functionName: 'getTokenImage',
+                        args: [tokenId],
                     });
 
                     if (result === "") {
-                        const result = await readContract(config, {
-                            abi: nftAbi,
-                            address: CONTRACT_ADDRESS_UNIQUE,
-                            functionName: 'tokenURI',
-                            args: [tokenId],
-                        });
-                        console.log("tokenURI Link ảnh đây Đạt nhé", result);
-                        return result;
+                        return "";
                     }
 
                     return result;
                 } catch (error) {
                     // If getUriForContributorAndLevel cannot be called, call tokenURI
-                    const result = await readContract(config, {
-                        abi: nftAbi,
-                        address: CONTRACT_ADDRESS_UNIQUE,
-                        functionName: 'tokenURI',
-                        args: [tokenId],
-                    });
-                    console.log("tokenURI Link ảnh đây Đạt nhé", result);
-                    return result;
+                    return "";
                 }
                 }));
 
-                setUriArray(tokenUriForContributorAndLevel);
+                setUriArray(tokenUriForContributorAndLevel as string[]);
             } catch (error) {
                 setIsError(true);
             } finally {
@@ -145,15 +131,5 @@ export default function PublishProfilePage() {
                 </CardGrid>
             </div>
         </>
-        // <div>
-        //     <h1>Profile of {address}</h1>
-        //     <ul>
-        //         {uriArray.map((uri, index) => (
-        //             <li key={index}>
-        //                 <img src={uri} alt={`Image ${index}`} style={{ maxWidth: '100%', height: 'auto' }} />
-        //             </li>
-        //         ))}
-        //     </ul>
-        // </div>
     );
 } 

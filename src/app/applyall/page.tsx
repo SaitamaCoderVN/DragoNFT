@@ -7,7 +7,7 @@ import { CustomConnectButton } from "@/components/ui/ConnectButton";
 
 
 import { nftAbi } from "@/components/contract/abi";
-import { BLOCK_EXPLORER_OPAL, BLOCK_EXPLORER_QUARTZ, BLOCK_EXPLORER_UNIQUE, CHAINID, CONTRACT_ADDRESS_OPAL, CONTRACT_ADDRESS_QUARTZ, CONTRACT_ADDRESS_UNIQUE } from "@/components/contract/contracts";
+import { BLOCK_EXPLORER_OPAL, CHAINID, CONTRACT_ADDRESS_OPAL } from "@/components/contract/contracts";
 import { useCallback, useRef, useState, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FaSpinner } from 'react-icons/fa';
@@ -103,14 +103,6 @@ function ApplyAll() {
     let blockexplorer: string | undefined;
 
     switch (chainId) {
-        case CHAINID.UNIQUE:
-            contractAddress = CONTRACT_ADDRESS_UNIQUE;
-            blockexplorer = BLOCK_EXPLORER_UNIQUE;
-            break;
-        case CHAINID.QUARTZ:
-            contractAddress = CONTRACT_ADDRESS_QUARTZ;
-            blockexplorer = BLOCK_EXPLORER_QUARTZ;
-            break;
         case CHAINID.OPAL:
             contractAddress = CONTRACT_ADDRESS_OPAL;
             blockexplorer = BLOCK_EXPLORER_OPAL;
@@ -343,8 +335,13 @@ function ApplyAll() {
                 await writeContract({
                     address: contractAddress,
                     abi: nftAbi,
-                    functionName: "mint_SoulBound_Ranking_NFT",
-                    args: [address as `0x${string}`, uri, BigInt(level), codeContribute],
+                    functionName: "mint_DragonNFT",
+                    args: [
+                        { eth: address as `0x${string}`, sub: BigInt(0) }, 
+                        "0x" + Buffer.from(codeContribute, 'utf-8').toString('hex'), 
+                        Number(level), 
+                        uri
+                    ],
                     chain: config[chainId],
                     account: account.address,
                 });

@@ -1,3 +1,4 @@
+import { SignerTypeEnum } from '@/accounts/types';
 import { Address } from 'viem';
 export type NFTCard = {
     id: string;
@@ -10,6 +11,7 @@ export type NFTCard = {
 export class User {
     private _address: string;
     private _nfts: NFTCard[];
+    walletType: 'evm' | 'polkadot' | SignerTypeEnum;
 
     constructor(address: string, nfts: NFTCard[] = []) {
         if (!address) {
@@ -17,6 +19,7 @@ export class User {
         }
         this._address = address;
         this._nfts = nfts;
+        this.walletType = 'evm';
     }
 
     get address(): string {

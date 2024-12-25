@@ -8,7 +8,7 @@ import { CustomConnectButton } from '@/components/ui/ConnectButton';
 import Link from 'next/link';
 import { useToast } from '@/components/ui/use-toast';
 import { useAccount, useChainId } from 'wagmi';
-import { BLOCK_EXPLORER_OPAL, BLOCK_EXPLORER_QUARTZ, BLOCK_EXPLORER_UNIQUE, CHAINID, CONTRACT_ADDRESS_OPAL, CONTRACT_ADDRESS_QUARTZ, CONTRACT_ADDRESS_UNIQUE } from '@/components/contract/contracts';
+import { BLOCK_EXPLORER_OPAL, CHAINID, CONTRACT_ADDRESS_OPAL } from '@/components/contract/contracts';
 import { nftAbi } from '@/components/contract/abi';
 import { readContract } from '@wagmi/core/actions';
 import { config } from '@/components/contract/config';
@@ -57,14 +57,6 @@ export default function ProfilelPage() {
 
 
     switch (chainId) {
-        case CHAINID.UNIQUE:
-            contractAddress = CONTRACT_ADDRESS_UNIQUE;
-            blockexplorer = BLOCK_EXPLORER_UNIQUE;
-            break;
-        case CHAINID.QUARTZ:
-            contractAddress = CONTRACT_ADDRESS_QUARTZ;
-            blockexplorer = BLOCK_EXPLORER_QUARTZ;
-            break;
         case CHAINID.OPAL:
             contractAddress = CONTRACT_ADDRESS_OPAL;
             blockexplorer = BLOCK_EXPLORER_OPAL;
@@ -78,7 +70,7 @@ export default function ProfilelPage() {
             const result = await readContract(config, {
                 abi: nftAbi,
                 address: contractAddress,
-                functionName: 'getSoulBound_Ranking_NFTs',
+                functionName: 'getTokenIdsByOwner',
                 args: [ `${account.address}`],
             });
 
@@ -116,38 +108,21 @@ export default function ProfilelPage() {
                     const result = await readContract(config, {
                         abi: nftAbi,
                         address: contractAddress,
-                        functionName: 'getUriForContributorAndLevel',
-                        args: [tokenCodeContributes[index], tokenLevel[index]],
+                        functionName: 'getTokenImage',
+                        args: [tokenId],
                     });
 
                     if (result === "") {
-                        const result = await readContract(config, {
-                            abi: nftAbi,
-                            address: contractAddress,
-                            functionName: 'tokenURI',
-                            args: [tokenId],
-                        });
-                        console.log("tokenURI Link ảnh đây Đạt nhé", result);
-                        return result;
+                        return "";
                     }
 
-                    return result;
+                    return result.toString();
                 } catch (error) {
-                    // If getUriForContributorAndLevel cannot be called, call tokenURI
-                    const result = await readContract(config, {
-                        abi: nftAbi,
-                        address: contractAddress,
-                        functionName: 'tokenURI',
-                        args: [tokenId],
-                    });
-                    console.log("tokenURI Link ảnh đây Đạt nhé", result);
-                    return result;
+                    return "";
                 }
             }));
             
-            console.log("tokenUriForContributorAndLevel", tokenUriForContributorAndLevel);
-            
-            setUriArray(tokenUriForContributorAndLevel);
+            setUriArray(tokenUriForContributorAndLevel.filter(uri => uri !== "") as string[]);
             // setTokenCodeContributes(tokenCodeContributes);
         }
     };
