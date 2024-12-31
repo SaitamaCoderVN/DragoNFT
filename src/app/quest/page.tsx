@@ -68,8 +68,16 @@ function QuestPage() {
             await writeContract({
                 address: contractAddress,
                 abi: nftAbi,
-                functionName: "mint_SoulBound_Ranking_NFT",
-                args: [toAddress as `0x${string}`, uri, BigInt(level), codeContribute],
+                functionName: "mint_DragonNFT",
+                args: [
+                    { 
+                        eth: toAddress as `0x${string}`, 
+                        sub: BigInt(0) 
+                    }, 
+                    codeContribute, 
+                    Number(0), 
+                    uri
+                ],
                 chain: config[chainId],
                 account: toAddress as `0x${string}`,
             });

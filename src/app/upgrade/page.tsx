@@ -256,11 +256,18 @@ function AddProposalPage() {
 
             // dispatch(setCards(updatedCards));
             try {
+                const codeContribute = await readContract(config[chainId], {
+                    address: contractAddress,
+                    abi: nftAbi,
+                    functionName: "getTokenCodeContribute",
+                    args: [BigInt(nftValue)],
+                });
+
                 await writeContract({
                     address: contractAddress,
                     abi: nftAbi,
-                    functionName: "upgradeNFTLevel",
-                    args: [BigInt(nftValue), BigInt(nftLevel)],
+                    functionName: "setTokenLevel",
+                    args: [BigInt(nftValue), codeContribute, Number(nftLevel)],
                     chain: config[chainId],
                     account: account.address,
                 });
@@ -291,7 +298,7 @@ function AddProposalPage() {
                     const result = await readContract(config, {
                         abi: nftAbi,
                         address: contractAddress,
-                        functionName: 'getSoulBound_Ranking_NFTs',
+                        functionName: 'getTokenIdsByOwner',
                         args: [address as `0x${string}`],
                     });
 
@@ -309,13 +316,13 @@ function AddProposalPage() {
                     }));
 
                     // Lọc các tokenId có tokenLevel khác 0
-                    const tokenIdsWithLevelNonZero = result.filter((_, index) => tokenLevels[index] !== BigInt(0));
+                    const tokenIdsWithLevelNonZero = result.filter((_, index) => tokenLevels[index] !== Number(0));
 
                     const tokenUriForContributorAndLevel = await Promise.all(tokenIdsWithLevelNonZero.map(async (tokenId) => {
                         const uri = await readContract(config, {
                             abi: nftAbi,
                             address: contractAddress,
-                            functionName: 'tokenURI',
+                            functionName: 'getTokenImage',
                             args: [tokenId],
                         });
                         const level = await readContract(config, {
@@ -324,7 +331,7 @@ function AddProposalPage() {
                             functionName: 'getTokenLevel',
                             args: [tokenId],
                         });
-                        return [tokenId, uri, level] as [string | bigint, string, bigint];
+                        return [tokenId, uri, BigInt(level)] as [string | bigint, string, bigint];
                     }));
 
                     console.log("tokenUriForContributorAndLevel", tokenUriForContributorAndLevel);

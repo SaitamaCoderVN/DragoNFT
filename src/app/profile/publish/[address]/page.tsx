@@ -27,7 +27,7 @@ export default function PublishProfilePage() {
                 const result = await readContract(config, {
                     abi: nftAbi,
                     address: CONTRACT_ADDRESS_UNIQUE,
-                    functionName: 'getSoulBound_Ranking_NFTs',
+                    functionName: 'getTokenIdsByOwner',
                     args: [ address as `0x${string}`],
                 });
             console.log("result", result);
@@ -65,15 +65,15 @@ export default function PublishProfilePage() {
                     const result = await readContract(config, {
                         abi: nftAbi,
                         address: CONTRACT_ADDRESS_UNIQUE,
-                        functionName: 'getUriForContributorAndLevel',
-                        args: [tokenCodeContributes[index], tokenLevel[index]],
+                        functionName: 'getTokenImage',
+                        args: [tokenId],
                     });
 
-                    if (result === "") {
+                    if (result === "" as any) {
                         const result = await readContract(config, {
                             abi: nftAbi,
                             address: CONTRACT_ADDRESS_UNIQUE,
-                            functionName: 'tokenURI',
+                            functionName: 'getTokenImage',
                             args: [tokenId],
                         });
                         console.log("tokenURI Link ảnh đây Đạt nhé", result);
@@ -86,7 +86,7 @@ export default function PublishProfilePage() {
                     const result = await readContract(config, {
                         abi: nftAbi,
                         address: CONTRACT_ADDRESS_UNIQUE,
-                        functionName: 'tokenURI',
+                        functionName: 'getTokenImage',
                         args: [tokenId],
                     });
                     console.log("tokenURI Link ảnh đây Đạt nhé", result);
@@ -94,7 +94,7 @@ export default function PublishProfilePage() {
                 }
                 }));
 
-                setUriArray(tokenUriForContributorAndLevel);
+                setUriArray(tokenUriForContributorAndLevel as string[]);
             } catch (error) {
                 setIsError(true);
             } finally {

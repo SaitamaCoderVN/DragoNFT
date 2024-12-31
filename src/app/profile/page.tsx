@@ -78,7 +78,7 @@ export default function ProfilelPage() {
             const result = await readContract(config, {
                 abi: nftAbi,
                 address: contractAddress,
-                functionName: 'getSoulBound_Ranking_NFTs',
+                functionName: 'getTokenIdsByOwner',
                 args: [ `${account.address}`],
             });
 
@@ -116,15 +116,15 @@ export default function ProfilelPage() {
                     const result = await readContract(config, {
                         abi: nftAbi,
                         address: contractAddress,
-                        functionName: 'getUriForContributorAndLevel',
-                        args: [tokenCodeContributes[index], tokenLevel[index]],
+                        functionName: 'getTokenImage',
+                        args: [tokenId],
                     });
 
-                    if (result === "") {
+                    if (result === "" as any) {
                         const result = await readContract(config, {
                             abi: nftAbi,
                             address: contractAddress,
-                            functionName: 'tokenURI',
+                            functionName: 'getTokenImage',
                             args: [tokenId],
                         });
                         console.log("tokenURI Link ảnh đây Đạt nhé", result);
@@ -137,7 +137,7 @@ export default function ProfilelPage() {
                     const result = await readContract(config, {
                         abi: nftAbi,
                         address: contractAddress,
-                        functionName: 'tokenURI',
+                        functionName: 'getTokenImage',
                         args: [tokenId],
                     });
                     console.log("tokenURI Link ảnh đây Đạt nhé", result);
@@ -147,7 +147,7 @@ export default function ProfilelPage() {
             
             console.log("tokenUriForContributorAndLevel", tokenUriForContributorAndLevel);
             
-            setUriArray(tokenUriForContributorAndLevel);
+            setUriArray(tokenUriForContributorAndLevel as string[]);
             // setTokenCodeContributes(tokenCodeContributes);
         }
     };

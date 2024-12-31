@@ -1,5 +1,5 @@
-import type { Metadata } from "next";
-// import localFont from "next/font/local";
+"use client";
+
 import "./globals.css";
 import "./css/cards.css"
 import './css/cards/base.css'
@@ -31,6 +31,10 @@ import { CustomConnectButton } from "@/components/ui/ConnectButton";
 import { store } from "@/redux/store";
 import { GlobalDataProvider } from "@/components/providers/CardsProvider";
 import { Suspense } from "react";
+import { SdkProvider } from "@/sdk/SdkContext";
+import dynamic from 'next/dynamic';
+import { BrowserRouter as Router } from "react-router-dom";
+
 const pixelifySans = Pixelify_Sans({
   subsets: ['latin'],
   display: 'swap',
@@ -44,10 +48,12 @@ const silkscreen = Silkscreen({
   variable: '--font-silkscreen',
 })
 // font-[family-name:var(--font-geist-sans)]
-export const metadata: Metadata = {
-  title: "Dragonft",
-  description: "Created by Thanh Dat",
-};
+
+// Import AccountsContextProvider dynamically
+const DynamicAccountsContextProvider = dynamic(
+  () => import('@/accounts/AccountsContext').then(mod => mod.AccountsContextProvider),
+  { ssr: false }
+);
 
 export default function RootLayout({
   children,
@@ -60,11 +66,17 @@ export default function RootLayout({
         className={`${pixelifySans.variable} ${silkscreen.variable} antialiased`}
       >
         <Providers>
-          <GlobalDataProvider>
-          <Suspense fallback={<div>Loading...</div>}>
-            <main>{children}</main>
-          </Suspense>
-          </GlobalDataProvider>
+          <SdkProvider>
+            <DynamicAccountsContextProvider>
+              <Router>
+                <GlobalDataProvider>
+                  <Suspense fallback={<div>Loading...</div>}>
+                    <main>{children}</main>
+                </Suspense>
+              </GlobalDataProvider>
+            </Router>
+            </DynamicAccountsContextProvider>
+          </SdkProvider>
         </Providers>
       </body>
     </html>

@@ -271,11 +271,26 @@ function AddProposalPage() {
                     const data = await response.json();
                     cloudinaryUrl = data.url;
                     console.log("cloudinaryUrl", cloudinaryUrl);
+
+                    const codeContribute = await readContract(config[chainId], {
+                        address: contractAddress,
+                        abi: nftAbi,
+                        functionName: "getTokenCodeContribute",
+                        args: [
+                            BigInt(nftValue),
+                        ],
+                        account: account.address,
+                    });
+
                     await writeContract({
                         address: contractAddress,
                         abi: nftAbi,
-                        functionName: "replayURI",
-                        args: [BigInt(nftValue), cloudinaryUrl],
+                        functionName: "setImageForLevelZero",
+                        args: [
+                            BigInt(nftValue),
+                            codeContribute,
+                            cloudinaryUrl
+                        ],
                         chain: config[chainId],
                         account: account.address,
                     });
@@ -303,7 +318,7 @@ function AddProposalPage() {
                     const result = await readContract(config, {
                         abi: nftAbi,
                         address: contractAddress,
-                        functionName: 'getSoulBound_Ranking_NFTs',
+                        functionName: 'getTokenIdsByOwner',
                         args: [address as `0x${string}`],
                     });
 
@@ -321,13 +336,13 @@ function AddProposalPage() {
                     }));
 
                     // Lọc các tokenId có tokenLevel bằng 0
-                    const tokenIdsWithLevelZero = result.filter((_, index) => tokenLevels[index] === BigInt(0));
+                    const tokenIdsWithLevelZero = result.filter((_, index) => tokenLevels[index] === Number(0));
 
                     const tokenUriForContributorAndLevel = await Promise.all(tokenIdsWithLevelZero.map(async (tokenId) => {
                         const uri = await readContract(config, {
                             abi: nftAbi,
                             address: contractAddress,
-                            functionName: 'tokenURI',
+                            functionName: 'getTokenImage',
                             args: [tokenId],
                         });
                         return [tokenId, uri] as [string | bigint, string];
