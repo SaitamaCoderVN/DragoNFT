@@ -1,7 +1,7 @@
 "use client";
 
 import { nftAbi } from "@/components/contract/abi";
-import { BLOCK_EXPLORER_OPAL, CHAINID, CONTRACT_ADDRESS_OPAL, CONTRACT_ADDRESS_UNIQUE, CONTRACT_ADDRESS_QUARTZ } from "@/components/contract/contracts";
+import { BLOCK_EXPLORER_OPAL, BLOCK_EXPLORER_QUARTZ, BLOCK_EXPLORER_UNIQUE, CHAINID, CONTRACT_ADDRESS_OPAL, CONTRACT_ADDRESS_QUARTZ, CONTRACT_ADDRESS_UNIQUE } from "@/components/contract/contracts";
 import { CustomConnectButton } from "@/components/ui/ConnectButton";
 import Spacer from "@/components/ui/Spacer";
 import Link from "next/link";
@@ -92,6 +92,14 @@ function MintPage() {
     }, []);
 
     switch (chainId) {
+        case CHAINID.UNIQUE:
+            contractAddress = CONTRACT_ADDRESS_UNIQUE;
+            blockexplorer = BLOCK_EXPLORER_UNIQUE;
+            break;
+        case CHAINID.QUARTZ:
+            contractAddress = CONTRACT_ADDRESS_QUARTZ;
+            blockexplorer = BLOCK_EXPLORER_QUARTZ;
+            break;
         case CHAINID.OPAL:
             contractAddress = CONTRACT_ADDRESS_OPAL;
             blockexplorer = BLOCK_EXPLORER_OPAL;
@@ -336,6 +344,7 @@ function MintPage() {
         if (!selectedAccount) throw new Error("Polkadot account not found");
 
         try {
+            setIsPolkadotPending(true);
             const result = await chain.evm.send(
                 {
                     contract: {
@@ -363,11 +372,14 @@ function MintPage() {
                 throw new Error("Mint transaction failed");
             }
 
-            return result;
-
+            setPolkadotTransactionStatus("Transaction successful!");
+            setPolkadotTransactionHash(result.extrinsicOutput.hash);
         } catch (error) {
             console.error("Error during minting:", error);
+            setPolkadotTransactionStatus("Transaction failed: " + (error as Error).message);
             throw new Error("Cannot mint NFT: " + (error as Error).message);
+        } finally {
+            setIsPolkadotPending(false);
         }
     };
 
@@ -376,7 +388,7 @@ function MintPage() {
         console.log("evmAddress", wagmiAddress);
 
         await writeContract({
-            address: contractAddress,
+            address: contractAddress as `0x${string}`,
             abi: nftAbi,
             functionName: "mint_DragonNFT",
             args: [
@@ -412,6 +424,10 @@ function MintPage() {
     useEffect(() => {
         console.log("Selected Account in MintPage:", selectedAccount);
     }, [selectedAccount]);
+
+    const [polkadotTransactionStatus, setPolkadotTransactionStatus] = useState<string | null>(null);
+    const [isPolkadotPending, setIsPolkadotPending] = useState(false);
+    const [polkadotTransactionHash, setPolkadotTransactionHash] = useState<string | null>(null);
 
     return (
         <>
@@ -587,12 +603,31 @@ function MintPage() {
                                 </a>
                             </p>
                         )}
+                        {isPolkadotPending && <p className="text-yellow-300">Polkadot transaction is pending...</p>}
+                        {polkadotTransactionStatus && (
+                            <p className={`text-${polkadotTransactionStatus.includes("successful") ? "green" : "red"}-300`}>
+                                {polkadotTransactionStatus}
+                                {polkadotTransactionStatus.includes("successful") && polkadotTransactionHash && (
+                                    <>
+                                        {' '}
+                                        <a
+                                            href={`${blockexplorer}/tx/${polkadotTransactionHash}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-blue-400 hover:underline"
+                                        >
+                                            View on block explorer
+                                        </a>
+                                    </>
+                                )}
+                            </p>
+                        )}
                         {error && (
                             <p className="text-red-300">
                                 Error: {(error as BaseError).shortMessage || "An unknown error occurred"}
                             </p>
                         )}
-                        {!isPending && !isConfirming && !isConfirmed && !error && (
+                        {!isPending && !isConfirming && !isConfirmed && !isPolkadotPending && !error && !polkadotTransactionStatus && (
                             <p className="text-gray-300">No transactions yet</p>
                         )}
                     </div>
