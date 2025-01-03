@@ -26,7 +26,8 @@ export default function PublishProfilePage() {
                 setIsLoading(true);
                 const result = await readContract(config, {
                     abi: nftAbi,
-                    address: CONTRACT_ADDRESS_OPAL,
+                    address: CONTRACT_ADDRESS_UNIQUE,
+
                     functionName: 'getTokenIdsByOwner',
                     args: [ address as `0x${string}`],
                 });
@@ -64,19 +65,36 @@ export default function PublishProfilePage() {
                 try {
                     const result = await readContract(config, {
                         abi: nftAbi,
-                        address: CONTRACT_ADDRESS_OPAL,
+                        address: CONTRACT_ADDRESS_UNIQUE,
+
                         functionName: 'getTokenImage',
                         args: [tokenId],
                     });
 
-                    if (result === "") {
-                        return "";
+                    if (result === "" as any) {
+                        const result = await readContract(config, {
+                            abi: nftAbi,
+                            address: CONTRACT_ADDRESS_UNIQUE,
+                            functionName: 'getTokenImage',
+                            args: [tokenId],
+                        });
+                        console.log("tokenURI Link ảnh đây Đạt nhé", result);
+                        return result;
+
                     }
 
                     return result;
                 } catch (error) {
                     // If getUriForContributorAndLevel cannot be called, call tokenURI
-                    return "";
+                    const result = await readContract(config, {
+                        abi: nftAbi,
+                        address: CONTRACT_ADDRESS_UNIQUE,
+                        functionName: 'getTokenImage',
+                        args: [tokenId],
+                    });
+                    console.log("tokenURI Link ảnh đây Đạt nhé", result);
+                    return result;
+
                 }
                 }));
 

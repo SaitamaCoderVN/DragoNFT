@@ -23,6 +23,7 @@ export const CustomConnectButton: React.FC = () => {
     setIsConnecting(true);
     try {
       const accounts = await connectWallet('polkadot-js');
+
       if (!accounts || accounts.size === 0) {
         throw new Error('No accounts found');
       }
@@ -32,21 +33,20 @@ export const CustomConnectButton: React.FC = () => {
         throw new Error('Invalid account data');
       }
       
-      // Cập nhật accounts context
       setAccounts(prev => new Map(prev).set(firstAccount.address, firstAccount));
       
-      // Tạo và lưu thông tin user
       const user = new User(firstAccount.address);
       user.walletType = 'polkadot';
       dispatch(setUser(user));
-      
-      // Cập nhật selected account
-      const accountId = Array.from(accounts.keys()).indexOf(firstAccount.address);
+
+      const accountId = Array.from(accounts.keys()).indexOf(firstAccount.normalizedAddress);
+      console.log(accountId);
+
       setSelectedAccountId(accountId);
       setIsOpen(false);
     } catch (error) {
       console.error("Failed to connect to Polkadot wallet:", error);
-      // Hiển thị thông báo lỗi cho người dùng
+
       alert(error instanceof Error ? error.message : 'Failed to connect wallet');
     } finally {
       setIsConnecting(false);
@@ -55,10 +55,20 @@ export const CustomConnectButton: React.FC = () => {
 
   const handlePolkadotDisconnect = () => {
     disconnectWallet('polkadot-js');
+    
     dispatch(clearUser());
+    
     localStorage.removeItem('selectedAccount');
+    localStorage.removeItem('accounts');
+    localStorage.removeItem('selectedAccountId');
+    localStorage.removeItem('CONNECTED_WALLET_TYPE');
+    
     setAccounts(new Map());
     setSelectedAccountId(-1);
+    
+    setIsOpen(false);
+    setIsConnecting(false);
+
   };
 
   useEffect(() => {
@@ -66,26 +76,39 @@ export const CustomConnectButton: React.FC = () => {
       dispatch(clearUser());
       localStorage.removeItem('selectedAccount');
     }
-  }, [isEvmConnected, accounts]);
+  }, [isEvmConnected, accounts, dispatch]);
+
+  useEffect(() => {
+    if (!isEvmConnected) {
+      dispatch(clearUser());
+      
+      localStorage.removeItem('wagmi.wallet');
+      localStorage.removeItem('wagmi.connected');
+      localStorage.removeItem('wagmi.account');
+      
+      setIsOpen(false);
+    }
+  }, [isEvmConnected, dispatch]);
 
   useEffect(() => {
     if (accounts.size > 0) {
       localStorage.setItem('selectedAccount', JSON.stringify(accounts.values().next().value));
     }
-  }, [accounts]);
+  }, [accounts, setAccounts]);
+
 
   useEffect(() => {
     const savedAccount = localStorage.getItem('selectedAccount');
     if (savedAccount) {
       const account = JSON.parse(savedAccount);
-      // Tự động kết nối lại với ví đã lưu
+
       if (account.walletType === 'polkadot') {
         connectWallet('polkadot-js').then((accounts) => {
           if (accounts && accounts.size > 0) {
             const firstAccount = accounts.values().next().value;
             if (firstAccount.address === account.address) {
               setAccounts((prevAccounts) => new Map(prevAccounts).set(firstAccount.address, firstAccount));
-              console.log("Accounts:", accounts);
+
               const user = new User(firstAccount.address);
               user.walletType = 'polkadot';
               dispatch(setUser(user));
@@ -105,23 +128,16 @@ export const CustomConnectButton: React.FC = () => {
     visible: { opacity: 1, y: 0 }
   };
 
-  // Kiểm tra xem có wallet nào được kết nối không
   const isAnyWalletConnected = isEvmConnected || (accounts.size > 0);
 
   if (isAnyWalletConnected) {
     if (accounts.size > 0) {
       const connectedWallet = accounts.values().next().value;
-      console.log("Connected Wallets:", accounts);
-      console.log("Connected Wallet:", connectedWallet);
       const address = connectedWallet.normalizedAddress;
-      console.log("Connected Wallet Address:", address);
       const name = connectedWallet.name;
-      console.log("Connected Wallet Name:", name);
-      console.log("Connected Accounts:", accounts);
-      console.log("Connected Selected Account:", selectedAccount);
 
       if (connectedWallet && address) {
-        console.log("Connected Wallet Address:", address);
+
         const walletName = connectedWallet.name || "Unknown Wallet";
         const walletAddress = address || "Unknown Address";
 

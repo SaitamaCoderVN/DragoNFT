@@ -112,17 +112,36 @@ export default function ProfilelPage() {
                         args: [tokenId],
                     });
 
-                    if (result === "") {
-                        return "";
+                    if (result === "" as any) {
+                        const result = await readContract(config, {
+                            abi: nftAbi,
+                            address: contractAddress,
+                            functionName: 'getTokenImage',
+                            args: [tokenId],
+                        });
+                        console.log("tokenURI Link ảnh đây Đạt nhé", result);
+                        return result;
+
                     }
 
                     return result.toString();
                 } catch (error) {
-                    return "";
+                    // If getUriForContributorAndLevel cannot be called, call tokenURI
+                    const result = await readContract(config, {
+                        abi: nftAbi,
+                        address: contractAddress,
+                        functionName: 'getTokenImage',
+                        args: [tokenId],
+                    });
+                    console.log("tokenURI Link ảnh đây Đạt nhé", result);
+                    return result;
                 }
             }));
             
-            setUriArray(tokenUriForContributorAndLevel.filter(uri => uri !== "") as string[]);
+            console.log("tokenUriForContributorAndLevel", tokenUriForContributorAndLevel);
+            
+            setUriArray(tokenUriForContributorAndLevel as string[]);
+
             // setTokenCodeContributes(tokenCodeContributes);
         }
     };

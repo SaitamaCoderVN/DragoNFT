@@ -5,10 +5,9 @@ import Link from "next/link";
 import { motion, AnimatePresence } from 'framer-motion';
 import { CustomConnectButton } from "@/components/ui/ConnectButton";
 
-
 import { nftAbi } from "@/components/contract/abi";
-import { BLOCK_EXPLORER_OPAL, CHAINID, CONTRACT_ADDRESS_OPAL } from "@/components/contract/contracts";
-import { useCallback, useRef, useState, useEffect } from 'react';
+import { BLOCK_EXPLORER_OPAL, BLOCK_EXPLORER_QUARTZ, BLOCK_EXPLORER_UNIQUE, CHAINID, CONTRACT_ADDRESS_OPAL, CONTRACT_ADDRESS_QUARTZ, CONTRACT_ADDRESS_UNIQUE } from "@/components/contract/contracts";
+import { useCallback, useRef, useState, useEffect, useContext } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FaSpinner } from 'react-icons/fa';
 import {
@@ -21,6 +20,11 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { config } from "@/components/contract/config";
 import { readContract } from "@wagmi/core/actions";
+import { AccountsContext } from "@/accounts/AccountsContext";
+import { useChainAndScan } from "@/hooks/useChainAndScan";
+import { ethers } from "ethers";
+import { Address } from "@unique-nft/utils";
+
 
 const ArrowDownIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" className="injected-svg" data-src="https://cdn.hugeicons.com/icons/arrow-down-01-stroke-sharp.svg"  role="img" color="#000000">
@@ -34,7 +38,9 @@ const FileUploadIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 function ApplyAll() {
     const [userIds, setUserIds] = useState<string[]>([]); // State to store user IDs
-
+    const { selectedAccount } = useContext(AccountsContext); // Sử dụng useContext để lấy thông tin tài khoản
+    const { chain, scan } = useChainAndScan();
+    const [isLoading, setIsLoading] = useState(false);
     const [link, setLink] = useState('');
     const [isLoadingIds, setIsLoadingIds] = useState(false);
     const fetchUserIdsFromLink = async (link: string) => {
@@ -321,44 +327,125 @@ function ApplyAll() {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (!contractAddress) {
-            toast({
-                variant: "destructive",
-                title: "Network Error",
-                description: "Please select a supported network",
-            });
-            return;
-        }
+        setIsLoading(true);
+
         try {
-            await Promise.all(toAddresses.map(async (address) => {
-                console.log("address", address);
-                await writeContract({
-                    address: contractAddress,
-                    abi: nftAbi,
-                    functionName: "mint_DragonNFT",
-                    args: [
-                        { eth: address as `0x${string}`, sub: BigInt(0) }, 
-                        "0x" + Buffer.from(codeContribute, 'utf-8').toString('hex'), 
-                        Number(level), 
-                        uri
-                    ],
-                    chain: config[chainId],
-                    account: account.address,
-                });
-            }));
+            if (!isConnected && !selectedAccount) {
+                throw new Error("Please connect wallet");
+            }
+
+            if (selectedAccount) {
+                await mintWithPolkadot(codeContribute);
+            } else if (isConnected) {
+                await mintWithEVM(codeContribute);
+            }
+
+            toast({
+                title: "Success",
+                description: "NFT has been minted successfully!",
+            });
+
         } catch (error) {
+            console.error("Mint error:", error);
             toast({
                 variant: "destructive",
-                title: "Transaction Cancelled",
-                description: `${(error as BaseError).shortMessage || "An unknown error occurred"}`,
+                title: "NFT Minting Error",
+                description: error instanceof Error ? error.message : "Unknown error",
             });
+        } finally {
+            setIsLoading(false);
         }
     };
+
+    const mintWithPolkadot = async (hexRepresentation: string) => {
+        if (!selectedAccount) throw new Error("Polkadot account not found");
+
+        try {
+            setIsPolkadotPending(true);
+            await Promise.all(toAddresses.map(async (address) => {
+
+                const result = await chain.evm.send(
+                    {
+                        contract: {
+                            address: contractAddress as string,
+                            abi: nftAbi as any
+                        },
+                        functionName: "mint_DragonNFT",
+                        functionArgs: [
+                            {
+                                eth: ethers.ZeroAddress,
+                                sub: Address.extract.substratePublicKey(selectedAccount.address)
+                            },
+                            hexRepresentation,
+                            Number(0),
+                            uri
+                        ],
+                        gasLimit: BigInt(3_000_000)
+                    },
+                    { signerAddress: selectedAccount.address },
+                    { signer: selectedAccount.signer }
+                );
+                console.log("result", result);
+
+            if (!result.result.isSuccessful) {
+                throw new Error("Mint transaction failed");
+            }
+
+            setPolkadotTransactionStatus("Transaction successful!");
+            setPolkadotTransactionHash(result.extrinsicOutput.hash);
+
+            }));
+            
+        } catch (error) {
+            console.error("Error during minting:", error);
+            setPolkadotTransactionStatus("Transaction failed: " + (error as Error).message);
+            throw new Error("Cannot mint NFT: " + (error as Error).message);
+        } finally {
+            setIsPolkadotPending(false);
+        }
+    };
+
+    const mintWithEVM = async (hexRepresentation: string) => {
+        if (!wagmiAddress) throw new Error("EVM address not found");
+        console.log("evmAddress", wagmiAddress);
+
+        await Promise.all(toAddresses.map(async (address) => {
+            console.log("address", address);
+            await writeContract({
+                address: contractAddress,
+                abi: nftAbi,
+                functionName: "mint_DragonNFT",
+                args: [
+                    { 
+                        eth: address as `0x${string}`, 
+                        sub: BigInt(0) 
+                    }, 
+                    uri, 
+                    Number(level), 
+                    codeContribute
+                ],
+                chain: config[chainId],
+                account: account.address,
+            });
+        }));
+    };
+
     useEffect(() => {
         if (isConfirmed) {
             resetForm();
         }
     }, [isConfirmed]);
+
+    const { address: wagmiAddress, isConnected } = useAccount();
+
+    useEffect(() => {
+        console.log("Selected Account in MintPage:", selectedAccount);
+    }, [selectedAccount]);
+
+    const [polkadotTransactionStatus, setPolkadotTransactionStatus] = useState<string | null>(null);
+    const [isPolkadotPending, setIsPolkadotPending] = useState(false);
+    const [polkadotTransactionHash, setPolkadotTransactionHash] = useState<string | null>(null);
+
     const resetForm = () => {
         setLocalImageFile(null);
         setLocalImagePreview('');
@@ -401,6 +488,7 @@ function ApplyAll() {
                 }
                 return null;
             }));
+            console.log("addresses", addresses);
 
             const validAddresses = addresses.filter(address => address !== null);
             setToAddresses(validAddresses); // Sử dụng validAddresses thay cho toAddresses
@@ -453,10 +541,16 @@ function ApplyAll() {
                                             Upgrade
                                         </Link>
                                         <Link href="/admin/replace" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
-                                        Replace
+                                            Replace
                                         </Link>
                                         <Link href="/admin/reward" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
-                                        Reward
+                                            Reward
+                                        </Link>
+                                        <Link href="/admin/nesting" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                                            Nesting
+                                        </Link>
+                                        <Link href="/admin/unnest" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                                            Unnest
                                         </Link>
                                     </motion.div>
                                 )}
@@ -622,13 +716,32 @@ function ApplyAll() {
                                 </a>
                             </p>
                         )}
+                        {isPolkadotPending && <p className="text-yellow-300">Polkadot transaction is pending...</p>}
+                        {polkadotTransactionStatus && (
+                            <p className={`text-${polkadotTransactionStatus.includes("successful") ? "green" : "red"}-300`}>
+                                {polkadotTransactionStatus}
+                                {polkadotTransactionStatus.includes("successful") && polkadotTransactionHash && (
+                                    <>
+                                        {' '}
+                                        <a
+                                            href={`${blockexplorer}/tx/${polkadotTransactionHash}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-blue-400 hover:underline"
+                                        >
+                                            View on block explorer
+                                        </a>
+                                    </>
+                                )}
+                            </p>
+                        )}
                         {error && (
                             <p className="text-red-300">
                                 Error: {(error as BaseError).shortMessage || "An unknown error occurred"}
                             </p>
                         )}
-                        {!isPending && !isConfirming && !isConfirmed && !error && (
-                            <p className="text-gray-300">No transactions yet</p>
+                        {!isPending && !isConfirming && !isConfirmed && !isPolkadotPending && !error && !polkadotTransactionStatus && (
+                        <p className="text-gray-300">No transactions yet</p>
                         )}
                     </div>
                 </div>

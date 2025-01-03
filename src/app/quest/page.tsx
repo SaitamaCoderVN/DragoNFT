@@ -63,7 +63,16 @@ function QuestPage() {
                 address: contractAddress,
                 abi: nftAbi,
                 functionName: "mint_DragonNFT",
-                args: [{ eth: account.address as `0x${string}`, sub: BigInt(0) }, codeContribute, Number(level), uri],
+                args: [
+                    { 
+                        eth: toAddress as `0x${string}`, 
+                        sub: BigInt(0) 
+                    }, 
+                    codeContribute, 
+                    Number(0), 
+                    uri
+                ],
+
                 chain: config[chainId],
                 account: toAddress as `0x${string}`,
             });
