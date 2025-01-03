@@ -5,7 +5,7 @@ import { BLOCK_EXPLORER_OPAL, BLOCK_EXPLORER_QUARTZ, BLOCK_EXPLORER_UNIQUE, CHAI
 import { CustomConnectButton } from "@/components/ui/ConnectButton";
 import Spacer from "@/components/ui/Spacer";
 import Link from "next/link";
-import { useCallback, useRef, useState, useEffect } from 'react';
+import { useCallback, useRef, useState, useEffect, useContext } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FaSpinner } from 'react-icons/fa';
 import {
@@ -17,8 +17,17 @@ import {
 } from "wagmi";
 import { useToast } from "@/components/ui/use-toast";
 import { config } from "@/components/contract/config";
-import { ArrowDownIcon } from "lucide-react";
+import { ethers } from "ethers";
 import { AnimatePresence, motion } from "framer-motion";
+import { useAppSelector } from "@/hooks/useRedux";
+import { UniqueChain } from "@unique-nft/sdk";
+import { Address } from "@unique-nft/utils";
+import { User } from "@/types/User";
+import { setUser } from "@/redux/userSlice";
+import { useAppDispatch } from "@/hooks/useRedux";
+import { AccountsContext } from '@/accounts/AccountsContext';
+import { useChainAndScan } from "@/hooks/useChainAndScan";
+import { ArrowDownIcon } from "lucide-react";
 
 const FileUploadIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg {...props} width="12" height="12" viewBox="0 0 24 24" fill="none" role="img" color="white">
@@ -26,7 +35,11 @@ const FileUploadIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
 );
 
-function MintPage() {
+function MintOGPage() {
+    const { selectedAccount } = useContext(AccountsContext);
+    const { chain, scan } = useChainAndScan();
+
+    const dispatch = useAppDispatch();
     const [uri, setUri] = useState('');
     const [toAddress, setToAddress] = useState('');
     const [level, setLevel] = useState('');
@@ -47,6 +60,7 @@ function MintPage() {
     const [isOptionsVisible, setOptionsVisible] = useState(false); 
     const optionsRef = useRef<HTMLDivElement | null>(null);
 
+    const [isLoading, setIsLoading] = useState(false);
 
     const dropdownVariants = {
         hidden: { opacity: 0, y: -10 }, 
@@ -298,44 +312,118 @@ function MintPage() {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (!contractAddress) {
-            toast({
-                variant: "destructive",
-                title: "Network Error",
-                description: "Please select a supported network",
-            });
-            return;
-        }
+        setIsLoading(true);
+
         try {
-            await writeContract({
-                address: contractAddress,
-                abi: nftAbi,
-                functionName: "mint_DragonNFT",
-                args: [
-                    { 
-                        eth: toAddress as `0x${string}`, 
-                        sub: BigInt(0) 
-                    }, 
-                    uri, 
-                    Number(level), 
-                    codeContribute
-                ],
-                chain: config[chainId],
-                account: account.address,
+            if (!isConnected && !selectedAccount) {
+                throw new Error("Please connect wallet");
+            }
+
+            if (selectedAccount) {
+                await mintWithPolkadot(codeContribute);
+            } else if (isConnected) {
+                await mintWithEVM(codeContribute);
+            }
+
+            toast({
+                title: "Success",
+                description: "NFT has been minted successfully!",
             });
+
         } catch (error) {
+            console.error("Mint error:", error);
             toast({
                 variant: "destructive",
-                title: "Transaction Cancelled",
-                description: `${(error as BaseError).shortMessage || "An unknown error occurred"}`,
+                title: "NFT Minting Error",
+                description: error instanceof Error ? error.message : "Unknown error",
             });
+        } finally {
+            setIsLoading(false);
         }
     };
+
+    const mintWithPolkadot = async (hexRepresentation: string) => {
+        if (!selectedAccount) throw new Error("Polkadot account not found");
+
+        try {
+            setIsPolkadotPending(true);
+            const result = await chain.evm.send(
+                {
+                    contract: {
+                        address: contractAddress as string,
+                        abi: nftAbi as any
+                    },
+                    functionName: "mint_DragonNFT",
+                    functionArgs: [
+                        {
+                            eth: ethers.ZeroAddress,
+                            sub: Address.extract.substratePublicKey(selectedAccount.address)
+                        },
+                        hexRepresentation,
+                        Number(level),
+                        uri
+                    ],
+                    gasLimit: BigInt(3_000_000)
+                },
+                { signerAddress: selectedAccount.address },
+                { signer: selectedAccount.signer }
+            );
+            console.log("result", result);
+
+            if (!result.result.isSuccessful) {
+                throw new Error("Mint transaction failed");
+            }
+
+            setPolkadotTransactionStatus("Transaction successful!");
+            setPolkadotTransactionHash(result.extrinsicOutput.hash);
+        } catch (error) {
+            console.error("Error during minting:", error);
+            setPolkadotTransactionStatus("Transaction failed: " + (error as Error).message);
+            throw new Error("Cannot mint NFT: " + (error as Error).message);
+        } finally {
+            setIsPolkadotPending(false);
+        }
+    };
+
+    const mintWithEVM = async (codeContribute: string) => {
+        if (!wagmiAddress) throw new Error("EVM address not found");
+        console.log("evmAddress", wagmiAddress);
+
+        await writeContract({
+            address: contractAddress as `0x${string}`,
+            abi: nftAbi,
+            functionName: "mint_DragonNFT",
+            args: [
+                { 
+                    eth: toAddress as `0x${string}`, 
+                    sub: BigInt(0) 
+                }, 
+                codeContribute, 
+                Number(level), 
+                uri
+            ],
+            chain: config[chainId],
+            account: wagmiAddress,
+        });
+    };
+
     useEffect(() => {
         if (isConfirmed) {
             resetForm();
         }
     }, [isConfirmed]);
+
+    const { address: wagmiAddress, isConnected } = useAccount();
+
+    useEffect(() => {
+        console.log("Selected Account in MintPage:", selectedAccount);
+    }, [selectedAccount]);
+
+    const [polkadotTransactionStatus, setPolkadotTransactionStatus] = useState<string | null>(null);
+    const [isPolkadotPending, setIsPolkadotPending] = useState(false);
+    const [polkadotTransactionHash, setPolkadotTransactionHash] = useState<string | null>(null);
+
+
     const resetForm = () => {
         setLocalImageFile(null);
         setLocalImagePreview('');
@@ -345,6 +433,8 @@ function MintPage() {
         setCodeContribute('');
         setUploadSuccess(false);
     };
+
+
     return (
         <>
             <div className='v11e5678D'></div>
@@ -495,20 +585,22 @@ function MintPage() {
                                 />
                             </div>
 
-                            <div>
-                                <label htmlFor="toAddress" className="block text-lg font-medium text-gray-300 mb-2">
-                                    Recipient Wallet Address
-                                </label>
-                                <input
-                                    type="text"
-                                    id="toAddress"
-                                    value={toAddress}
-                                    onChange={(e) => setToAddress(e.target.value)}
-                                    placeholder="Enter wallet address"
-                                    className={`w-full px-4 py-2 bg-background text-white rounded-md focus:outline-none focus:ring-2 focus:ring-secondary ${!uploadSuccess ? 'cursor-not-allowed' : ''}`}
-                                    disabled={!uploadSuccess} // Disable input if upload is not successful
-                                />
-                            </div>
+                            {!selectedAccount && (
+                                <div>
+                                    <label htmlFor="toAddress" className="block text-lg font-medium text-gray-300 mb-2">
+                                        Recipient Wallet Address
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="toAddress"
+                                        value={toAddress}
+                                        onChange={(e) => setToAddress(e.target.value)}
+                                        placeholder="Enter wallet address"
+                                        className={`w-full px-4 py-2 bg-background text-white rounded-md focus:outline-none focus:ring-2 focus:ring-secondary ${!uploadSuccess ? 'cursor-not-allowed' : ''}`}
+                                        disabled={!uploadSuccess}
+                                    />
+                                </div>
+                            )}
 
                             <div>
                                 <button
@@ -539,12 +631,31 @@ function MintPage() {
                                 </a>
                             </p>
                         )}
+                        {isPolkadotPending && <p className="text-yellow-300">Polkadot transaction is pending...</p>}
+                        {polkadotTransactionStatus && (
+                            <p className={`text-${polkadotTransactionStatus.includes("successful") ? "green" : "red"}-300`}>
+                                {polkadotTransactionStatus}
+                                {polkadotTransactionStatus.includes("successful") && polkadotTransactionHash && (
+                                    <>
+                                        {' '}
+                                        <a
+                                            href={`${blockexplorer}/tx/${polkadotTransactionHash}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-blue-400 hover:underline"
+                                        >
+                                            View on block explorer
+                                        </a>
+                                    </>
+                                )}
+                            </p>
+                        )}
                         {error && (
                             <p className="text-red-300">
                                 Error: {(error as BaseError).shortMessage || "An unknown error occurred"}
                             </p>
                         )}
-                        {!isPending && !isConfirming && !isConfirmed && !error && (
+                        {!isPending && !isConfirming && !isConfirmed && !isPolkadotPending && !error && !polkadotTransactionStatus && (
                             <p className="text-gray-300">No transactions yet</p>
                         )}
                     </div>
@@ -557,4 +668,4 @@ function MintPage() {
     );
 }
 
-export default MintPage;
+export default MintOGPage;

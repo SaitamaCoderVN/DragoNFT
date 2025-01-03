@@ -5,7 +5,7 @@ import { BLOCK_EXPLORER_OPAL, BLOCK_EXPLORER_QUARTZ, BLOCK_EXPLORER_UNIQUE, CHAI
 import { CustomConnectButton } from "@/components/ui/ConnectButton";
 import Spacer from "@/components/ui/Spacer";
 import Link from "next/link";
-import { useCallback, useRef, useState, useEffect } from 'react';
+import { useCallback, useRef, useState, useEffect, useContext } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FaSpinner } from 'react-icons/fa';
 import {
@@ -18,6 +18,13 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { config } from "@/components/contract/config";
 import { AnimatePresence, motion } from "framer-motion";
+import { useAppSelector } from "@/hooks/useRedux";
+import { setUser } from "@/redux/userSlice";
+import { useAppDispatch } from "@/hooks/useRedux";
+import { useChainAndScan } from "@/hooks/useChainAndScan";
+import { ethers } from "ethers";
+import { AccountsContext } from '@/accounts/AccountsContext';
+import { Address } from "@unique-nft/utils";
 
 const FileUploadIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg {...props} width="12" height="12" viewBox="0 0 24 24" fill="none" role="img" color="white">
@@ -30,6 +37,10 @@ const ArrowDownIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
 );
 function ConfigPage() {
+
+    const { selectedAccount } = useContext(AccountsContext);
+    const { chain, scan } = useChainAndScan();
+
     const [uri, setUri] = useState('');
     const [codeContribute, setCodeContribute] = useState('');
     const [levelFrom, setLevelFrom] = useState<number>(0);
@@ -49,6 +60,8 @@ function ConfigPage() {
 
     const [isOptionsVisible, setOptionsVisible] = useState(false); 
     const optionsRef = useRef<HTMLDivElement | null>(null);
+
+    const [isLoading, setIsLoading] = useState(false);
 
     const dropdownVariants = {
         hidden: { opacity: 0, y: -10 }, 
@@ -302,36 +315,93 @@ function ConfigPage() {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (!contractAddress) {
-            toast({
-                variant: "destructive",
-                title: "Network Error",
-                description: "Please select a supported network",
-            });
-            return;
-        }
-        
+        setIsLoading(true);
+
         try {
-            await writeContract({
-                address: contractAddress,
-                abi: nftAbi,
-                functionName: "setLevelImageUri",
-                args: [
-                    codeContribute,
-                    Number(levelFrom), 
-                    Number(levelTo), 
-                    uri
-                ],
-                chain: config[chainId],
-                account: account.address as `0x${string}`,
+            if (!isConnected && !selectedAccount) {
+                throw new Error("Please connect wallet");
+            }
+
+            if (selectedAccount) {
+                await configWithPolkadot(codeContribute);
+            } else if (isConnected) {
+                await configWithEVM(codeContribute);
+            }
+
+            toast({
+                title: "Success",
+                description: "NFT has been minted successfully!",
             });
+
         } catch (error) {
+            console.error("Mint error:", error);
             toast({
                 variant: "destructive",
-                title: "Transaction Cancelled",
-                description: `${(error as BaseError).shortMessage || "An unknown error occurred"}`,
+                title: "NFT Minting Error",
+                description: error instanceof Error ? error.message : "Unknown error",
             });
+        } finally {
+            setIsLoading(false);
         }
+    };
+
+    const configWithPolkadot = async (codeContribute: string) => {
+        if (!selectedAccount) throw new Error("Polkadot account not found");
+
+        try {
+            setIsPolkadotPending(true);
+            const result = await chain.evm.send(
+                {
+                    contract: {
+                        address: contractAddress as string,
+                        abi: nftAbi as any
+                    },
+                    functionName: "setLevelImageUri",
+                    functionArgs: [
+                        codeContribute,
+                        Number(levelFrom),
+                        Number(levelTo),
+                        uri
+                    ],
+                    gasLimit: BigInt(3_000_000)
+                },
+                { signerAddress: selectedAccount.address },
+                { signer: selectedAccount.signer }
+            );
+            console.log("result", result);
+
+            if (!result.result.isSuccessful) {
+                throw new Error("Mint transaction failed");
+            }
+
+            setPolkadotTransactionStatus("Transaction successful!");
+            setPolkadotTransactionHash(result.extrinsicOutput.hash);
+        } catch (error) {
+            console.error("Error during minting:", error);
+            setPolkadotTransactionStatus("Transaction failed: " + (error as Error).message);
+            throw new Error("Cannot mint NFT: " + (error as Error).message);
+        } finally {
+            setIsPolkadotPending(false);
+        }
+    };
+
+    const configWithEVM = async (codeContribute: string) => {
+        if (!wagmiAddress) throw new Error("EVM address not found");
+        console.log("evmAddress", wagmiAddress);
+
+        await writeContract({
+            address: contractAddress,
+            abi: nftAbi,
+            functionName: "setLevelImageUri",
+            args: [
+                codeContribute,
+                Number(levelFrom), 
+                Number(levelTo), 
+                uri
+            ],
+            chain: config[chainId],
+            account: account.address as `0x${string}`,
+        });
     };
 
     useEffect(() => {
@@ -348,6 +418,15 @@ function ConfigPage() {
         setCodeContribute('');
         setUploadSuccess(false);
     };
+
+    const { address: wagmiAddress, isConnected } = useAccount();
+    const [polkadotTransactionStatus, setPolkadotTransactionStatus] = useState<string | null>(null);
+    const [isPolkadotPending, setIsPolkadotPending] = useState(false);
+    const [polkadotTransactionHash, setPolkadotTransactionHash] = useState<string | null>(null);
+
+    useEffect(() => {
+        console.log("Selected Account in MintPage:", selectedAccount);
+    }, [selectedAccount]);
 
     return (
         <>
@@ -404,11 +483,11 @@ function ConfigPage() {
                                     fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
                                         Admin
                                     </Link>
-                                    <Link href="/config" className='
+                                    <Link href="/upgrade" className='
                                         max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw] max-phonescreen:h-[27px]
                                     
                                     fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
-                                        Config
+                                        Upgrade
                                     </Link>
                                     <Link href="/replace" className='
                                         max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw] max-phonescreen:h-[27px]
@@ -421,6 +500,18 @@ function ConfigPage() {
                                     
                                     fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
                                         Reward
+                                    </Link>
+                                    <Link href="/nesting" className='
+                                        max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw] max-phonescreen:h-[27px]
+                                    
+                                    fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                                        Nesting
+                                    </Link>
+                                    <Link href="/unnest" className='
+                                        max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw] max-phonescreen:h-[27px]
+                                    
+                                    fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                                        Unnest
                                     </Link>
                                 </motion.div>
                             )}
@@ -571,12 +662,31 @@ function ConfigPage() {
                                 </a>
                             </p>
                         )}
+                        {isPolkadotPending && <p className="text-yellow-300">Polkadot transaction is pending...</p>}
+                        {polkadotTransactionStatus && (
+                            <p className={`text-${polkadotTransactionStatus.includes("successful") ? "green" : "red"}-300`}>
+                                {polkadotTransactionStatus}
+                                {polkadotTransactionStatus.includes("successful") && polkadotTransactionHash && (
+                                    <>
+                                        {' '}
+                                        <a
+                                            href={`${blockexplorer}/tx/${polkadotTransactionHash}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-blue-400 hover:underline"
+                                        >
+                                            View on block explorer
+                                        </a>
+                                    </>
+                                )}
+                            </p>
+                        )}
                         {error && (
                             <p className="text-red-300">
                                 Error: {(error as BaseError).shortMessage || "An unknown error occurred"}
                             </p>
                         )}
-                        {!isPending && !isConfirming && !isConfirmed && !error && (
+                        {!isPending && !isConfirming && !isConfirmed && !isPolkadotPending && !error && !polkadotTransactionStatus && (
                             <p className="text-gray-300">No transactions yet</p>
                         )}
                     </div>

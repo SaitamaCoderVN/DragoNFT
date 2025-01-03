@@ -19,12 +19,19 @@ import { nftAbi } from "@/components/contract/abi";
 import { useToast } from "@/components/ui/use-toast";
 import { BaseError, useAccount, useChainId, useWriteContract } from "wagmi";
 import { BLOCK_EXPLORER_OPAL, BLOCK_EXPLORER_QUARTZ, BLOCK_EXPLORER_UNIQUE, CHAINID, CONTRACT_ADDRESS_OPAL, CONTRACT_ADDRESS_QUARTZ, CONTRACT_ADDRESS_UNIQUE } from "@/components/contract/contracts";
-import { useWaitForTransactionReceipt } from "wagmi";
-import { AccountsContext } from "@/accounts/AccountsContext";
-import { useChainAndScan } from "@/hooks/useChainAndScan";
-import { ethers } from "ethers";
+import { UniqueChain } from "@unique-nft/sdk";
 
 import { AnimatePresence, motion } from "framer-motion";
+import { useChainAndScan } from "@/hooks/useChainAndScan";
+import { ethers } from "ethers";
+import { AccountsContext } from '@/accounts/AccountsContext';
+import { Address } from "@unique-nft/utils";
+import { useWaitForTransactionReceipt, useSendTransaction } from "wagmi";
+import { SdkContext } from "@/sdk/SdkContext";
+import { parseEther } from "viem";
+import { SignerTypeEnum, Account } from "@/accounts/types";
+import { toast } from '@/components/ui/use-toast';
+
 const FileUploadIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg {...props} width="12" height="12" viewBox="0 0 24 24" fill="none" role="img" color="white"><path fillRule="evenodd" clipRule="evenodd" d="M13.25 1.26003C12.9109 1.25 12.5071 1.25 11.997 1.25H11.25C8.44974 1.25 7.04961 1.25 5.98005 1.79497C5.03924 2.27433 4.27433 3.03924 3.79497 3.98005C3.25 5.04961 3.25 6.44974 3.25 9.25V14.75C3.25 17.5503 3.25 18.9504 3.79497 20.02C4.27433 20.9608 5.03924 21.7257 5.98005 22.205C7.04961 22.75 8.44974 22.75 11.25 22.75H12.75C15.5503 22.75 16.9504 22.75 18.02 22.205C18.9608 21.7257 19.7257 20.9608 20.205 20.02C20.75 18.9504 20.75 17.5503 20.75 14.75V10.003C20.75 9.49288 20.75 9.08913 20.74 8.75001H17.2H17.1695H17.1695C16.6354 8.75002 16.1895 8.75003 15.8253 8.72027C15.4454 8.68924 15.0888 8.62212 14.7515 8.45028C14.2341 8.18663 13.8134 7.76593 13.5497 7.24849C13.3779 6.91122 13.3108 6.55457 13.2797 6.17468C13.25 5.81045 13.25 5.3646 13.25 4.83044V4.80001V1.26003ZM20.5164 7.25001C20.3941 6.86403 20.2252 6.4939 20.0132 6.14791C19.704 5.64333 19.2716 5.21096 18.4069 4.34621L18.4069 4.34619L17.6538 3.59315L17.6538 3.59314C16.789 2.72839 16.3567 2.29601 15.8521 1.9868C15.5061 1.77478 15.136 1.6059 14.75 1.48359V4.80001C14.75 5.37244 14.7506 5.75666 14.7748 6.05253C14.7982 6.33966 14.8401 6.47694 14.8862 6.5675C15.0061 6.8027 15.1973 6.99393 15.4325 7.11377C15.5231 7.15991 15.6604 7.2018 15.9475 7.22526C16.2434 7.24943 16.6276 7.25001 17.2 7.25001H20.5164ZM12.5303 10.4697C12.2374 10.1768 11.7626 10.1768 11.4697 10.4697L8.96967 12.9697C8.67678 13.2626 8.67678 13.7374 8.96967 14.0303C9.26256 14.3232 9.73744 14.3232 10.0303 14.0303L11.25 12.8107V17C11.25 17.4142 11.5858 17.75 12 17.75C12.4142 17.75 12.75 17.4142 12.75 17V12.8107L13.9697 14.0303C14.2626 14.3232 14.7374 14.3232 15.0303 14.0303C15.3232 13.7374 15.3232 13.2626 15.0303 12.9697L12.5303 10.4697Z" fill="currentColor"></path></svg>
 );
@@ -33,30 +40,30 @@ const ArrowDownIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <path d="M5.99977 9.00005L11.9998 15L17.9998 9" stroke="#000000" strokeWidth="2" stroke-miterlimit="16"></path>
     </svg>
 );
-function ReplacePage() {
+
+function NestingPage() {
     const dispatch = useAppDispatch();
     const { cards } = useAppSelector((state) => state.card);
-    // const [nftName, setNftName] = useState('');
-    // const [nftTitle, setNftTitle] = useState('');
-    const [address, setAddress] = useState('');
+    const { address: wagmiAddress, isConnected } = useAccount();
+    const { selectedAccount } = useContext(AccountsContext);
+
+    const getCurrentAddress = useCallback(() => {
+        if (selectedAccount) {
+            return selectedAccount.normalizedAddress;
+        }
+        if (isConnected && wagmiAddress) {
+            return wagmiAddress;
+        }
+        return null;
+    }, [selectedAccount, isConnected, wagmiAddress]);
+
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [localImageFile, setLocalImageFile] = useState(null);
     const [localImagePreview, setLocalImagePreview] = useState('');
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [uriArray, setUriArray] = useState<Array<[string | bigint, string]>>([]);
-    const [nftValue, setNftValue] = useState('');
-
-    const { toast } = useToast();
-    const account = useAccount();
-    const chainId = useChainId();
-    let contractAddress: `0x${string}` | undefined;
-    let blockexplorer: string | undefined;
-
-    const [isLoading, setIsLoading] = useState(false);
-
-    
-    const { selectedAccount } = useContext(AccountsContext);
-    const { chain, scan } = useChainAndScan();
+    const [uriArray, setUriArray] = useState<Array<[string | bigint, string, bigint]>>([]);
+    const [TokenIdParent, setTokenIdParent] = useState('');
+    const [TokenIdNested, setTokenIdNested] = useState('');
 
     const [isOptionsVisible, setOptionsVisible] = useState(false); 
     const optionsRef = useRef<HTMLDivElement | null>(null); 
@@ -64,6 +71,18 @@ function ReplacePage() {
         hidden: { opacity: 0, y: -10 }, 
         visible: { opacity: 1, y: 0 },   
     };
+
+    const { sdk } = useContext(SdkContext);
+
+    const { chain, scan } = useChainAndScan();
+
+    const [isLoading, setIsLoading] = useState(false);
+
+    const { 
+        data: hashTransaction, 
+        isPending: isPendingTransaction, 
+        sendTransaction 
+      } = useSendTransaction()
 
     const toggleOptions = () => {
         setOptionsVisible(!isOptionsVisible); 
@@ -81,6 +100,12 @@ function ReplacePage() {
             document.removeEventListener('mousedown', handleClickOutside); 
         };
     }, []);
+
+    const { toast } = useToast();
+    const account = useAccount();
+    const chainId = useChainId();
+    let contractAddress: `0x${string}` | undefined;
+    let blockexplorer: string | undefined;
 
     switch (chainId) {
         case CHAINID.UNIQUE:
@@ -117,10 +142,6 @@ function ReplacePage() {
     const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
         hash,
     });
-
-    const [polkadotTransactionStatus, setPolkadotTransactionStatus] = useState<string | null>(null);
-    const [isPolkadotPending, setIsPolkadotPending] = useState(false);
-    const [polkadotTransactionHash, setPolkadotTransactionHash] = useState<string | null>(null);
 
     const generateCombinedImage = async (): Promise<Blob | null> => {
         return new Promise((resolve) => {
@@ -266,48 +287,30 @@ function ReplacePage() {
         });
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            let cloudinaryUrl = '';
-            if (localImageFile) {
-                const combinedImageBlob = await generateCombinedImage();
-                if (combinedImageBlob) {
-                    const formData = new FormData();
-                    formData.append('file', combinedImageBlob, 'combined_image.png');
-
-                    const response = await fetch('/api/upload', {
-                        method: 'POST',
-                        body: formData,
-                    });
-
-                    if (!response.ok) {
-                        throw new Error('Upload failed');
-                    }
-
-                    const data = await response.json();
-                    cloudinaryUrl = data.url;
-                    console.log("cloudinaryUrl", cloudinaryUrl);
-
-                    if (selectedAccount) {
-                        await replaceWithPolkadot(cloudinaryUrl);
-                    } else if (isConnected) {
-                        await replaceWithEVM(cloudinaryUrl);
-                    }
-
-                    toast({
-                        title: "Success",
-                        description: "NFT has been replaced successfully!",
-                    });
-                }
+            if (!isConnected && !selectedAccount) {
+                throw new Error("Please connect wallet");
             }
 
+            if (selectedAccount) {
+                await nestingWithPolkadot();
+            } else if (isConnected) {
+                await nestingWithEVM();
+            }
+
+            toast({
+                title: "Success",
+                description: "NFT has been minted successfully!",
+            });
+        
         } catch (error) {
-            console.error("Replace error:", error);
+            console.error("Nesting error:", error);
             toast({
                 variant: "destructive",
-                title: "NFT Replace Error",
+                title: "NFT Nesting Error",
                 description: error instanceof Error ? error.message : "Unknown error",
             });
         } finally {
@@ -316,75 +319,145 @@ function ReplacePage() {
         }
     };
 
-    const replaceWithEVM = async (cloudinaryUrl: string) => {
-        if (!wagmiAddress) throw new Error("EVM address not found");
-        console.log("evmAddress", wagmiAddress);
+    const nestingWithPolkadot = async () => {
+        if (!selectedAccount) throw new Error("Polkadot account not found");
 
-        const codeContribute = await readContract(config, {
-            address: contractAddress,
-            abi: nftAbi,
-            functionName: "getTokenCodeContribute",
-            args: [
-                BigInt(nftValue),
-            ],
-            account: account.address,
-        });
-
-        await writeContract({
-            address: contractAddress,
-            abi: nftAbi,
-            functionName: "setImageForLevelZero",
-            args: [
-                BigInt(nftValue),
-                codeContribute,
-                cloudinaryUrl
-            ],
-            chain: config[chainId],
-            account: account.address,
-        });
-    };
-
-    const replaceWithPolkadot = async (cloudinaryUrl: string) => {
-        if (!selectedAccount) throw new Error("Polkadot address not found");
-        console.log("polkadotAddress", selectedAccount);
-        setIsPolkadotPending(true);
         try {
-            const codeContribute = await readContract(config, {
-                address: contractAddress,
-                abi: nftAbi,
-                functionName: "getTokenCodeContribute",
-                args: [BigInt(nftValue)],
+            setIsPolkadotPending(true);
+            
+            // Check token IDs
+            if (!TokenIdParent || !TokenIdNested) {
+                throw new Error("Invalid Token ID");
+            }
+
+            // Check if tokens exist
+            const parentExists = await chain.token.get({
+                collectionId: 4790,
+                tokenId: Number(TokenIdParent)
+            });
+            
+            const nestedExists = await chain.token.get({
+                collectionId: 4790,
+                tokenId: Number(TokenIdNested)
             });
 
-            const result = await chain.evm.send(
-                {
-                    contract: {
-                        address: contractAddress as string,
-                        abi: nftAbi as any
-                    },
-                    functionName: "setImageForLevelZero",
-                    functionArgs: [
-                        BigInt(nftValue),
-                        codeContribute,
-                        cloudinaryUrl
-                    ],
-                    gasLimit: BigInt(3_000_000)
-                },
-                { signerAddress: selectedAccount.address },
-                { signer: selectedAccount.signer }
-            );
-            console.log("result", result);
+            console.log("parentExists", parentExists);
+            console.log("nestedExists", nestedExists);
 
-            if (!result.result.isSuccessful) {
-                throw new Error("Replace transaction failed");
+            if (!parentExists || !nestedExists) {
+                throw new Error("One or both tokens do not exist");
+            }
+
+            // Check ownership
+            const tokenInfo = await chain.token.get({
+                collectionId: 4790,
+                tokenId: Number(TokenIdParent)
+            });
+
+            if (tokenInfo.owner !== selectedAccount.normalizedAddress) {
+                throw new Error("You don't own the parent token");
+            }
+
+            // Perform nesting
+            const result = await chain.token.nest(
+                {
+                    parent: { 
+                        collectionId: 4790, 
+                        tokenId: Number(TokenIdParent) 
+                    },
+                    nested: { 
+                        collectionId: 4790, 
+                        tokenId: Number(TokenIdNested) 
+                    },
+                },
+                { 
+                    signerAddress: selectedAccount.address 
+                },
+                { 
+                    signer: selectedAccount.signer 
+                }
+            );
+
+            if (!result || !result.extrinsicOutput) {
+                throw new Error("Nesting transaction failed");
             }
 
             setPolkadotTransactionStatus("Transaction successful!");
             setPolkadotTransactionHash(result.extrinsicOutput.hash);
+
         } catch (error) {
-            console.error("Error during replace:", error);
-            setPolkadotTransactionStatus("Transaction failed: " + (error as Error).message);
-            throw new Error("Cannot replace NFT: " + (error as Error).message);
+            console.error("Error during nesting:", error);
+            const errorMessage = error instanceof Error ? error.message : "Unknown error";
+            setPolkadotTransactionStatus("Transaction failed: " + errorMessage);
+            throw new Error("Cannot nest NFT: " + errorMessage);
+        } finally {
+            setIsPolkadotPending(false);
+        }
+    };
+
+    const nestingWithEVM = async () => {
+        try {
+            if (!wagmiAddress) throw new Error("Please connect EVM wallet");
+            if (!TokenIdParent || !TokenIdNested) throw new Error("Please enter Token ID");
+
+            setIsPolkadotPending(true);
+            
+            // Convert EVM address to appropriate format
+            const ethereumAddress = Address.extract.substrateOrMirrorIfEthereumNormalized(wagmiAddress);
+            
+            // Create account object with required information
+            const account: Account = {
+                address: ethereumAddress,
+                signerType: SignerTypeEnum.Ethereum,
+                name: '',
+                normalizedAddress: wagmiAddress,
+                // Add signer from window.ethereum
+                signer: window.ethereum
+            };
+
+            // Check balance (if needed)
+            const balanceResponse = await sdk.balance.get({ address: ethereumAddress });
+            account.balance = Number(balanceResponse.available) / Math.pow(10, Number(balanceResponse.decimals));
+
+            console.log("Nesting NFT with params:", {
+                parent: { collectionId: 1, tokenId: Number(TokenIdParent) },
+                nested: { collectionId: 1, tokenId: Number(TokenIdNested) },
+                signerAddress: ethereumAddress
+            });
+
+            // Perform nesting
+            const result = await chain.token.nest(
+                {
+                    parent: { collectionId: 1, tokenId: Number(TokenIdParent) },
+                    nested: { collectionId: 1, tokenId: Number(TokenIdNested) }
+                },
+                { signerAddress: ethereumAddress },
+                { signer: account.signer }
+            );
+
+            setPolkadotTransactionStatus("Nesting successful!");
+            setPolkadotTransactionHash(result.extrinsicOutput?.hash);
+            
+            // Add success notification
+            toast({
+                title: "Success",
+                description: "NFT has been nested successfully!",
+                duration: 5000,
+            });
+
+        } catch (error) {
+            console.error("Nesting error:", error);
+            setPolkadotTransactionStatus("Nesting failed: " + (error as Error).message);
+            
+            // Add error notification
+            toast({
+                variant: "destructive",
+                title: "Nesting Error",
+                description: error instanceof Error ? error.message : "Cannot perform NFT nesting",
+                duration: 5000,
+            });
+            
+            throw error;
         } finally {
             setIsPolkadotPending(false);
         }
@@ -392,13 +465,14 @@ function ReplacePage() {
 
     useEffect(() => {
         const fetchData = async () => {
-            if (address) {
+            const currentAddress = getCurrentAddress();
+            if (currentAddress) {
                 try {
-                    if (!address.toLowerCase().startsWith("0x")) {
+                    if (selectedAccount) {
 
                         const result = await chain.collection.accountTokens(
                             {
-                                address: address,
+                                address: currentAddress,
                                 collectionId: 4790
                             }
                         );
@@ -421,7 +495,7 @@ function ReplacePage() {
                                 functionName: 'getTokenLevel',
                                 args: [BigInt(tokenId)],
                             });
-                            return [BigInt(tokenId), uri] as [string | bigint, string];
+                            return [BigInt(tokenId), uri, BigInt(level)] as [string | bigint, string, bigint];
                         }));
     
                         setUriArray(tokenUriForContributorAndLevel);
@@ -430,7 +504,7 @@ function ReplacePage() {
                             abi: nftAbi,
                             address: contractAddress,
                             functionName: 'getTokenIdsByOwner',
-                            args: [address as `0x${string}`],
+                            args: [currentAddress as `0x${string}`],
                         });
     
                         console.log("result", result);
@@ -448,11 +522,12 @@ function ReplacePage() {
                                 functionName: 'getTokenLevel',
                                 args: [tokenId],
                             });
-                            return [tokenId, uri] as [string | bigint, string];
+                            return [tokenId, uri, BigInt(level)] as [string | bigint, string, bigint];
                         }));
     
                         setUriArray(tokenUriForContributorAndLevel);
                     }
+                    
                 } catch (error) {
                     console.error('Error reading from contract:', error);
                 }
@@ -460,21 +535,15 @@ function ReplacePage() {
         };
 
         fetchData();
-    }, [address]);
-    const { address: wagmiAddress, isConnected } = useAccount();
+    }, [getCurrentAddress]);
+
+    const [polkadotTransactionStatus, setPolkadotTransactionStatus] = useState<string | null>(null);
+    const [isPolkadotPending, setIsPolkadotPending] = useState(false);
+    const [polkadotTransactionHash, setPolkadotTransactionHash] = useState<string | null>(null);
 
     useEffect(() => {
         console.log("Selected Account in MintPage:", selectedAccount);
     }, [selectedAccount]);
-
-    // Thêm state để theo dõi NFT được chọn
-    const [selectedNftId, setSelectedNftId] = useState<string>('');
-
-    // Thêm hàm xử lý khi chọn NFT
-    const handleSelectNft = (tokenId: string) => {
-        setSelectedNftId(tokenId);
-        setNftValue(tokenId);
-    };
 
     return (
         <>
@@ -484,6 +553,7 @@ function ReplacePage() {
 
             <div className='
             max-phonescreen:flex-col max-phonescreen:items-start max-phonescreen:gap-2
+            
             flex justify-between items-center px-[3vw]'>
                 <div className='flex items-center '>
                     <div className="flex flex-col">
@@ -498,10 +568,9 @@ function ReplacePage() {
                         max-phonescreen:text-[8.5vw] max-phonescreen:leading-[8.5vw]
                     
                     text-primary font-bold font-pixel uppercase text-[5.5vw] leading-[5.5vw] whitespace-nowrap'>
-                        Replace NFT
+                        Nesting NFT
                     </div>
                 </div>
-                
                 <div className='
                     max-phonescreen:gap-1
                 
@@ -539,11 +608,11 @@ function ReplacePage() {
                                     fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
                                         Config
                                     </Link>
-                                    <Link href="/upgrade" className='
+                                    <Link href="/replace" className='
                                         max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw] max-phonescreen:h-[27px]
                                     
                                     fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
-                                        Upgrade
+                                        Replace
                                     </Link>
                                     <Link href="/reward" className='
                                         max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw] max-phonescreen:h-[27px]
@@ -551,11 +620,11 @@ function ReplacePage() {
                                     fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
                                         Reward
                                     </Link>
-                                    <Link href="/nesting" className='
+                                    <Link href="/upgrade" className='
                                         max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw] max-phonescreen:h-[27px]
                                     
                                     fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
-                                        Nesting
+                                        Upgrade
                                     </Link>
                                     <Link href="/unnest" className='
                                         max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw] max-phonescreen:h-[27px]
@@ -574,171 +643,189 @@ function ReplacePage() {
                         <CustomConnectButton />
                     </div>
                 </div>
+                
             </div>
             <Spacer className='h-[3vw] max-phonescreen:h-[4vw]' />
 
 
             <div className="
             max-phonescreen:flex-col-reverse max-phonescreen:gap-10
+            
             add-profile-container flex px-[3vw] ">
                 <div className="
                 max-phonescreen:w-full max-phonescreen:p-0
+                
                 left-column w-[65%] pr-4 ">
                     <div className="flex-column">
-                        <input
-                            type="text"
-                            id="address"
-                            value={address}
-                            onChange={(e) => setAddress(e.target.value)}
-                            placeholder="Enter Address"
-                            className="
-                            max-phonescreen:w-full
-                            w-[50%] px-4 py-2 bg-black text-white rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
-                        />
-                    </div>
-                    
-                    <div className="mt-[9vh]">
-                    <h1 className="text-primary font-pixel text-3xl">Profile of {address}</h1>
-                    {uriArray.length === 0 ? (
-                        <p className="text-primary font-pixel text-3xl">You haven't got any NFTs yet</p>
-                    ) : (
-                        <ul className="grid grid-cols-3 gap-4">
-                            {uriArray.map((item, index) => (
-                                <li key={index} className="text-center relative group">
-                                    <div className="relative">
-                                        <img 
-                                            src={ethers.toUtf8String(item[1])} 
-                                            alt={`Image ${index}`} 
-                                            className={`max-w-[80%] h-auto mx-auto transition-all duration-300 ${
-                                                selectedNftId === item[0].toString() ? 'ring-4 ring-primary' : ''
-                                            }`}
-                                        />
-                                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button
-                                                onClick={() => handleSelectNft(item[0].toString())}
-                                                className={`px-4 py-2 bg-primary text-white rounded-md font-pixel text-sm hover:bg-secondary transition-colors ${
-                                                    selectedNftId === item[0].toString() ? 'bg-secondary' : ''
-                                                }`}
-                                            >
-                                                {selectedNftId === item[0].toString() ? 'Selected' : 'Select for Replace'}
-                                            </button>
+                        <div className="mt-[9vh]">
+                            <h1 className="text-primary font-pixel text-3xl">
+                                Your NFTs
+                            </h1>
+                            {uriArray.length === 0 ? (
+                                <p className="text-primary font-pixel text-3xl">You don't have any NFTs yet</p>
+                            ) : (
+                                <div className="grid grid-cols-2 gap-6">
+                                    {uriArray.map((item, index) => (
+                                        <div key={index} className="bg-secondary/20 rounded-lg p-4 border-2 border-primary">
+                                            <div className="flex flex-col">
+                                                {/* NFT Image */}
+                                                <img 
+                                                    src={ethers.toUtf8String(item[1])} 
+                                                    alt={`NFT ${item[0]}`} 
+                                                    className="w-full rounded-lg border-2 border-primary"
+                                                />
+                                                <div className="mt-2 text-center">
+                                                    <p className="text-primary font-pixel font-bold">NFT #{item[0].toString()}</p>
+                                                    <p className="text-primary/80 font-pixel text-sm">Level {item[2].toString()}</p>
+                                                </div>
+
+                                                {/* Action Buttons */}
+                                                <div className="flex gap-2 mt-4">
+                                                    <button 
+                                                        onClick={() => setTokenIdParent(item[0].toString())}
+                                                        className="flex-1 bg-primary text-white font-pixel py-2 px-4 rounded-md 
+                                                                 hover:bg-secondary transition-colors flex items-center justify-center gap-2"
+                                                    >
+                                                        <span>Select as Parent NFT</span>
+                                                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                        </svg>
+                                                    </button>
+
+                                                    <button 
+                                                        onClick={() => setTokenIdNested(item[0].toString())}
+                                                        className="flex-1 bg-primary text-white font-pixel py-2 px-4 rounded-md 
+                                                                 hover:bg-secondary transition-colors flex items-center justify-center gap-2"
+                                                    >
+                                                        <span>Select as Child NFT</span>
+                                                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <p className="text-primary font-pixel mt-2">Token ID: {item[0].toString()}</p>
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-                </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
                     
                 </div>
                 <div className="
                 max-phonescreen:w-full max-phonescreen:p-0
+                
                 right-column w-[35%] pl-4 overflow-y-auto">
                     <div className="add-profile-form">
-                        <h2 className="text-primary font-bold font-pixel text-2xl mb-4">Replace Certificate NFT</h2>
+                        <h2 className="text-primary font-bold font-pixel text-2xl mb-4">Nesting NFT</h2>
                         <form onSubmit={handleSubmit} className="space-y-4">
+                            {/* <div>
+                                <label htmlFor="nftName" className="block text-primary font-pixel mb-2">NFT Name</label>
+                                <input
+                                    type="text"
+                                    id="nftName"
+                                    value={nftName}
+                                    onChange={(e) => setNftName(e.target.value)}
+                                    className="w-full px-4 py-2 bg-black text-white rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
+                                    required
+                                    disabled={isSubmitting}
+                                />
+                            </div> */}
                             <div className="flex flex-col">
-                                <div className="relative w-full pt-[24px]">
-                                    <div className="absolute z-0 top-0 left-0 flex items-center gap-[4px] pt-[4px] pb-[32px] px-[8px] rounded-tl-[12px] rounded-tr-[12px] bg-primary">
-                                        <FileUploadIcon className="w-[12px] h-[12px]"/>
-                                        <span className="max-phonescreen:text-[2.5vw] max-phonescreen:leading-[2.5vw] text-white font-pixel text-[1vw] leading-[1vw]">
-                                            Upload Image
-                                        </span>
-                                    </div>
-                                    <div className="upload__frame rounded-md flex relative overflow-visible before:rounded-md before:z-0 before:absolute before:bg-gradient-to-br max-phonescreen:before:p-0 before:p-8 before:inset-0 before:from-primary before:from-0% before:via-primary before:via-26% before:to-[#ffffff21] before:to-40%">
-                                        <div {...getRootProps()} className="z-[1] w-full p-4 text-center font-pixel font-semibold text-primary cursor-pointer relative min-h-[10vw] flex flex-col items-center justify-center">
-                                            <input {...getInputProps()} disabled={isSubmitting} />
-                                            {isDragActive ? (
-                                                <p>Drop the image here ...</p>
-                                            ) : (
-                                                <p className="text-sm">Drag and drop an image here, or click to select a file</p>
-                                            )}
-                                            {localImagePreview && (
-                                                <div className="mt-2">
-                                                    <img src={localImagePreview} alt="Preview" className="max-w-[150px] h-auto" />
-                                                    <p className="mt-1 text-xs">Click or drag a new image to replace</p>
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="absolute left-[1px] top-[1px] right-[1px] bottom-[1px] rounded-md overflow-hidden p-[20px] border-image min-w-0 flex flex-col gap-300 bg-background outline-dashed outline-[1.5px] outline-background"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div className="flex flex-col">
-                                <label htmlFor="nftValue" className="block text-primary font-pixel mb-2 text-sm">NFT of your choice</label>
+                                <label htmlFor="nftValue" className="block text-primary font-pixel mb-2">Token ID of Parent NFT</label>
                                 <input
                                     type="text"
                                     id="nftValue"
-                                    value={nftValue}
-                                    onChange={(e) => setNftValue(e.target.value)}
-                                    className="w-full px-3 py-1.5 bg-black text-white rounded-md focus:outline-none focus:ring-2 focus:ring-secondary text-sm"
+                                    value={TokenIdParent}
+                                    onChange={(e) => setTokenIdParent(e.target.value)}
+                                    className="w-full px-4 py-2 bg-black text-white rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
                                     required
                                     disabled={isSubmitting}
                                 />
                             </div>
-                            
+                            <div className="flex flex-col">
+                                <label htmlFor="nftLevel" className="block text-primary font-pixel mb-2">Token ID of Nested NFT</label>
+                                <input
+                                    type="number"
+                                    id="nftLevel"
+                                    value={TokenIdNested}
+                                    onChange={(e) => setTokenIdNested(e.target.value)}
+                                    className="w-full px-4 py-2 bg-black text-white rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
+                                    required
+                                    min="1"
+                                    disabled={isSubmitting}
+                                />
+                            </div>
                             <button 
                                 type="submit" 
-                                className="bg-primary text-white font-pixel py-1.5 px-3 rounded-md hover:bg-secondary transition-colors flex items-center justify-center w-full text-sm"
+                                className="bg-primary text-white font-pixel py-2 px-4 rounded-md hover:bg-secondary transition-colors flex items-center justify-center w-full"
                                 disabled={isSubmitting}
                             >
                                 {isSubmitting ? (
                                     <>
                                         <FaSpinner className="animate-spin mr-2" />
-                                        Replace...
+                                        Nesting...
                                     </>
                                 ) : (
-                                    'Replace'
+                                    'Nesting'
                                 )}
                             </button>
-
-                            {/* Transaction Status Section */}
-                            <div className="mt-4 bg-secondary/20 p-4 rounded-lg text-sm">
-                                <h3 className="text-lg font-semibold text-white mb-2">Transaction Status</h3>
-                                {isPending && <p className="text-yellow-300">Waiting for signature...</p>}
-                                {isConfirming && <p className="text-yellow-300">Confirming...</p>}
-                                {isConfirmed && (
-                                    <p className="text-green-300">
-                                        Transaction successful!{' '}
-                                        <a href={`${blockexplorer}/tx/${hash}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
-                                            View on explorer
-                                        </a>
-                                    </p>
-                                )}
-                                {isPolkadotPending && <p className="text-yellow-300">Polkadot transaction is processing...</p>}
-                                {polkadotTransactionStatus && (
-                                    <p className={`text-${polkadotTransactionStatus.includes("successful") ? "green" : "red"}-300`}>
-                                        {polkadotTransactionStatus}
-                                        {polkadotTransactionStatus.includes("successful") && polkadotTransactionHash && (
-                                            <>
-                                                {' '}
-                                                <a href={`${blockexplorer}/tx/${polkadotTransactionHash}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
-                                                    View on explorer
-                                                </a>
-                                            </>
-                                        )}
-                                    </p>
-                                )}
-                                {error && (
-                                    <p className="text-red-300">
-                                        Error: {(error as BaseError).shortMessage || "An unknown error occurred"}
-                                    </p>
-                                )}
-                                {!isPending && !isConfirming && !isConfirmed && !isPolkadotPending && !error && !polkadotTransactionStatus && (
-                                    <p className="text-gray-300">No transactions yet</p>
-                                )}
-                            </div>
                         </form>
+                    </div>
+                    
+                    <div className="mt-8 bg-secondary p-8 rounded-lg">
+                        <h3 className="text-xl font-semibold text-white mb-4">Transaction Status</h3>
+                        {isPending && <p className="text-yellow-300">Waiting for signature...</p>}
+                        {isConfirming && <p className="text-yellow-300">Confirming...</p>}
+                        {isConfirmed && (
+                            <p className="text-green-300">
+                                Transaction successful!{' '}
+                                <a
+                                    href={`${blockexplorer}/tx/${hash}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-400 hover:underline"
+                                >
+                                    View on block explorer
+                                </a>
+                            </p>
+                        )}
+                        {isPolkadotPending && <p className="text-yellow-300">Polkadot transaction is processing...</p>}
+                        {polkadotTransactionStatus && (
+                            <p className={`text-${polkadotTransactionStatus.includes("successful") ? "green" : "red"}-300`}>
+                                {polkadotTransactionStatus}
+                                {polkadotTransactionStatus.includes("successful") && polkadotTransactionHash && (
+                                    <>
+                                        {' '}
+                                        <a
+                                            href={`${blockexplorer}/tx/${polkadotTransactionHash}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-blue-400 hover:underline"
+                                        >
+                                            View on block explorer
+                                        </a>
+                                    </>
+                                )}
+                            </p>
+                        )}
+                        {error && (
+                            <p className="text-red-300">
+                                Error: {(error as BaseError).shortMessage || "An unknown error occurred"}
+                            </p>
+                        )}
+                        {!isPending && !isConfirming && !isConfirmed && !isPolkadotPending && !error && !polkadotTransactionStatus && (
+                            <p className="text-gray-300">No transactions yet</p>
+                        )}
                     </div>
                 </div>
             </div>
             <Spacer className='h-[3vw] max-phonescreen:h-[4vw]' />
+
         </div>
         <canvas ref={canvasRef} style={{ display: 'none' }} />
         </>
     );
 }
 
-export default ReplacePage;
+export default NestingPage;
