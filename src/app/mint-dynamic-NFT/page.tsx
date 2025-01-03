@@ -1,7 +1,7 @@
 "use client";
 
 import { nftAbi } from "@/components/contract/abi";
-import { BLOCK_EXPLORER_OPAL, BLOCK_EXPLORER_QUARTZ, BLOCK_EXPLORER_UNIQUE, CHAINID, CONTRACT_ADDRESS_OPAL, CONTRACT_ADDRESS_QUARTZ, CONTRACT_ADDRESS_UNIQUE } from "@/components/contract/contracts";
+import { BLOCK_EXPLORER_OPAL, CHAINID, CONTRACT_ADDRESS_OPAL_EVM } from "@/components/contract/contracts";
 import { CustomConnectButton } from "@/components/ui/ConnectButton";
 import Spacer from "@/components/ui/Spacer";
 import Link from "next/link";
@@ -86,16 +86,8 @@ function MintOGPage() {
     }, []);
 
     switch (chainId) {
-        case CHAINID.UNIQUE:
-            contractAddress = CONTRACT_ADDRESS_UNIQUE;
-            blockexplorer = BLOCK_EXPLORER_UNIQUE;
-            break;
-        case CHAINID.QUARTZ:
-            contractAddress = CONTRACT_ADDRESS_QUARTZ;
-            blockexplorer = BLOCK_EXPLORER_QUARTZ;
-            break;
         case CHAINID.OPAL:
-            contractAddress = CONTRACT_ADDRESS_OPAL;
+            contractAddress = CONTRACT_ADDRESS_OPAL_EVM;
             blockexplorer = BLOCK_EXPLORER_OPAL;
             break;
     }
@@ -328,6 +320,7 @@ function MintOGPage() {
             toast({
                 title: "Success",
                 description: "NFT has been minted successfully!",
+
             });
 
         } catch (error) {
@@ -448,7 +441,7 @@ function MintOGPage() {
                         </Link>
                         
                         <div className='text-primary font-bold font-pixel uppercase text-[5.5vw] leading-[5.5vw] whitespace-nowrap'>
-                            mint 
+                            MINT OG
                         </div>
                     </div>
                     
@@ -474,7 +467,7 @@ function MintOGPage() {
                                         <Link href="/mint" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
                                             Mint Certificate NFT
                                         </Link>
-                                        <Link href="/mint-dynamic-nft" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                                        <Link href="/mint-dynamic-NFT" className='fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
                                             Mint OG NFT
                                         </Link>
                                     </motion.div>

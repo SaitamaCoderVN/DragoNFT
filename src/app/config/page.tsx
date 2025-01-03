@@ -1,7 +1,7 @@
 "use client";
 
 import { nftAbi } from "@/components/contract/abi";
-import { BLOCK_EXPLORER_OPAL, BLOCK_EXPLORER_QUARTZ, BLOCK_EXPLORER_UNIQUE, CHAINID, CONTRACT_ADDRESS_OPAL, CONTRACT_ADDRESS_QUARTZ, CONTRACT_ADDRESS_UNIQUE } from "@/components/contract/contracts";
+import { BLOCK_EXPLORER_OPAL, CHAINID, CONTRACT_ADDRESS_OPAL } from "@/components/contract/contracts";
 import { CustomConnectButton } from "@/components/ui/ConnectButton";
 import Spacer from "@/components/ui/Spacer";
 import Link from "next/link";
@@ -87,14 +87,6 @@ function ConfigPage() {
     }, []);
 
     switch (chainId) {
-        case CHAINID.UNIQUE:
-            contractAddress = CONTRACT_ADDRESS_UNIQUE;
-            blockexplorer = BLOCK_EXPLORER_UNIQUE;
-            break;
-        case CHAINID.QUARTZ:
-            contractAddress = CONTRACT_ADDRESS_QUARTZ;
-            blockexplorer = BLOCK_EXPLORER_QUARTZ;
-            break;
         case CHAINID.OPAL:
             contractAddress = CONTRACT_ADDRESS_OPAL;
             blockexplorer = BLOCK_EXPLORER_OPAL;

@@ -1,7 +1,7 @@
 "use client";
 
 import { nftAbi } from "@/components/contract/abi";
-import { BLOCK_EXPLORER_OPAL, BLOCK_EXPLORER_QUARTZ, BLOCK_EXPLORER_UNIQUE, CHAINID, CONTRACT_ADDRESS_OPAL, CONTRACT_ADDRESS_QUARTZ, CONTRACT_ADDRESS_UNIQUE } from "@/components/contract/contracts";
+import { BLOCK_EXPLORER_OPAL, CHAINID, CONTRACT_ADDRESS_OPAL_EVM, CONTRACT_ADDRESS_OPAL_POLKADOT } from "@/components/contract/contracts";
 import { CustomConnectButton } from "@/components/ui/ConnectButton";
 import Spacer from "@/components/ui/Spacer";
 import Link from "next/link";
@@ -38,6 +38,7 @@ const FileUploadIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 function MintPage() {
     const { selectedAccount } = useContext(AccountsContext);
+
     const { chain, scan } = useChainAndScan();
     
     const dispatch = useAppDispatch();
@@ -56,7 +57,8 @@ function MintPage() {
     const chainId = useChainId();
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    let contractAddress: `0x${string}` | undefined;
+    let contractAddressEVM: `0x${string}` | undefined;
+    let contractAddressPOLKADOT: `0x${string}` | undefined;
     let blockexplorer: string | undefined;
 
     const [isOptionsVisible, setOptionsVisible] = useState(false); 
@@ -88,16 +90,9 @@ function MintPage() {
     }, []);
 
     switch (chainId) {
-        case CHAINID.UNIQUE:
-            contractAddress = CONTRACT_ADDRESS_UNIQUE;
-            blockexplorer = BLOCK_EXPLORER_UNIQUE;
-            break;
-        case CHAINID.QUARTZ:
-            contractAddress = CONTRACT_ADDRESS_QUARTZ;
-            blockexplorer = BLOCK_EXPLORER_QUARTZ;
-            break;
         case CHAINID.OPAL:
-            contractAddress = CONTRACT_ADDRESS_OPAL;
+            contractAddressEVM = CONTRACT_ADDRESS_OPAL_EVM;
+            contractAddressPOLKADOT = CONTRACT_ADDRESS_OPAL_POLKADOT;
             blockexplorer = BLOCK_EXPLORER_OPAL;
             break;
     }
@@ -311,6 +306,7 @@ function MintPage() {
                 await mintWithPolkadot(codeContribute);
             } else if (isConnected) {
                 await mintWithEVM(codeContribute);
+
             }
 
             toast({
@@ -374,11 +370,13 @@ function MintPage() {
     };
 
     const mintWithEVM = async (codeContribute: string) => {
+
         if (!wagmiAddress) throw new Error("EVM address not found");
         console.log("evmAddress", wagmiAddress);
 
         await writeContract({
             address: contractAddress as `0x${string}`,
+
             abi: nftAbi,
             functionName: "mint_DragonNFT",
             args: [
@@ -387,6 +385,7 @@ function MintPage() {
                     sub: BigInt(0) 
                 }, 
                 codeContribute, 
+
                 Number(0), 
                 uri
             ],
@@ -563,6 +562,7 @@ function MintPage() {
                                     />
                                 </div>
                             )}
+
 
                             <div>
                                 <button

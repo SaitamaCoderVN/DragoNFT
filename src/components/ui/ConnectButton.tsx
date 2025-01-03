@@ -23,7 +23,7 @@ export const CustomConnectButton: React.FC = () => {
     setIsConnecting(true);
     try {
       const accounts = await connectWallet('polkadot-js');
-      console.log("Accounts:", accounts);
+
       if (!accounts || accounts.size === 0) {
         throw new Error('No accounts found');
       }
@@ -46,6 +46,7 @@ export const CustomConnectButton: React.FC = () => {
       setIsOpen(false);
     } catch (error) {
       console.error("Failed to connect to Polkadot wallet:", error);
+
       alert(error instanceof Error ? error.message : 'Failed to connect wallet');
     } finally {
       setIsConnecting(false);
@@ -67,6 +68,7 @@ export const CustomConnectButton: React.FC = () => {
     
     setIsOpen(false);
     setIsConnecting(false);
+
   };
 
   useEffect(() => {
@@ -94,16 +96,19 @@ export const CustomConnectButton: React.FC = () => {
     }
   }, [accounts, setAccounts]);
 
+
   useEffect(() => {
     const savedAccount = localStorage.getItem('selectedAccount');
     if (savedAccount) {
       const account = JSON.parse(savedAccount);
+
       if (account.walletType === 'polkadot') {
         connectWallet('polkadot-js').then((accounts) => {
           if (accounts && accounts.size > 0) {
             const firstAccount = accounts.values().next().value;
             if (firstAccount.address === account.address) {
               setAccounts((prevAccounts) => new Map(prevAccounts).set(firstAccount.address, firstAccount));
+
               const user = new User(firstAccount.address);
               user.walletType = 'polkadot';
               dispatch(setUser(user));
@@ -122,7 +127,7 @@ export const CustomConnectButton: React.FC = () => {
     hidden: { opacity: 0, y: -10 },
     visible: { opacity: 1, y: 0 }
   };
-  
+
   const isAnyWalletConnected = isEvmConnected || (accounts.size > 0);
 
   if (isAnyWalletConnected) {
@@ -132,6 +137,7 @@ export const CustomConnectButton: React.FC = () => {
       const name = connectedWallet.name;
 
       if (connectedWallet && address) {
+
         const walletName = connectedWallet.name || "Unknown Wallet";
         const walletAddress = address || "Unknown Address";
 

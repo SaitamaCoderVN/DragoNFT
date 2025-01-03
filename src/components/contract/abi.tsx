@@ -64,6 +64,7 @@ export const nftAbi = [
         "internalType": "string",
         "name": "",
         "type": "string"
+
       }
     ],
     "stateMutability": "view",
@@ -215,6 +216,7 @@ export const nftAbi = [
         "internalType": "bytes",
         "name": "",
         "type": "bytes"
+
       }
     ],
     "stateMutability": "view",
@@ -261,6 +263,7 @@ export const nftAbi = [
       {
         "internalType": "string",
         "name": "code_contribute",
+
         "type": "string"
       },
       {
@@ -324,6 +327,7 @@ export const nftAbi = [
         "internalType": "string",
         "name": "code_contribute",
         "type": "string"
+
       },
       {
         "internalType": "uint256",
@@ -411,6 +415,7 @@ export const nftAbi = [
         "internalType": "string",
         "name": "code_contribute",
         "type": "string"
+
       },
       {
         "internalType": "uint32",
@@ -472,6 +477,7 @@ export const nftAbi = [
         "internalType": "uint32",
         "name": "level",
         "type": "uint32"
+
       }
     ],
     "name": "setTokenLevel",

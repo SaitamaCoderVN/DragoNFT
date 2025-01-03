@@ -13,6 +13,8 @@ const nextConfig = {
     config.resolve.fallback = {
       ...config.resolve.fallback,
       "encoding": require.resolve("encoding"),
+      "crypto": require.resolve("crypto-browserify"),
+      "stream": require.resolve("stream-browserify"),
     };
     return config;
   },

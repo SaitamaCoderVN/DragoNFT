@@ -1,4 +1,5 @@
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
+
 import { BN } from "@polkadot/util";
 import { IEthereumExtensionResultSafe } from "@unique-nft/utils/extension";
 import { ConnectedWalletsName } from "./useWalletCenter";
@@ -56,6 +57,7 @@ export interface AccountsContextValue {
   updateEthereumWallet: () => Promise<void>;
   reinitializePolkadotAccountsWithBalance: () => Promise<void>;
   clearAccounts: () => void;
+
 }
 
 type SomeType = {

@@ -32,6 +32,7 @@ export const connectSdk = async (
   const uniqueChain = UniqueChain({
     baseUrl: sdkEndpoint,
     // @ts-expect-error: Account type mismatch due to SDK version
+
     account,
   });
 

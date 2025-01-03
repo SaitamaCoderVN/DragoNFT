@@ -58,6 +58,7 @@ export const AccountsContextProvider = ({ children }: PropsWithChildren) => {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
+
       const savedAccounts = localStorage.getItem("accounts");
       if (!savedAccounts) {
         setAccounts(new Map());

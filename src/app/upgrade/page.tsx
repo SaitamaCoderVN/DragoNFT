@@ -47,6 +47,7 @@ function UpgradePage() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [uriArray, setUriArray] = useState<Array<[string | bigint, string, bigint]>>([]);
     const [nftValue, setNftValue] = useState('');
+    const [code_contribute, setCodeContribute] = useState('');
     const [nftLevel, setNftLevel] = useState(1);
 
     const [isOptionsVisible, setOptionsVisible] = useState(false); 
@@ -85,14 +86,6 @@ function UpgradePage() {
     let blockexplorer: string | undefined;
 
     switch (chainId) {
-        case CHAINID.UNIQUE:
-            contractAddress = CONTRACT_ADDRESS_UNIQUE;
-            blockexplorer = BLOCK_EXPLORER_UNIQUE;
-            break;
-        case CHAINID.QUARTZ:
-            contractAddress = CONTRACT_ADDRESS_QUARTZ;
-            blockexplorer = BLOCK_EXPLORER_QUARTZ;
-            break;
         case CHAINID.OPAL:
             contractAddress = CONTRACT_ADDRESS_OPAL;
             blockexplorer = BLOCK_EXPLORER_OPAL;
@@ -276,6 +269,7 @@ function UpgradePage() {
                 await upgradeWithPolkadot();
             } else if (isConnected) {
                 await upgradeWithEVM();
+
             }
 
             toast({
