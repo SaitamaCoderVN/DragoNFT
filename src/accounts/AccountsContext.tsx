@@ -52,38 +52,55 @@ export const AccountsContextProvider = ({ children }: PropsWithChildren) => {
   const { address } = useAccount();
   const [accounts, setAccounts] = useState<Map<string, Account>>(new Map());
   const [selectedAccountId, setSelectedAccountId] = useState<number>(() => {
-    const savedId = localStorage.getItem("selectedAccountId");
-    return savedId ? Number(savedId) : 0;
+    if (typeof window !== 'undefined') {
+      const savedId = localStorage.getItem("selectedAccountId");
+      return savedId ? Number(savedId) : 0;
+    }
+    return 0;
   });
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
+  const getLocalStorage = (key: string) => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem(key);
+    }
+    return null;
+  };
 
-      const savedAccounts = localStorage.getItem("accounts");
-      if (!savedAccounts) {
-        setAccounts(new Map());
-        setSelectedAccountId(0);
-      } else {
-        try {
-          const parsedAccounts = JSON.parse(savedAccounts);
-          setAccounts(new Map(parsedAccounts));
-        } catch (error) {
-          console.error("Failed to restore accounts from localStorage", error);
-        }
+  const setLocalStorage = (key: string, value: string) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(key, value);
+    }
+  };
+
+  const removeLocalStorage = (key: string) => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(key);
+    }
+  };
+
+  const restoreAccounts = () => {
+    const savedId = getLocalStorage("selectedAccountId");
+    const savedAccounts = getLocalStorage("accounts");
+    if (!savedAccounts) {
+      setAccounts(new Map());
+      setSelectedAccountId(0);
+    } else {
+      try {
+        const parsedAccounts = JSON.parse(savedAccounts);
+        setAccounts(new Map(parsedAccounts));
+      } catch (error) {
+        console.error("Failed to restore accounts from localStorage", error);
       }
     }
-  }, []);
+  };
 
-  useEffect(() => {
-    if (accounts.size > 0) {
-      const accountsArray = Array.from(accounts.entries());
-      localStorage.setItem("accounts", JSON.stringify(accountsArray));
-    }
-  }, [accounts]);
+  const saveAccounts = (accountsArray: Account[]) => {
+    setLocalStorage("accounts", JSON.stringify(accountsArray));
+  };
 
   const clearAccounts = useCallback(() => {
-    localStorage.removeItem("accounts");
-    localStorage.removeItem("selectedAccountId");
+    removeLocalStorage("accounts");
+    removeLocalStorage("selectedAccountId");
     setAccounts(new Map());
     setSelectedAccountId(0);
   }, []);
@@ -94,10 +111,6 @@ export const AccountsContextProvider = ({ children }: PropsWithChildren) => {
   );
 
   const { sdk } = useContext(SdkContext);
-
-  useEffect(() => {
-    localStorage.setItem("selectedAccountId", String(selectedAccountId));
-  }, [selectedAccountId]);
 
   const updateEthereumWallet = useCallback(async () => {
     if (!sdk || !address) return;
@@ -178,6 +191,21 @@ export const AccountsContextProvider = ({ children }: PropsWithChildren) => {
     });
   }, [sdk, connectWallet]);
 
+  const filterEthereumAccounts = () => {
+    const savedAccounts = getLocalStorage("accounts");
+    if (savedAccounts) {
+      try {
+        const parsedAccounts: [string, Account][] = JSON.parse(savedAccounts);
+        const filteredAccounts = parsedAccounts.filter(
+          ([, account]) => account.signerType !== SignerTypeEnum.Ethereum
+        );
+        setLocalStorage("accounts", JSON.stringify(filteredAccounts));
+      } catch (error) {
+        console.error("Failed to filter Ethereum accounts from localStorage", error);
+      }
+    }
+  };
+
   useEffect(() => {
     if (!address) {
       setAccounts((prevAccounts) => {
@@ -190,20 +218,15 @@ export const AccountsContextProvider = ({ children }: PropsWithChildren) => {
         return newAccounts;
       });
 
-      const savedAccounts = localStorage.getItem("accounts");
-      if (savedAccounts) {
-        try {
-          const parsedAccounts: [string, Account][] = JSON.parse(savedAccounts);
-          const filteredAccounts = parsedAccounts.filter(
-            ([, account]) => account.signerType !== SignerTypeEnum.Ethereum
-          );
-          localStorage.setItem("accounts", JSON.stringify(filteredAccounts));
-        } catch (error) {
-          console.error("Failed to filter Ethereum accounts from localStorage", error);
-        }
-      }
+      filterEthereumAccounts();
     }
   }, [address]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem("selectedAccountId", String(selectedAccountId));
+    }
+  }, [selectedAccountId]);
 
   const contextValue = useMemo(
     () => ({

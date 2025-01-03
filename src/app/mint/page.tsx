@@ -1,7 +1,7 @@
 "use client";
 
 import { nftAbi } from "@/components/contract/abi";
-import { BLOCK_EXPLORER_OPAL, CHAINID, CONTRACT_ADDRESS_OPAL_EVM, CONTRACT_ADDRESS_OPAL_POLKADOT } from "@/components/contract/contracts";
+import { BLOCK_EXPLORER_OPAL, BLOCK_EXPLORER_UNIQUE, BLOCK_EXPLORER_QUARTZ, CONTRACT_ADDRESS_UNIQUE, CHAINID, CONTRACT_ADDRESS_QUARTZ, CONTRACT_ADDRESS_OPAL } from "@/components/contract/contracts";
 import { CustomConnectButton } from "@/components/ui/ConnectButton";
 import Spacer from "@/components/ui/Spacer";
 import Link from "next/link";
@@ -57,8 +57,7 @@ function MintPage() {
     const chainId = useChainId();
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    let contractAddressEVM: `0x${string}` | undefined;
-    let contractAddressPOLKADOT: `0x${string}` | undefined;
+    let contractAddress: `0x${string}` | undefined;
     let blockexplorer: string | undefined;
 
     const [isOptionsVisible, setOptionsVisible] = useState(false); 
@@ -91,9 +90,16 @@ function MintPage() {
 
     switch (chainId) {
         case CHAINID.OPAL:
-            contractAddressEVM = CONTRACT_ADDRESS_OPAL_EVM;
-            contractAddressPOLKADOT = CONTRACT_ADDRESS_OPAL_POLKADOT;
+            contractAddress = CONTRACT_ADDRESS_OPAL;
             blockexplorer = BLOCK_EXPLORER_OPAL;
+            break;
+        case CHAINID.UNIQUE:
+            contractAddress = CONTRACT_ADDRESS_UNIQUE;
+            blockexplorer = BLOCK_EXPLORER_UNIQUE;
+            break;
+        case CHAINID.QUARTZ:
+            contractAddress = CONTRACT_ADDRESS_QUARTZ;
+            blockexplorer = BLOCK_EXPLORER_QUARTZ;
             break;
     }
 

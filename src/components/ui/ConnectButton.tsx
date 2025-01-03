@@ -19,6 +19,25 @@ export const CustomConnectButton: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
 
+  const getLocalStorage = (key: string) => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem(key);
+    }
+    return null;
+  };
+
+  const setLocalStorage = (key: string, value: string) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(key, value);
+    }
+  };
+
+  const removeLocalStorage = (key: string) => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(key);
+    }
+  };
+
   const handlePolkadotConnect = async () => {
     setIsConnecting(true);
     try {
@@ -58,10 +77,10 @@ export const CustomConnectButton: React.FC = () => {
     
     dispatch(clearUser());
     
-    localStorage.removeItem('selectedAccount');
-    localStorage.removeItem('accounts');
-    localStorage.removeItem('selectedAccountId');
-    localStorage.removeItem('CONNECTED_WALLET_TYPE');
+    removeLocalStorage('selectedAccount');
+    removeLocalStorage('accounts');
+    removeLocalStorage('selectedAccountId');
+    removeLocalStorage('CONNECTED_WALLET_TYPE');
     
     setAccounts(new Map());
     setSelectedAccountId(-1);
@@ -74,7 +93,7 @@ export const CustomConnectButton: React.FC = () => {
   useEffect(() => {
     if (!isEvmConnected && !accounts.size) {
       dispatch(clearUser());
-      localStorage.removeItem('selectedAccount');
+      removeLocalStorage('selectedAccount');
     }
   }, [isEvmConnected, accounts, dispatch]);
 
@@ -82,9 +101,9 @@ export const CustomConnectButton: React.FC = () => {
     if (!isEvmConnected) {
       dispatch(clearUser());
       
-      localStorage.removeItem('wagmi.wallet');
-      localStorage.removeItem('wagmi.connected');
-      localStorage.removeItem('wagmi.account');
+      removeLocalStorage('wagmi.wallet');
+      removeLocalStorage('wagmi.connected');
+      removeLocalStorage('wagmi.account');
       
       setIsOpen(false);
     }
@@ -92,13 +111,13 @@ export const CustomConnectButton: React.FC = () => {
 
   useEffect(() => {
     if (accounts.size > 0) {
-      localStorage.setItem('selectedAccount', JSON.stringify(accounts.values().next().value));
+      setLocalStorage('selectedAccount', JSON.stringify(accounts.values().next().value));
     }
   }, [accounts, setAccounts]);
 
 
   useEffect(() => {
-    const savedAccount = localStorage.getItem('selectedAccount');
+    const savedAccount = getLocalStorage('selectedAccount');
     if (savedAccount) {
       const account = JSON.parse(savedAccount);
 

@@ -50,8 +50,7 @@ function ReplacePage() {
     const { toast } = useToast();
     const account = useAccount();
     const chainId = useChainId();
-    let contractAddressEVM: `0x${string}` | undefined;
-    let contractAddressPOLKADOT: `0x${string}` | undefined;
+    let contractAddress: `0x${string}` | undefined;
     let blockexplorer: string | undefined;
 
     const [isLoading, setIsLoading] = useState(false);
@@ -86,9 +85,16 @@ function ReplacePage() {
 
     switch (chainId) {
         case CHAINID.OPAL:
-            contractAddressEVM = CONTRACT_ADDRESS_OPAL_EVM;
-            contractAddressPOLKADOT = CONTRACT_ADDRESS_OPAL_POLKADOT;
+            contractAddress = CONTRACT_ADDRESS_OPAL;
             blockexplorer = BLOCK_EXPLORER_OPAL;
+            break;
+        case CHAINID.UNIQUE:
+            contractAddress = CONTRACT_ADDRESS_UNIQUE;
+            blockexplorer = BLOCK_EXPLORER_UNIQUE;
+            break;
+        case CHAINID.QUARTZ:
+            contractAddress = CONTRACT_ADDRESS_QUARTZ;
+            blockexplorer = BLOCK_EXPLORER_QUARTZ;
             break;
     }
 
