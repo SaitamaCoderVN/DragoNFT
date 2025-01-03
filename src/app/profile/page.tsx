@@ -12,25 +12,50 @@ import { BLOCK_EXPLORER_OPAL, CHAINID, CONTRACT_ADDRESS_OPAL } from '@/component
 import { nftAbi } from '@/components/contract/abi';
 import { readContract } from '@wagmi/core/actions';
 import { config } from '@/components/contract/config';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useContext, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { AccountsContext } from '@/accounts/AccountsContext';
+import { useChainAndScan } from '@/hooks/useChainAndScan';
+import { ethers } from 'ethers';
+
+interface TokenData {
+    tokenId: number;
+    imageUri: string;
+    level: number;
+    codeContribute: string;
+}
+
 const ArrowDownIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" className="injected-svg" data-src="https://cdn.hugeicons.com/icons/arrow-down-01-stroke-sharp.svg"  role="img" color="#000000">
     <path d="M5.99977 9.00005L11.9998 15L17.9998 9" stroke="#000000" strokeWidth="2" stroke-miterlimit="16"></path>
     </svg>
 );
+
 export default function ProfilelPage() {
     const dispatch = useAppDispatch();
     const { cards, activeCardId } = useAppSelector((state) => state.card);
+    const { address: wagmiAddress, isConnected } = useAccount();
+    const { selectedAccount } = useContext(AccountsContext);
+    const { chain, scan } = useChainAndScan();
+
+    const getCurrentAddress = useCallback(() => {
+        if (selectedAccount) {
+            return selectedAccount.normalizedAddress;
+        }
+        if (isConnected && wagmiAddress) {
+            return wagmiAddress;
+        }
+        return null;
+    }, [selectedAccount, isConnected, wagmiAddress]);
 
     const { toast } = useToast();
-    const account = useAccount();
     const chainId = useChainId();
     let contractAddress: `0x${string}` | undefined;
     let blockexplorer: string | undefined;
 
     const [isOptionsVisible, setOptionsVisible] = useState(false); 
     const optionsRef = useRef<HTMLDivElement | null>(null); 
+    const [uriArray, setUriArray] = useState<TokenData[]>([]);
 
     const dropdownVariants = {
         hidden: { opacity: 0, y: -10 }, 
@@ -40,8 +65,7 @@ export default function ProfilelPage() {
     const toggleOptions = () => {
         setOptionsVisible(!isOptionsVisible); 
     };
-    
-    // Function to handle clicks outside the dropdown
+
     const handleClickOutside = (event: MouseEvent) => {
         if (optionsRef.current && !optionsRef.current.contains(event.target as Node)) {
             setOptionsVisible(false); 
@@ -55,7 +79,6 @@ export default function ProfilelPage() {
         };
     }, []);
 
-
     switch (chainId) {
         case CHAINID.OPAL:
             contractAddress = CONTRACT_ADDRESS_OPAL;
@@ -63,99 +86,133 @@ export default function ProfilelPage() {
             break;
     }
 
-    const [uriArray, setUriArray] = useState<string[]>([]);
-
     const fetchTotalOwnerShitNFT = async () => {
-        if (account.address) {
-            const result = await readContract(config, {
-                abi: nftAbi,
-                address: contractAddress,
-                functionName: 'getTokenIdsByOwner',
-                args: [ `${account.address}`],
-            });
-
-
-            const tokenCodeContributes = await Promise.all(result.map(async (tokenId) => {
-                console.log("tokenId", tokenId);
-                try {
-                    const tokenCode = await readContract(config, {
-                        abi: nftAbi,
-                        address: contractAddress,
-                        functionName: 'getTokenCodeContribute',
-                        args: [tokenId],
+        const currentAddress = getCurrentAddress();
+        if (currentAddress) {
+            try {
+                if (selectedAccount) {
+                    // Logic cho ví Polkadot
+                    const result = await chain.collection.accountTokens({
+                        address: currentAddress,
+                        collectionId: 4790
                     });
-                    console.log("tokenCode", tokenCode);
-                    return tokenCode;
-                } catch (error) {
-                    console.error("Error fetching tokenCodeContribute:", error);
-                    return null;
-                }
-            }));
 
-            const tokenLevel = await Promise.all(result.map(async (tokenId) => {
-                const tokenLevel = await readContract(config, {
-                    abi: nftAbi,
-                    address: contractAddress,
-                    functionName: 'getTokenLevel',
-                    args: [tokenId],
-                });
-                console.log("tokenLevel", tokenLevel);
-                return tokenLevel;
-            }));
+                    const tokenIds = result.map(token => token.tokenId);
+                    
+                    const tokenData = await Promise.all(tokenIds.map(async (tokenId) => {
+                        const uri = await readContract(config, {
+                            abi: nftAbi,
+                            address: contractAddress,
+                            functionName: 'getTokenImage',
+                            args: [BigInt(tokenId)],
+                        });
 
-            const tokenUriForContributorAndLevel = await Promise.all(result.map(async (tokenId, index) => {
-                try {
+                        const level = await readContract(config, {
+                            abi: nftAbi,
+                            address: contractAddress,
+                            functionName: 'getTokenLevel',
+                            args: [BigInt(tokenId)],
+                        });
+
+                        const codeContribute = await readContract(config, {
+                            abi: nftAbi,
+                            address: contractAddress,
+                            functionName: 'getTokenCodeContribute',
+                            args: [BigInt(tokenId)],
+                        });
+
+                        let codeContributeString = '';
+                        try {
+                            codeContributeString = ethers.toUtf8String(codeContribute as `0x${string}`);
+                        } catch (error) {
+                            console.warn(" Cannot convert codeContribute to UTF-8:", error);
+                            codeContributeString = String(codeContribute);
+                        }
+
+                        return {
+                            tokenId: tokenId,
+                            imageUri: ethers.toUtf8String(uri),
+                            level: Number(level),
+                            codeContribute: codeContributeString
+                        };
+                    }));
+
+                    setUriArray(tokenData);
+                } else {
+                    // Logic cho ví EVM
                     const result = await readContract(config, {
                         abi: nftAbi,
                         address: contractAddress,
-                        functionName: 'getTokenImage',
-                        args: [tokenId],
+                        functionName: 'getTokenIdsByOwner',
+                        args: [currentAddress as `0x${string}`],
                     });
 
-                    if (result === "" as any) {
-                        const result = await readContract(config, {
+                    const tokenData = await Promise.all(result.map(async (tokenId) => {
+                        const uri = await readContract(config, {
                             abi: nftAbi,
                             address: contractAddress,
                             functionName: 'getTokenImage',
                             args: [tokenId],
                         });
-                        console.log("tokenURI Link ảnh đây Đạt nhé", result);
-                        return result;
 
-                    }
+                        const level = await readContract(config, {
+                            abi: nftAbi,
+                            address: contractAddress,
+                            functionName: 'getTokenLevel',
+                            args: [tokenId],
+                        });
 
-                    return result.toString();
-                } catch (error) {
-                    // If getUriForContributorAndLevel cannot be called, call tokenURI
-                    const result = await readContract(config, {
-                        abi: nftAbi,
-                        address: contractAddress,
-                        functionName: 'getTokenImage',
-                        args: [tokenId],
-                    });
-                    console.log("tokenURI Link ảnh đây Đạt nhé", result);
-                    return result;
+                        const codeContribute = await readContract(config, {
+                            abi: nftAbi,
+                            address: contractAddress,
+                            functionName: 'getTokenCodeContribute',
+                            args: [tokenId],
+                        });
+
+                        let codeContributeString = '';
+                        try {
+                            codeContributeString = ethers.toUtf8String(codeContribute as `0x${string}`);
+                        } catch (error) {
+                            console.warn(" Cannot convert codeContribute to UTF-8:", error);
+                            codeContributeString = String(codeContribute);
+                        }
+
+                        return {
+                            tokenId: Number(tokenId),
+                            imageUri: uri.toString(),
+                            level: Number(level),
+                            codeContribute: codeContributeString
+                        };
+                    }));
+                    
+                    setUriArray(tokenData);
                 }
-            }));
-            
-            console.log("tokenUriForContributorAndLevel", tokenUriForContributorAndLevel);
-            
-            setUriArray(tokenUriForContributorAndLevel as string[]);
-
-            // setTokenCodeContributes(tokenCodeContributes);
+            } catch (error) {
+                console.error("Error fetching NFTs:", error);
+                toast({
+                    variant: "destructive",
+                    title: "Error",
+                    description: "Failed to fetch NFTs",
+                });
+            }
         }
     };
 
     useEffect(() => {
         fetchTotalOwnerShitNFT();
-    }, [account.address, contractAddress]);
+    }, [getCurrentAddress(), contractAddress]);
 
     const handlePublishProfile = () => {
-        if (account.address) {
-            const profileUrl = `/profile/publish/${account.address}`;
+        const currentAddress = getCurrentAddress();
+        if (currentAddress) {
+            const profileUrl = `/profile/publish/${currentAddress}`;
             window.open(profileUrl, '_blank');
         } else {
-            alert('Please connect your wallet to publish your profile.');
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: "Please connect your wallet to publish your profile",
+            });
         }
     };
 
@@ -230,19 +287,29 @@ export default function ProfilelPage() {
                 </div>
 
                     <CardGrid>
-                        {uriArray.map((img, index) => (
-                            <Card 
-                                key={index} 
-                                id={`swsh12pt5-${index + 160}`} 
-                                name={cards[1].name} 
-                                number={cards[1].number} 
-                                img={img} // Using the image URL from uriArray
-                                set={cards[1].set} 
-                                types={cards[1].types} 
-                                subtypes={cards[1].subtypes} 
-                                supertype={cards[1].supertype} 
-                                rarity={cards[1].rarity} 
-                            />
+                        {uriArray.map((tokenData, index) => (
+                            <div key={index} className="relative transform-gpu transition-all duration-300 hover:scale-105 hover:z-10">
+                                <div className="transform-none w-full h-full">
+                                    <div className="relative w-full h-full">
+                                        <Card 
+                                            id={`swsh12pt5-${index + 160}`} 
+                                            name={cards[1].name} 
+                                            number={cards[1].number} 
+                                            img={tokenData.imageUri}
+                                            set={cards[1].set} 
+                                            types={cards[1].types} 
+                                            subtypes={cards[1].subtypes} 
+                                            supertype={cards[1].supertype} 
+                                            rarity={cards[1].rarity} 
+                                        />
+                                        <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 text-center transition-opacity duration-300 hover:bg-black/70">
+                                            <div className="text-primary font-pixel">Token ID: {tokenData.tokenId}</div>
+                                            <div className="text-primary font-pixel">Level: {tokenData.level}</div>
+                                            <div className="text-primary font-pixel">Code Contribution: {tokenData.codeContribute}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         ))}
                     </CardGrid>
             </div>

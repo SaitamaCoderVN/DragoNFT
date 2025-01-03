@@ -5,7 +5,7 @@ import { BLOCK_EXPLORER_OPAL, BLOCK_EXPLORER_QUARTZ, BLOCK_EXPLORER_UNIQUE, CHAI
 import { CustomConnectButton } from "@/components/ui/ConnectButton";
 import Spacer from "@/components/ui/Spacer";
 import Link from "next/link";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import {
     type BaseError,
     useChainId,
@@ -18,6 +18,10 @@ import { readContract } from '@wagmi/core/actions'; // Import hàm readContract
 import { isPending } from "@reduxjs/toolkit/react";
 import { config } from "@/components/contract/config";
 import { useSearchParams } from "next/navigation";
+import { AccountsContext } from '@/accounts/AccountsContext';
+import { useChainAndScan } from "@/hooks/useChainAndScan";
+import { Address } from "@unique-nft/utils";
+import { ethers } from "ethers";
 
 function AddIDDiscordPage() {
     const searchParams = useSearchParams();
@@ -31,6 +35,13 @@ function AddIDDiscordPage() {
     let contractAddress: `0x${string}` | undefined;
     let blockexplorer: string | undefined;
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false); // Thêm biến trạng thái để theo dõi xác thực
+
+    const { selectedAccount } = useContext(AccountsContext);
+    const { chain, scan } = useChainAndScan();
+
+    const [polkadotTransactionStatus, setPolkadotTransactionStatus] = useState<string | null>(null);
+    const [isPolkadotPending, setIsPolkadotPending] = useState(false);
+    const [polkadotTransactionHash, setPolkadotTransactionHash] = useState<string | null>(null);
 
     const handleLogin = async () => {
         const clientId = '1306227974579949568'; // Replace with your Discord client ID
@@ -121,46 +132,87 @@ function AddIDDiscordPage() {
             return;
         }
 
-        // Kiểm tra xem ví đã được kết nối chưa
-        if (!account.address) {
-            toast({
-                variant: "destructive",
-                title: "Wallet Not Connected",
-                description: "Please connect your wallet before proceeding.",
-            });
-            return;
-        }
-
         try {
-            console.log("Calling setDiscordId on contract:", contractAddress); // Ghi log địa chỉ hợp đồng
-            await writeContract({
-                address: contractAddress,
-                abi: nftAbi,
-                functionName: "setDiscordId",
-                args: [account.address, discordIdAuth],
-                chain: config[chainId],
-                account: account.address,
+            if (!account.isConnected && !selectedAccount) {
+                throw new Error("Please connect wallet");
+            }
+
+            if (selectedAccount) {
+                await submitWithPolkadot();
+            } else if (account.isConnected) {
+                await submitWithEVM();
+            }
+
+            toast({
+                title: "Success",
+                description: "Discord ID has been set successfully!",
             });
+
         } catch (error) {
             console.error("Error during transaction:", error);
             toast({
                 variant: "destructive",
-                title: "Transaction Cancelled",
-                description: `${(error as BaseError).shortMessage || "An unknown error occurred"}`,
+                title: "Transaction Error",
+                description: error instanceof Error ? error.message : "Unknown error",
             });
-            if (error instanceof Error) {
-                toast({
-                    variant: "destructive",
-                    title: "Error Details",
-                    description: error.message,
-                });
-            }
         }
     };
 
     const handleChangeDiscordId = () => {
         setCurrentDiscordId(null); // Reset current Discord ID to allow re-authentication
         handleLogin(); // Redirect to Discord login
+    };
+
+    const submitWithPolkadot = async () => {
+        if (!selectedAccount) throw new Error("Polkadot account not found");
+        if (!discordIdAuth) throw new Error("Discord ID not found");
+
+        try {
+            setIsPolkadotPending(true);
+            const result = await chain.evm.send(
+                {
+                    contract: {
+                        address: contractAddress as string,
+                        abi: nftAbi as any
+                    },
+                    functionName: "setDiscordId",
+                    functionArgs: [
+                        selectedAccount.address,
+                        discordIdAuth
+                    ],
+                    gasLimit: BigInt(3_000_000)
+                },
+                { signerAddress: selectedAccount.address },
+                { signer: selectedAccount.signer }
+            );
+
+            if (!result.result.isSuccessful) {
+                throw new Error("Transaction failed");
+            }
+
+            setPolkadotTransactionStatus("Transaction successful!");
+            setPolkadotTransactionHash(result.extrinsicOutput.hash);
+        } catch (error) {
+            console.error("Error during transaction:", error);
+            setPolkadotTransactionStatus("Transaction failed: " + (error as Error).message);
+            throw new Error("Cannot set Discord ID: " + (error as Error).message);
+        } finally {
+            setIsPolkadotPending(false);
+        }
+    };
+
+    const submitWithEVM = async () => {
+        if (!account.address) throw new Error("EVM address not found");
+        if (!discordIdAuth) throw new Error("Discord ID not found");
+
+        await writeContract({
+            address: contractAddress,
+            abi: nftAbi,
+            functionName: "setDiscordId",
+            args: [account.address, discordIdAuth],
+            chain: config[chainId],
+            account: account.address,
+        });
     };
 
     return (
@@ -247,6 +299,25 @@ function AddIDDiscordPage() {
                         )}
                         {!isPending && !isConfirming && !isConfirmed && !error && (
                             <p className="text-gray-300">No transactions yet</p>
+                        )}
+                        {isPolkadotPending && <p className="text-yellow-300">Polkadot transaction is pending...</p>}
+                        {polkadotTransactionStatus && (
+                            <p className={`text-${polkadotTransactionStatus.includes("successful") ? "green" : "red"}-300`}>
+                                {polkadotTransactionStatus}
+                                {polkadotTransactionStatus.includes("successful") && polkadotTransactionHash && (
+                                    <>
+                                        {' '}
+                                        <a
+                                            href={`${blockexplorer}/tx/${polkadotTransactionHash}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-blue-400 hover:underline"
+                                        >
+                                            View on block explorer
+                                        </a>
+                                    </>
+                                )}
+                            </p>
                         )}
                     </div>
                 </div>

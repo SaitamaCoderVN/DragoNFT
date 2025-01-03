@@ -1,7 +1,7 @@
 "use client"
 
 import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import { nftAbi } from "@/components/contract/abi";
 import { CONTRACT_ADDRESS_OPAL } from "@/components/contract/contracts";
 import { readContract } from '@wagmi/core/actions';
@@ -10,96 +10,136 @@ import Spacer from '@/components/ui/Spacer';
 import CardGrid from '@/components/card-grid/CardGrid';
 import Card from '@/components/Card';
 import { useAppSelector } from '@/hooks/useRedux';
+import { useChainAndScan } from '@/hooks/useChainAndScan';
+import { ethers } from 'ethers';
+import { UniqueChain } from '@unique-nft/sdk';
+
+// Add interface to define data type
+interface TokenData {
+    imageUri: string;
+    level: number;
+    codeContribute: string;
+}
 
 export default function PublishProfilePage() {
     const { address } = useParams();
-    const [uriArray, setUriArray] = useState<string[]>([]);
+    const addressString = Array.isArray(address) ? address[0] : address;
+    const [tokenDataArray, setTokenDataArray] = useState<TokenData[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [isError, setIsError] = useState<boolean>(false);
-    const { cards, activeCardId } = useAppSelector((state) => state.card);
+    const { cards } = useAppSelector((state) => state.card);
+    const sdk = UniqueChain({
+        baseUrl: "https://rest.unique.network/v2/opal", 
+    });
 
-    const fetchTotalOwnerShitNFT = async () => {
-        if (address) {
-            console.log("result", address);
-            
+    const fetchTotalOwnerNFT = async () => {
+        if (addressString) {
             try {
                 setIsLoading(true);
-                const result = await readContract(config, {
-                    abi: nftAbi,
-                    address: CONTRACT_ADDRESS_UNIQUE,
-
-                    functionName: 'getTokenIdsByOwner',
-                    args: [ address as `0x${string}`],
-                });
-                console.log("result", result);
                 
-            const tokenCodeContributes = await Promise.all(result.map(async (tokenId) => {
-                console.log("tokenId", tokenId);
-                try {
-                    const tokenCode = await readContract(config, {
-                        abi: nftAbi,
-                        address: CONTRACT_ADDRESS_OPAL,
-                        functionName: 'getTokenCodeContribute',
-                        args: [tokenId],
+                if (!addressString.toLowerCase().startsWith("0x")) {
+                    console.log("addressString", addressString);
+                    // Logic for Polkadot address
+                    const result = await sdk.collection.accountTokens({
+                        address: addressString,
+                        collectionId: 4790
                     });
-                    console.log("tokenCode", tokenCode);
-                    return tokenCode;
-                } catch (error) {
-                    console.error("Error fetching tokenCodeContribute:", error);
-                    return null;
-                }
-            }));
 
-            const tokenLevel = await Promise.all(result.map(async (tokenId) => {
-                const tokenLevel = await readContract(config, {
-                    abi: nftAbi,
-                    address: CONTRACT_ADDRESS_OPAL,
-                    functionName: 'getTokenLevel',
-                    args: [tokenId],
-                });
-                console.log("tokenLevel", tokenLevel);
-                return tokenLevel;
-            }));
+                    if (!result || !Array.isArray(result)) {
+                        setTokenDataArray([]);
+                        return;
+                    }
 
-            const tokenUriForContributorAndLevel = await Promise.all(result.map(async (tokenId, index) => {
-                try {
+                    const tokenIds = result.map(token => token.tokenId);
+                    
+                    const tokenData = await Promise.all(tokenIds.map(async (tokenId) => {
+                        const imageUri = await readContract(config, {
+                            abi: nftAbi,
+                            address: CONTRACT_ADDRESS_OPAL,
+                            functionName: 'getTokenImage',
+                            args: [BigInt(tokenId)],
+                        });
+                        
+                        const level = await readContract(config, {
+                            abi: nftAbi,
+                            address: CONTRACT_ADDRESS_OPAL,
+                            functionName: 'getTokenLevel',
+                            args: [BigInt(tokenId)],
+                        });
+
+                        const codeContribute = await readContract(config, {
+                            abi: nftAbi,
+                            address: CONTRACT_ADDRESS_OPAL,
+                            functionName: 'getTokenCodeContribute',
+                            args: [BigInt(tokenId)],
+                        });
+                        
+                        let codeContributeString = '';
+                        try {
+                            codeContributeString = ethers.toUtf8String(codeContribute as `0x${string}`);
+                        } catch (error) {
+                            console.warn("Unable to convert codeContribute to UTF-8:", error);
+                            codeContributeString = String(codeContribute);
+                        }
+
+                        return {
+                            imageUri: ethers.toUtf8String(imageUri),
+                            level: Number(level),
+                            codeContribute: codeContributeString
+                        };
+                    }));
+
+                    setTokenDataArray(tokenData as TokenData[]);
+                } else {
+                    // Logic for EVM address
                     const result = await readContract(config, {
                         abi: nftAbi,
-                        address: CONTRACT_ADDRESS_UNIQUE,
-
-                        functionName: 'getTokenImage',
-                        args: [tokenId],
+                        address: CONTRACT_ADDRESS_OPAL,
+                        functionName: 'getTokenIdsByOwner',
+                        args: [addressString as `0x${string}`],
                     });
 
-                    if (result === "" as any) {
-                        const result = await readContract(config, {
+                    const tokenData = await Promise.all(result.map(async (tokenId) => {
+                        const imageUri = await readContract(config, {
                             abi: nftAbi,
-                            address: CONTRACT_ADDRESS_UNIQUE,
+                            address: CONTRACT_ADDRESS_OPAL,
                             functionName: 'getTokenImage',
                             args: [tokenId],
                         });
-                        console.log("tokenURI Link ảnh đây Đạt nhé", result);
-                        return result;
+                        
+                        const level = await readContract(config, {
+                            abi: nftAbi,
+                            address: CONTRACT_ADDRESS_OPAL,
+                            functionName: 'getTokenLevel',
+                            args: [tokenId],
+                        });
 
-                    }
+                        const codeContribute = await readContract(config, {
+                            abi: nftAbi,
+                            address: CONTRACT_ADDRESS_OPAL,
+                            functionName: 'getTokenCodeContribute',
+                            args: [tokenId],
+                        });
 
-                    return result;
-                } catch (error) {
-                    // If getUriForContributorAndLevel cannot be called, call tokenURI
-                    const result = await readContract(config, {
-                        abi: nftAbi,
-                        address: CONTRACT_ADDRESS_UNIQUE,
-                        functionName: 'getTokenImage',
-                        args: [tokenId],
-                    });
-                    console.log("tokenURI Link ảnh đây Đạt nhé", result);
-                    return result;
+                        let codeContributeString = '';
+                        try {
+                            codeContributeString = ethers.toUtf8String(codeContribute as `0x${string}`);
+                        } catch (error) {
+                            console.warn("Unable to convert codeContribute to UTF-8:", error);
+                            codeContributeString = String(codeContribute);
+                        }
 
+                        return {
+                            imageUri: imageUri.toString(),
+                            level: Number(level),
+                            codeContribute: codeContributeString
+                        };
+                    }));
+                    
+                    setTokenDataArray(tokenData);
                 }
-                }));
-
-                setUriArray(tokenUriForContributorAndLevel as string[]);
             } catch (error) {
+                console.error("Error fetching NFTs:", error);
                 setIsError(true);
             } finally {
                 setIsLoading(false);
@@ -108,7 +148,7 @@ export default function PublishProfilePage() {
     };
 
     useEffect(() => {
-        fetchTotalOwnerShitNFT();
+        fetchTotalOwnerNFT();
     }, [address]);
 
     if (isLoading) {
@@ -116,14 +156,13 @@ export default function PublishProfilePage() {
     }
 
     if (isError) {
-        return <div>Error loading profile data</div>;
+        return <div>Error loading data</div>;
     }
 
     return (
         <>
             <div className='background-container min-h-[100vh] border-2 border-solid border-primary rounded-[20px] bg-background overflow-hidden bg-custom-bg bg-custom-pos bg-custom-size bg-custom-repeat bg-custom-attachment'>
-            <Spacer className='h-[3vw] max-phonescreen:h-[4vw]' />
-
+                <Spacer className='h-[3vw] max-phonescreen:h-[4vw]' />
                 <div className='flex justify-between items-center px-[3vw]'>
                     <div className='flex items-center'>
                         <div className='text-primary font-bold font-pixel uppercase text-[3.5vw] leading-[5.5vw] whitespace-nowrap'>
@@ -132,19 +171,28 @@ export default function PublishProfilePage() {
                     </div>
                 </div>
                 <CardGrid>
-                    {uriArray.map((img, index) => (
-                        <Card 
-                            key={index} 
-                            id={`swsh12pt5-${index + 160}`} 
-                            name={cards[1].name} 
-                            number={cards[1].number} 
-                            img={img} // Using the image URL from uriArray
-                            set={cards[1].set} 
-                            types={cards[1].types} 
-                            subtypes={cards[1].subtypes} 
-                            supertype={cards[1].supertype} 
-                            rarity={cards[1].rarity} 
-                        />
+                    {tokenDataArray.map((tokenData, index) => (
+                        <div key={index} className="relative transform-gpu transition-all duration-300 hover:scale-105 hover:z-10">
+                            <div className="transform-none w-full h-full">
+                                <div className="relative w-full h-full">
+                                    <Card 
+                                        id={`swsh12pt5-${index + 160}`} 
+                                        name={cards[1].name} 
+                                        number={cards[1].number} 
+                                        img={tokenData.imageUri}
+                                        set={cards[1].set} 
+                                        types={cards[1].types} 
+                                        subtypes={cards[1].subtypes} 
+                                        supertype={cards[1].supertype} 
+                                        rarity={cards[1].rarity} 
+                                    />
+                                    <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 text-center transition-opacity duration-300 hover:bg-black/70">
+                                        <div>Level: {tokenData.level}</div>
+                                        <div>Code Contribution: {tokenData.codeContribute}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     ))}
                 </CardGrid>
             </div>
