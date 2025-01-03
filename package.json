@@ -9,7 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@polkadot/extension-inject": "^0.34.0-beta.12",
+    "@polkadot/extension-inject": "0.44.9",
+    "@polkadot/extension-dapp": "0.44.9",
     "@polkadot/util-crypto": "^13.2.3",
     "@radix-ui/react-toast": "^1.2.2",
     "@rainbow-me/rainbowkit": "^2.2.0",
@@ -47,7 +48,6 @@
     "stream-browserify": "^3.0.0",
     "stream-http": "^3.2.0",
     "tailwind-merge": "^2.5.4",
-    "types": "link:@polkadot/extension-inject/types",
     "url": "^0.11.4",
     "uuid": "^10.0.0",
     "viem": "^2.21.28",

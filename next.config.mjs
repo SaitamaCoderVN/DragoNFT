@@ -20,17 +20,17 @@ const nextConfig = {
       fs: false,
       net: false,
       tls: false,
-      crypto: require.resolve('crypto-browserify'),
-      stream: require.resolve('stream-browserify'),
-      url: require.resolve('url'),
+      crypto: 'crypto-browserify',
+      stream: 'stream-browserify',
+      url: 'url',
       zlib: false,
-      http: require.resolve('stream-http'),
-      https: require.resolve('https-browserify'),
-      assert: require.resolve('assert'),
-      os: require.resolve('os-browserify'),
+      http: 'stream-http',
+      https: 'https-browserify',
+      assert: 'assert',
+      os: 'os-browserify',
       path: false,
-      process: require.resolve('process/browser'),
-      buffer: require.resolve('buffer')
+      process: 'process/browser',
+      buffer: 'buffer'
     };
     config.resolve.extensions = [...config.resolve.extensions, '.ts', '.tsx'];
     config.plugins = [...config.plugins];
