@@ -365,7 +365,7 @@ function UpgradePage() {
                     if (!address.toLowerCase().startsWith("0x")) {
                         const result = await chain.collection.accountTokens({
                             address: address,
-                            collectionId: 4790
+                            collectionId: 4794
                         });
 
                         const tokenIds = result.map(token => token.tokenId);

@@ -332,12 +332,12 @@ function NestingPage() {
 
             // Check if tokens exist
             const parentExists = await chain.token.get({
-                collectionId: 4790,
+                collectionId: 4794,
                 tokenId: Number(TokenIdParent)
             });
             
             const nestedExists = await chain.token.get({
-                collectionId: 4790,
+                collectionId: 4794,
                 tokenId: Number(TokenIdNested)
             });
 
@@ -350,7 +350,7 @@ function NestingPage() {
 
             // Check ownership
             const tokenInfo = await chain.token.get({
-                collectionId: 4790,
+                collectionId: 4794,
                 tokenId: Number(TokenIdParent)
             });
 
@@ -362,11 +362,11 @@ function NestingPage() {
             const result = await chain.token.nest(
                 {
                     parent: { 
-                        collectionId: 4790, 
+                        collectionId: 4794, 
                         tokenId: Number(TokenIdParent) 
                     },
                     nested: { 
-                        collectionId: 4790, 
+                        collectionId: 4794, 
                         tokenId: Number(TokenIdNested) 
                     },
                 },
@@ -473,7 +473,7 @@ function NestingPage() {
                         const result = await chain.collection.accountTokens(
                             {
                                 address: currentAddress,
-                                collectionId: 4790
+                                collectionId: 4794
                             }
                         );
 

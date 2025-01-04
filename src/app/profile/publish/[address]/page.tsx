@@ -42,7 +42,7 @@ export default function PublishProfilePage() {
                     // Logic for Polkadot address
                     const result = await sdk.collection.accountTokens({
                         address: addressString,
-                        collectionId: 4790
+                        collectionId: 4794
                     });
 
                     if (!result || !Array.isArray(result)) {

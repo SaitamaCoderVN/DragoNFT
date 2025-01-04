@@ -94,7 +94,7 @@ export default function ProfilelPage() {
                     // Logic cho ví Polkadot
                     const result = await chain.collection.accountTokens({
                         address: currentAddress,
-                        collectionId: 4790
+                        collectionId: 4794
                     });
 
                     const tokenIds = result.map(token => token.tokenId);

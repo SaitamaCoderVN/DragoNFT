@@ -337,7 +337,7 @@ function UnnestPage() {
 
             // Check if tokens exist
             const bundleExists = await chain.token.get({
-                collectionId: 4790,
+                collectionId: 4794,
                 tokenId: Number(TokenIdBundle)
             });
             
@@ -349,7 +349,7 @@ function UnnestPage() {
 
             // Check ownership
             const tokenInfo = await chain.token.get({
-                collectionId: 4790,
+                collectionId: 4794,
                 tokenId: Number(TokenIdBundle)
             });
 
@@ -359,7 +359,7 @@ function UnnestPage() {
             // Perform Unnest
             const result = await chain.token.unnest(
                 {
-                    nested: { collectionId: 4790, tokenId: Number(TokenIdBundle) }
+                    nested: { collectionId: 4794, tokenId: Number(TokenIdBundle) }
                 },
                 { 
                     signerAddress: selectedAccount.address 
@@ -411,14 +411,14 @@ function UnnestPage() {
             account.balance = Number(balanceResponse.available) / Math.pow(10, Number(balanceResponse.decimals));
 
             console.log("Unnest NFT with params:", {
-                nested: { collectionId: 4790, tokenId: Number(TokenIdBundle) },
+                nested: { collectionId: 4794, tokenId: Number(TokenIdBundle) },
                 signerAddress: ethereumAddress
             });
 
             // Perform unnest
             const result = await chain.token.unnest(
                 {
-                    nested: { collectionId: 4790, tokenId: Number(TokenIdBundle) }
+                    nested: { collectionId: 4794, tokenId: Number(TokenIdBundle) }
                 },
                 { 
                     signerAddress: ethereumAddress 
@@ -464,7 +464,7 @@ function UnnestPage() {
                     if (selectedAccount) {
                         const result = await chain.collection.accountTokens({
                             address: currentAddress,
-                            collectionId: 4790
+                            collectionId: 4794
                         });
 
                         const tokenIds = result.map(token => token.tokenId);
@@ -473,7 +473,7 @@ function UnnestPage() {
                         const bundleTokens = await Promise.all(
                             tokenIds.map(async (tokenId) => {
                                 const tokenInfo = await chain.token.get({
-                                    collectionId: 4790,
+                                    collectionId: 4794,
                                     tokenId: tokenId,
                                     withChildren: true
                                 });
@@ -487,7 +487,7 @@ function UnnestPage() {
 
                         const tokenUriForContributorAndLevel = await Promise.all(bundleTokenIds.map(async (tokenId) => {
                             const tokenInfo = await chain.token.get({
-                                collectionId: 4790,
+                                collectionId: 4794,
                                 tokenId: tokenId,
                                 withChildren: true
                             });

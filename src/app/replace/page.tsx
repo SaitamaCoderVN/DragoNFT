@@ -401,7 +401,7 @@ function ReplacePage() {
                         const result = await chain.collection.accountTokens(
                             {
                                 address: address,
-                                collectionId: 4790
+                                collectionId: 4794
                             }
                         );
 
