@@ -146,7 +146,6 @@ export default function ProfilelPage() {
                         functionName: 'getTokenIdsByOwner',
                         args: [currentAddress as `0x${string}`],
                     });
-
                     const tokenData = await Promise.all(result.map(async (tokenId) => {
                         const uri = await readContract(config, {
                             abi: nftAbi,
@@ -154,7 +153,7 @@ export default function ProfilelPage() {
                             functionName: 'getTokenImage',
                             args: [tokenId],
                         });
-
+                        const uriString = ethers.toUtf8String(uri as `0x${string}`);
                         const level = await readContract(config, {
                             abi: nftAbi,
                             address: contractAddress,
@@ -179,7 +178,7 @@ export default function ProfilelPage() {
 
                         return {
                             tokenId: Number(tokenId),
-                            imageUri: uri.toString(),
+                            imageUri: uriString,
                             level: Number(level),
                             codeContribute: codeContributeString
                         };

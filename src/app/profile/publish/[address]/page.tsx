@@ -105,6 +105,8 @@ export default function PublishProfilePage() {
                             functionName: 'getTokenImage',
                             args: [tokenId],
                         });
+
+                        const uriString = ethers.toUtf8String(imageUri as `0x${string}`);
                         
                         const level = await readContract(config, {
                             abi: nftAbi,
@@ -129,7 +131,7 @@ export default function PublishProfilePage() {
                         }
 
                         return {
-                            imageUri: imageUri.toString(),
+                            imageUri: uriString,
                             level: Number(level),
                             codeContribute: codeContributeString
                         };
