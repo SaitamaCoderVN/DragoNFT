@@ -38,7 +38,6 @@ export default function PublishProfilePage() {
                 setIsLoading(true);
                 
                 if (!addressString.toLowerCase().startsWith("0x")) {
-                    console.log("addressString", addressString);
                     // Logic for Polkadot address
                     const result = await sdk.collection.accountTokens({
                         address: addressString,

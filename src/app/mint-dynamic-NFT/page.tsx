@@ -9,7 +9,6 @@ import { useCallback, useRef, useState, useEffect, useContext } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FaSpinner } from 'react-icons/fa';
 import {
-    type BaseError,
     useWaitForTransactionReceipt,
     useWriteContract,
     useChainId,
@@ -19,15 +18,12 @@ import { useToast } from "@/components/ui/use-toast";
 import { config } from "@/components/contract/config";
 import { ethers } from "ethers";
 import { AnimatePresence, motion } from "framer-motion";
-import { useAppSelector } from "@/hooks/useRedux";
-import { UniqueChain } from "@unique-nft/sdk";
 import { Address } from "@unique-nft/utils";
-import { User } from "@/types/User";
-import { setUser } from "@/redux/userSlice";
 import { useAppDispatch } from "@/hooks/useRedux";
 import { AccountsContext } from '@/accounts/AccountsContext';
 import { useChainAndScan } from "@/hooks/useChainAndScan";
 import { ArrowDownIcon } from "lucide-react";
+import { TransactionStatus } from "@/components/TransactionStatus";
 
 const FileUploadIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg {...props} width="12" height="12" viewBox="0 0 24 24" fill="none" role="img" color="white">
@@ -35,7 +31,7 @@ const FileUploadIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
 );
 
-function MintOGPage() {
+function MintDynamicNFTPage() {
     const { selectedAccount } = useContext(AccountsContext);
     const { chain, scan } = useChainAndScan();
 
@@ -47,12 +43,11 @@ function MintOGPage() {
     const [localImageFile, setLocalImageFile] = useState<File | null>(null);
     const [localImagePreview, setLocalImagePreview] = useState<string>('');
     const [isUploading, setIsUploading] = useState(false);
-    const [uploadSuccess, setUploadSuccess] = useState(false); // New state for upload success
-    const [levelError, setLevelError] = useState<string>(''); // Thêm state để theo dõi lỗi
+    const [uploadSuccess, setUploadSuccess] = useState(false);
+    const [levelError, setLevelError] = useState<string>('');
 
     const { toast } = useToast();
     const chainId = useChainId();
-    const account = useAccount();
     const canvasRef = useRef<HTMLCanvasElement>(null);
     let contractAddress: `0x${string}` | undefined;
     let blockexplorer: string | undefined;
@@ -369,7 +364,6 @@ function MintOGPage() {
                 { signerAddress: selectedAccount.address },
                 { signer: selectedAccount.signer }
             );
-            console.log("result", result);
 
             if (!result.result.isSuccessful) {
                 throw new Error("Mint transaction failed");
@@ -388,7 +382,6 @@ function MintOGPage() {
 
     const mintWithEVM = async (codeContribute: string) => {
         if (!wagmiAddress) throw new Error("EVM address not found");
-        console.log("evmAddress", wagmiAddress);
 
         await writeContract({
             address: contractAddress as `0x${string}`,
@@ -417,7 +410,6 @@ function MintOGPage() {
     const { address: wagmiAddress, isConnected } = useAccount();
 
     useEffect(() => {
-        console.log("Selected Account in MintPage:", selectedAccount);
     }, [selectedAccount]);
 
     const [polkadotTransactionStatus, setPolkadotTransactionStatus] = useState<string | null>(null);
@@ -556,17 +548,17 @@ function MintOGPage() {
                                     onChange={(e) => {
                                         const value = Number(e.target.value);
                                         if (value < 1) {
-                                            setLevelError('Level must be 1 or higher'); // Thiết lập thông báo lỗi
+                                            setLevelError('Level must be 1 or higher');
                                         } else {
-                                            setLevelError(''); // Xóa thông báo lỗi nếu giá trị hợp lệ
+                                            setLevelError('');
                                             setLevel(e.target.value);
                                         }
                                     }}
                                     placeholder="Enter level"
                                     className={`w-full px-4 py-2 bg-background text-white rounded-md focus:outline-none focus:ring-2 focus:ring-secondary ${!uploadSuccess ? 'cursor-not-allowed' : ''}`}
-                                    disabled={!uploadSuccess} // Disable input if upload is not successful
+                                    disabled={!uploadSuccess}
                                 />
-                                {levelError && ( // Hiển thị thông báo lỗi nếu có
+                                {levelError && (
                                     <p className="text-red-500 mt-2">{levelError}</p>
                                 )}
                             </div>
@@ -582,7 +574,7 @@ function MintOGPage() {
                                     onChange={(e) => setCodeContribute(e.target.value)}
                                     placeholder="Enter code contribute"
                                     className={`w-full px-4 py-2 bg-background text-white rounded-md focus:outline-none focus:ring-2 focus:ring-secondary ${!uploadSuccess ? 'cursor-not-allowed' : ''}`}
-                                    disabled={!uploadSuccess} // Disable input if upload is not successful
+                                    disabled={!uploadSuccess}
                                 />
                             </div>
 
@@ -607,7 +599,7 @@ function MintOGPage() {
                                 <button
                                     type="submit"
                                     className="w-full bg-black text-[#3f3c40] font-bold py-2 px-4 rounded-md hover:text-[#c7c1c9] transition duration-300"
-                                    disabled={!uploadSuccess} // Disable submit button if upload is not successful
+                                    disabled={!uploadSuccess}
                                 >
                                     Mint OG NFT
                                 </button>
@@ -617,48 +609,17 @@ function MintOGPage() {
 
                     <div className="mt-8 bg-secondary p-6 rounded-lg max-w-2xl mx-auto">
                         <h3 className="text-xl font-semibold text-white mb-4">Transaction Status</h3>
-                        {isPending && <p className="text-yellow-300">Waiting for signature...</p>}
-                        {isConfirming && <p className="text-yellow-300">Confirming...</p>}
-                        {isConfirmed && (
-                            <p className="text-green-300">
-                                Transaction successful!{' '}
-                                <a
-                                    href={`${blockexplorer}/tx/${hash}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-blue-400 hover:underline"
-                                >
-                                    View on block explorer
-                                </a>
-                            </p>
-                        )}
-                        {isPolkadotPending && <p className="text-yellow-300">Polkadot transaction is pending...</p>}
-                        {polkadotTransactionStatus && (
-                            <p className={`text-${polkadotTransactionStatus.includes("successful") ? "green" : "red"}-300`}>
-                                {polkadotTransactionStatus}
-                                {polkadotTransactionStatus.includes("successful") && polkadotTransactionHash && (
-                                    <>
-                                        {' '}
-                                        <a
-                                            href={`${blockexplorer}/tx/${polkadotTransactionHash}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-blue-400 hover:underline"
-                                        >
-                                            View on block explorer
-                                        </a>
-                                    </>
-                                )}
-                            </p>
-                        )}
-                        {error && (
-                            <p className="text-red-300">
-                                Error: {(error as BaseError).shortMessage || "An unknown error occurred"}
-                            </p>
-                        )}
-                        {!isPending && !isConfirming && !isConfirmed && !isPolkadotPending && !error && !polkadotTransactionStatus && (
-                            <p className="text-gray-300">No transactions yet</p>
-                        )}
+                        <TransactionStatus 
+                            isPending={isPending}
+                            isConfirming={isConfirming}
+                            isConfirmed={isConfirmed}
+                            hash={hash}
+                            error={error}
+                            isPolkadotPending={isPolkadotPending}
+                            polkadotTransactionStatus={polkadotTransactionStatus}
+                            polkadotTransactionHash={polkadotTransactionHash}
+                            blockexplorer={blockexplorer}
+                        />
                     </div>
                 </div>
                 <Spacer className='h-[3vw] max-phonescreen:h-[4vw]' />
@@ -669,4 +630,4 @@ function MintOGPage() {
     );
 }
 
-export default MintOGPage;
+export default MintDynamicNFTPage;

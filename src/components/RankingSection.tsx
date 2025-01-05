@@ -89,7 +89,6 @@ function RankingSection() {
         const response = await fetch(`/api/leaderboard?serverId=1170911030789029898`);
         if (!response.ok) throw new Error('Failed to fetch data');
         const data = await response.json();
-        // console.log(data)
         
         if (isLoadMore) {
           setPlayers(prevPlayers => {

@@ -36,7 +36,6 @@ export async function GET(req: Request) {
                 Authorization: `Bearer ${accessToken}`,
             },
         });
-        console.log(userResponse);
         const discordId = userResponse.data.id;
 
         // Redirect back to your page with the Discord ID

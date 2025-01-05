@@ -1,7 +1,5 @@
 "use client"
 
-import Card from "@/components/Card";
-import CardGrid from "@/components/card-grid/CardGrid";
 import { CustomConnectButton } from "@/components/ui/ConnectButton";
 import Spacer from "@/components/ui/Spacer";
 import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
@@ -10,16 +8,12 @@ import { useState, useCallback, useEffect, useRef, useContext } from "react";
 import { useDropzone } from 'react-dropzone';
 import { FaSpinner } from 'react-icons/fa';
 import "./style.css"
-import { setCards } from "@/redux/cardSlice";
-import { v4 as uuidv4 } from 'uuid';
-import { getRandomRarity, getRandomType } from "@/utils/rarityUtils";
 import { readContract } from "@wagmi/core/actions";
 import { config } from "@/components/contract/config";
 import { nftAbi } from "@/components/contract/abi";
 import { useToast } from "@/components/ui/use-toast";
-import { BaseError, useAccount, useChainId, useWriteContract } from "wagmi";
+import { useAccount, useChainId, useWriteContract } from "wagmi";
 import { BLOCK_EXPLORER_OPAL, BLOCK_EXPLORER_QUARTZ, BLOCK_EXPLORER_UNIQUE, CHAINID, CONTRACT_ADDRESS_OPAL, CONTRACT_ADDRESS_QUARTZ, CONTRACT_ADDRESS_UNIQUE } from "@/components/contract/contracts";
-import { UniqueChain } from "@unique-nft/sdk";
 
 import { AnimatePresence, motion } from "framer-motion";
 import { useChainAndScan } from "@/hooks/useChainAndScan";
@@ -28,22 +22,11 @@ import { AccountsContext } from '@/accounts/AccountsContext';
 import { Address } from "@unique-nft/utils";
 import { useWaitForTransactionReceipt, useSendTransaction } from "wagmi";
 import { SdkContext } from "@/sdk/SdkContext";
-import { parseEther } from "viem";
-import { SignerTypeEnum, Account } from "@/accounts/types";
-import { toast } from '@/components/ui/use-toast';
-
-const FileUploadIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg {...props} width="12" height="12" viewBox="0 0 24 24" fill="none" role="img" color="white"><path fillRule="evenodd" clipRule="evenodd" d="M13.25 1.26003C12.9109 1.25 12.5071 1.25 11.997 1.25H11.25C8.44974 1.25 7.04961 1.25 5.98005 1.79497C5.03924 2.27433 4.27433 3.03924 3.79497 3.98005C3.25 5.04961 3.25 6.44974 3.25 9.25V14.75C3.25 17.5503 3.25 18.9504 3.79497 20.02C4.27433 20.9608 5.03924 21.7257 5.98005 22.205C7.04961 22.75 8.44974 22.75 11.25 22.75H12.75C15.5503 22.75 16.9504 22.75 18.02 22.205C18.9608 21.7257 19.7257 20.9608 20.205 20.02C20.75 18.9504 20.75 17.5503 20.75 14.75V10.003C20.75 9.49288 20.75 9.08913 20.74 8.75001H17.2H17.1695H17.1695C16.6354 8.75002 16.1895 8.75003 15.8253 8.72027C15.4454 8.68924 15.0888 8.62212 14.7515 8.45028C14.2341 8.18663 13.8134 7.76593 13.5497 7.24849C13.3779 6.91122 13.3108 6.55457 13.2797 6.17468C13.25 5.81045 13.25 5.3646 13.25 4.83044V4.80001V1.26003ZM20.5164 7.25001C20.3941 6.86403 20.2252 6.4939 20.0132 6.14791C19.704 5.64333 19.2716 5.21096 18.4069 4.34621L18.4069 4.34619L17.6538 3.59315L17.6538 3.59314C16.789 2.72839 16.3567 2.29601 15.8521 1.9868C15.5061 1.77478 15.136 1.6059 14.75 1.48359V4.80001C14.75 5.37244 14.7506 5.75666 14.7748 6.05253C14.7982 6.33966 14.8401 6.47694 14.8862 6.5675C15.0061 6.8027 15.1973 6.99393 15.4325 7.11377C15.5231 7.15991 15.6604 7.2018 15.9475 7.22526C16.2434 7.24943 16.6276 7.25001 17.2 7.25001H20.5164ZM12.5303 10.4697C12.2374 10.1768 11.7626 10.1768 11.4697 10.4697L8.96967 12.9697C8.67678 13.2626 8.67678 13.7374 8.96967 14.0303C9.26256 14.3232 9.73744 14.3232 10.0303 14.0303L11.25 12.8107V17C11.25 17.4142 11.5858 17.75 12 17.75C12.4142 17.75 12.75 17.4142 12.75 17V12.8107L13.9697 14.0303C14.2626 14.3232 14.7374 14.3232 15.0303 14.0303C15.3232 13.7374 15.3232 13.2626 15.0303 12.9697L12.5303 10.4697Z" fill="currentColor"></path></svg>
-);
-const ArrowDownIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" className="injected-svg" data-src="https://cdn.hugeicons.com/icons/arrow-down-01-stroke-sharp.svg"  role="img" color="#000000">
-    <path d="M5.99977 9.00005L11.9998 15L17.9998 9" stroke="#000000" strokeWidth="2" stroke-miterlimit="16"></path>
-    </svg>
-);
+import { UniqueNFTFactory } from "@unique-nft/solidity-interfaces";
+import { TransactionStatus } from "@/components/TransactionStatus";
+import { ArrowDownIcon } from "lucide-react";
 
 function NestingPage() {
-    const dispatch = useAppDispatch();
-    const { cards } = useAppSelector((state) => state.card);
     const { address: wagmiAddress, isConnected } = useAccount();
     const { selectedAccount } = useContext(AccountsContext);
 
@@ -58,7 +41,6 @@ function NestingPage() {
     }, [selectedAccount, isConnected, wagmiAddress]);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [localImageFile, setLocalImageFile] = useState(null);
     const [localImagePreview, setLocalImagePreview] = useState('');
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [uriArray, setUriArray] = useState<Array<[string | bigint, string, bigint]>>([]);
@@ -102,7 +84,6 @@ function NestingPage() {
     }, []);
 
     const { toast } = useToast();
-    const account = useAccount();
     const chainId = useChainId();
     let contractAddress: `0x${string}` | undefined;
     let blockexplorer: string | undefined;
@@ -122,170 +103,10 @@ function NestingPage() {
             break;
     }
 
-    const onDrop = useCallback((acceptedFiles) => {
-        const file = acceptedFiles[0];
-        if (!file) return;
-
-        setLocalImageFile(file);
-        setLocalImagePreview(URL.createObjectURL(file));
-    }, []);
-
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({
-        onDrop,
-        accept: {'image/*': []},
-        multiple: false
-    });
-
-
     const { data: hash, error, isPending, writeContract } = useWriteContract();
-
     const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
         hash,
     });
-
-    const generateCombinedImage = async (): Promise<Blob | null> => {
-        return new Promise((resolve) => {
-            const canvas = canvasRef.current;
-            if (!canvas) {
-                resolve(null);
-                return;
-            }
-    
-            const ctx = canvas.getContext('2d');
-            if (!ctx) {
-                resolve(null);
-                return;
-            }
-    
-            const img = new Image();
-            img.onload = () => {
-                const aspectRatio = 0.718;
-                const cardWidth = 400;
-                const cardHeight = cardWidth / aspectRatio;
-                canvas.width = cardWidth;
-                canvas.height = cardHeight;
-    
-                // Create gradient background for the frame
-                const gradient = ctx.createLinearGradient(0, 0, cardWidth, cardHeight);
-                gradient.addColorStop(0, '#2a0845');
-                gradient.addColorStop(1, '#6441A5');
-                ctx.fillStyle = gradient;
-                ctx.fillRect(0, 0, cardWidth, cardHeight);
-    
-                // Draw image with object-fit: cover
-                const frameMargin = 20;
-                const imageWidth = cardWidth - frameMargin * 2;
-                const imageHeight = cardHeight - frameMargin * 3;
-                const imageAspectRatio = img.width / img.height;
-                let drawWidth, drawHeight, offsetX, offsetY;
-    
-                if (imageAspectRatio > imageWidth / imageHeight) {
-                    drawHeight = imageHeight;
-                    drawWidth = drawHeight * imageAspectRatio;
-                    offsetX = frameMargin + (imageWidth - drawWidth) / 2;
-                    offsetY = frameMargin * 2;
-                } else {
-                    drawWidth = imageWidth;
-                    drawHeight = drawWidth / imageAspectRatio;
-                    offsetX = frameMargin;
-                    offsetY = frameMargin * 2 + (imageHeight - drawHeight) / 2;
-                }
-    
-                ctx.save();
-                ctx.beginPath();
-                ctx.rect(frameMargin, frameMargin * 2, imageWidth, imageHeight);
-                ctx.clip();
-                ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
-                ctx.restore();
-    
-                // Outer frame
-                ctx.strokeStyle = '#8A2BE2';
-                ctx.lineWidth = 8;
-                ctx.strokeRect(10, 10, cardWidth - 20, cardHeight - 20);
-    
-                // Inner frame
-                ctx.strokeStyle = '#4B0082';
-                ctx.lineWidth = 4;
-                ctx.strokeRect(frameMargin, frameMargin, cardWidth - frameMargin * 2, cardHeight - frameMargin * 2);
-    
-                // Corner accents
-                const cornerSize = 30;
-                ctx.strokeStyle = '#9370DB';
-                ctx.lineWidth = 2;
-                // Top-left
-                ctx.beginPath();
-                ctx.moveTo(5, 35);
-                ctx.lineTo(5, 5);
-                ctx.lineTo(35, 5);
-                ctx.stroke();
-                // Top-right
-                ctx.beginPath();
-                ctx.moveTo(cardWidth - 35, 5);
-                ctx.lineTo(cardWidth - 5, 5);
-                ctx.lineTo(cardWidth - 5, 35);
-                ctx.stroke();
-                // Bottom-left
-                ctx.beginPath();
-                ctx.moveTo(5, cardHeight - 35);
-                ctx.lineTo(5, cardHeight - 5);
-                ctx.lineTo(35, cardHeight - 5);
-                ctx.stroke();
-                // Bottom-right
-                ctx.beginPath();
-                ctx.moveTo(cardWidth - 35, cardHeight - 5);
-                ctx.lineTo(cardWidth - 5, cardHeight - 5);
-                ctx.lineTo(cardWidth - 5, cardHeight - 35);
-                ctx.stroke();
-    
-                // Draw name at the top
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-                ctx.fillRect(0, 0, cardWidth, 40);
-                ctx.fillStyle = '#ce8eeb';
-                ctx.font = 'bold 24px "Courier New", monospace';
-                ctx.textAlign = 'center';
-                // ctx.fillText(nftName, cardWidth / 2, 28);
-    
-                // Draw title at the bottom
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-                ctx.fillRect(0, cardHeight - 40, cardWidth, 40);
-                ctx.fillStyle = '#E6E6FA';
-                ctx.font = '20px "Courier New", monospace';
-                ctx.textAlign = 'center';
-                // ctx.fillText(nftTitle, cardWidth / 2, cardHeight - 15);
-    
-                // Add some tech-inspired details
-                ctx.strokeStyle = 'rgba(147, 112, 219, 0.5)';
-                ctx.lineWidth = 1;
-                for (let i = 0; i < 3; i++) {
-                    ctx.beginPath();
-                    ctx.moveTo(frameMargin, 50 + i * 20);
-                    ctx.lineTo(cardWidth - frameMargin, 50 + i * 20);
-                    ctx.stroke();
-                }
-    
-                // Circular element
-                ctx.strokeStyle = '#9370DB';
-                ctx.beginPath();
-                ctx.arc(cardWidth - 40, 60, 15, 0, Math.PI * 2);
-                ctx.stroke();
-    
-                // Data-like lines
-                ctx.beginPath();
-                ctx.moveTo(40, 60);
-                ctx.lineTo(cardWidth - 70, 60);
-                ctx.moveTo(40, 70);
-                ctx.lineTo(cardWidth - 90, 70);
-                ctx.moveTo(40, 80);
-                ctx.lineTo(cardWidth - 80, 80);
-                ctx.stroke();
-    
-                canvas.toBlob((blob) => {
-                    resolve(blob);
-                });
-            };
-            img.src = localImagePreview;
-        });
-    };
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -300,6 +121,10 @@ function NestingPage() {
             } else if (isConnected) {
                 await nestingWithEVM();
             }
+
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
 
             toast({
                 title: "Success",
@@ -340,9 +165,6 @@ function NestingPage() {
                 collectionId: 4794,
                 tokenId: Number(TokenIdNested)
             });
-
-            console.log("parentExists", parentExists);
-            console.log("nestedExists", nestedExists);
 
             if (!parentExists || !nestedExists) {
                 throw new Error("One or both tokens do not exist");
@@ -400,45 +222,42 @@ function NestingPage() {
             if (!wagmiAddress) throw new Error("Please connect EVM wallet");
             if (!TokenIdParent || !TokenIdNested) throw new Error("Please enter Token ID");
 
-            setIsPolkadotPending(true);
-            
-            // Convert EVM address to appropriate format
-            const ethereumAddress = Address.extract.substrateOrMirrorIfEthereumNormalized(wagmiAddress);
-            
-            // Create account object with required information
-            const account: Account = {
-                address: ethereumAddress,
-                signerType: SignerTypeEnum.Ethereum,
-                name: '',
-                normalizedAddress: wagmiAddress,
-                // Add signer from window.ethereum
-                signer: window.ethereum
-            };
+            setIsLoading(true);
 
-            // Check balance (if needed)
-            const balanceResponse = await sdk.balance.get({ address: ethereumAddress });
-            account.balance = Number(balanceResponse.available) / Math.pow(10, Number(balanceResponse.decimals));
+            const collectionAddress = Address.collection.idToAddress(4794);
+            const tokenAddress = Address.nesting.idsToAddress(4794, Number(TokenIdParent));
 
-            console.log("Nesting NFT with params:", {
-                parent: { collectionId: 1, tokenId: Number(TokenIdParent) },
-                nested: { collectionId: 1, tokenId: Number(TokenIdNested) },
-                signerAddress: ethereumAddress
-            });
+            const provider = new ethers.BrowserProvider(window.ethereum);
+            const signer = await provider.getSigner();
 
-            // Perform nesting
-            const result = await chain.token.nest(
-                {
-                    parent: { collectionId: 1, tokenId: Number(TokenIdParent) },
-                    nested: { collectionId: 1, tokenId: Number(TokenIdNested) }
-                },
-                { signerAddress: ethereumAddress },
-                { signer: account.signer }
+            const collectionContract = await UniqueNFTFactory(
+                collectionAddress,
+                signer
             );
 
-            setPolkadotTransactionStatus("Nesting successful!");
-            setPolkadotTransactionHash(result.extrinsicOutput?.hash);
+            const ownerOfNested = await collectionContract.ownerOf(Number(TokenIdNested));
+            const ownerOfParent = await collectionContract.ownerOf(Number(TokenIdParent));
             
-            // Add success notification
+            if (ownerOfNested.toLowerCase() !== wagmiAddress.toLowerCase()) {
+                throw new Error("You don't own the nested token");
+            }
+            
+            if (ownerOfParent.toLowerCase() !== wagmiAddress.toLowerCase()) {
+                throw new Error("You don't own the parent token");
+            }
+            const approveResult = await collectionContract.approve(
+                tokenAddress,
+                Number(TokenIdNested)
+            );
+            await approveResult.wait();
+
+            const result = await collectionContract.transfer(
+                tokenAddress, 
+                Number(TokenIdNested)
+            );
+
+            await result.wait();
+
             toast({
                 title: "Success",
                 description: "NFT has been nested successfully!",
@@ -447,19 +266,15 @@ function NestingPage() {
 
         } catch (error) {
             console.error("Nesting error:", error);
-            setPolkadotTransactionStatus("Nesting failed: " + (error as Error).message);
-            
-            // Add error notification
             toast({
                 variant: "destructive",
-                title: "Nesting Error",
+                title: "Nesting Error", 
                 description: error instanceof Error ? error.message : "Cannot perform NFT nesting",
                 duration: 5000,
             });
-            
             throw error;
         } finally {
-            setIsPolkadotPending(false);
+            setIsLoading(false);
         }
     };
 
@@ -477,10 +292,7 @@ function NestingPage() {
                             }
                         );
 
-                        console.log("resultCollection", result);
-
                         const tokenIds = result.map(token => token.tokenId)
-                        console.log("tokenIds", tokenIds);
 
                         const tokenUriForContributorAndLevel = await Promise.all(tokenIds.map(async (tokenId) => {
                             const uri = await readContract(config, {
@@ -500,29 +312,29 @@ function NestingPage() {
     
                         setUriArray(tokenUriForContributorAndLevel);
                     } else {
-                        const result = await readContract(config, {
-                            abi: nftAbi,
-                            address: contractAddress,
-                            functionName: 'getTokenIdsByOwner',
-                            args: [currentAddress as `0x${string}`],
-                        });
-    
-                        console.log("result", result);
-    
-                        const tokenUriForContributorAndLevel = await Promise.all(result.map(async (tokenId) => {
+                        const result = await chain.collection.accountTokens(
+                            {
+                                address: currentAddress,
+                                collectionId: 4794
+                            }
+                        );
+
+                        const tokenIds = result.map(token => token.tokenId)
+
+                        const tokenUriForContributorAndLevel = await Promise.all(tokenIds.map(async (tokenId) => {
                             const uri = await readContract(config, {
                                 abi: nftAbi,
                                 address: contractAddress,
                                 functionName: 'getTokenImage',
-                                args: [tokenId],
+                                args: [BigInt(tokenId)],
                             });
                             const level = await readContract(config, {
                                 abi: nftAbi,
                                 address: contractAddress,
                                 functionName: 'getTokenLevel',
-                                args: [tokenId],
+                                args: [BigInt(tokenId)],
                             });
-                            return [tokenId, uri, BigInt(level)] as [string | bigint, string, bigint];
+                            return [BigInt(tokenId), uri, BigInt(level)] as [string | bigint, string, bigint];
                         }));
     
                         setUriArray(tokenUriForContributorAndLevel);
@@ -542,7 +354,6 @@ function NestingPage() {
     const [polkadotTransactionHash, setPolkadotTransactionHash] = useState<string | null>(null);
 
     useEffect(() => {
-        console.log("Selected Account in MintPage:", selectedAccount);
     }, [selectedAccount]);
 
     return (
@@ -773,51 +584,17 @@ function NestingPage() {
                         </form>
                     </div>
                     
-                    <div className="mt-8 bg-secondary p-8 rounded-lg">
-                        <h3 className="text-xl font-semibold text-white mb-4">Transaction Status</h3>
-                        {isPending && <p className="text-yellow-300">Waiting for signature...</p>}
-                        {isConfirming && <p className="text-yellow-300">Confirming...</p>}
-                        {isConfirmed && (
-                            <p className="text-green-300">
-                                Transaction successful!{' '}
-                                <a
-                                    href={`${blockexplorer}/tx/${hash}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-blue-400 hover:underline"
-                                >
-                                    View on block explorer
-                                </a>
-                            </p>
-                        )}
-                        {isPolkadotPending && <p className="text-yellow-300">Polkadot transaction is processing...</p>}
-                        {polkadotTransactionStatus && (
-                            <p className={`text-${polkadotTransactionStatus.includes("successful") ? "green" : "red"}-300`}>
-                                {polkadotTransactionStatus}
-                                {polkadotTransactionStatus.includes("successful") && polkadotTransactionHash && (
-                                    <>
-                                        {' '}
-                                        <a
-                                            href={`${blockexplorer}/tx/${polkadotTransactionHash}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-blue-400 hover:underline"
-                                        >
-                                            View on block explorer
-                                        </a>
-                                    </>
-                                )}
-                            </p>
-                        )}
-                        {error && (
-                            <p className="text-red-300">
-                                Error: {(error as BaseError).shortMessage || "An unknown error occurred"}
-                            </p>
-                        )}
-                        {!isPending && !isConfirming && !isConfirmed && !isPolkadotPending && !error && !polkadotTransactionStatus && (
-                            <p className="text-gray-300">No transactions yet</p>
-                        )}
-                    </div>
+                    <TransactionStatus 
+                        isPending={isPending}
+                        isConfirming={isConfirming}
+                        isConfirmed={isConfirmed}
+                        hash={hash}
+                        error={error}
+                        isPolkadotPending={isPolkadotPending}
+                        polkadotTransactionStatus={polkadotTransactionStatus}
+                        polkadotTransactionHash={polkadotTransactionHash}
+                        blockexplorer={blockexplorer}
+                    />
                 </div>
             </div>
             <Spacer className='h-[3vw] max-phonescreen:h-[4vw]' />

@@ -9,7 +9,6 @@ import { useCallback, useRef, useState, useEffect, useContext } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FaSpinner } from 'react-icons/fa';
 import {
-    type BaseError,
     useWaitForTransactionReceipt,
     useWriteContract,
     useChainId,
@@ -20,14 +19,12 @@ import { config } from "@/components/contract/config";
 import { ethers } from "ethers";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAppSelector } from "@/hooks/useRedux";
-import { UniqueChain } from "@unique-nft/sdk";
 import { Address } from "@unique-nft/utils";
-import { User } from "@/types/User";
-import { setUser } from "@/redux/userSlice";
 import { useAppDispatch } from "@/hooks/useRedux";
 import { AccountsContext } from '@/accounts/AccountsContext';
 import { useChainAndScan } from "@/hooks/useChainAndScan";
 import { ArrowDownIcon } from "lucide-react";
+import { TransactionStatus } from "@/components/TransactionStatus";
 
 
 const FileUploadIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -41,7 +38,6 @@ function MintPage() {
 
     const { chain, scan } = useChainAndScan();
     
-    const dispatch = useAppDispatch();
     const [uri, setUri] = useState('');
     const [toAddress, setToAddress] = useState('');
     const [codeContribute, setCodeContribute] = useState('');
@@ -49,8 +45,6 @@ function MintPage() {
     const [localImagePreview, setLocalImagePreview] = useState<string>('');
     const [isUploading, setIsUploading] = useState(false);
     const [uploadSuccess, setUploadSuccess] = useState(false);
-    const [walletType, setWalletType] = useState<string | null>(null);
-    // AccountsContext to access user's account details
     
 
     const { toast } = useToast();
@@ -62,7 +56,6 @@ function MintPage() {
 
     const [isOptionsVisible, setOptionsVisible] = useState(false); 
     const optionsRef = useRef<HTMLDivElement | null>(null);
-    const currentUser = useAppSelector((state) => state.user.currentUser);
 
     const [isLoading, setIsLoading] = useState(false);
     
@@ -102,14 +95,6 @@ function MintPage() {
             blockexplorer = BLOCK_EXPLORER_QUARTZ;
             break;
     }
-
-    const onDrop = useCallback((acceptedFiles) => {
-        const file = acceptedFiles[0];
-        if (!file) return;
-
-        setLocalImageFile(file);
-        setLocalImagePreview(URL.createObjectURL(file));
-    }, []);
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop: (acceptedFiles) => {
@@ -358,7 +343,6 @@ function MintPage() {
                 { signerAddress: selectedAccount.address },
                 { signer: selectedAccount.signer }
             );
-            console.log("result", result);
 
             if (!result.result.isSuccessful) {
                 throw new Error("Mint transaction failed");
@@ -378,7 +362,6 @@ function MintPage() {
     const mintWithEVM = async (codeContribute: string) => {
 
         if (!wagmiAddress) throw new Error("EVM address not found");
-        console.log("evmAddress", wagmiAddress);
 
         await writeContract({
             address: contractAddress as `0x${string}`,
@@ -417,7 +400,6 @@ function MintPage() {
     const { address: wagmiAddress, isConnected } = useAccount();
 
     useEffect(() => {
-        console.log("Selected Account in MintPage:", selectedAccount);
     }, [selectedAccount]);
 
     const [polkadotTransactionStatus, setPolkadotTransactionStatus] = useState<string | null>(null);
@@ -586,48 +568,17 @@ function MintPage() {
                     max-phonescreen:max-w-[400px]   
                     mt-8 bg-secondary p-6 rounded-lg max-w-2xl mx-auto">
                         <h3 className="text-xl font-semibold text-white mb-4">Transaction Status</h3>
-                        {isPending && <p className="text-yellow-300">Waiting for signature...</p>}
-                        {isConfirming && <p className="text-yellow-300">Confirming...</p>}
-                        {isConfirmed && (
-                            <p className="text-green-300">
-                                Transaction successful!{' '}
-                                <a
-                                    href={`${blockexplorer}/tx/${hash}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-blue-400 hover:underline"
-                                >
-                                    View on block explorer
-                                </a>
-                            </p>
-                        )}
-                        {isPolkadotPending && <p className="text-yellow-300">Polkadot transaction is pending...</p>}
-                        {polkadotTransactionStatus && (
-                            <p className={`text-${polkadotTransactionStatus.includes("successful") ? "green" : "red"}-300`}>
-                                {polkadotTransactionStatus}
-                                {polkadotTransactionStatus.includes("successful") && polkadotTransactionHash && (
-                                    <>
-                                        {' '}
-                                        <a
-                                            href={`${blockexplorer}/tx/${polkadotTransactionHash}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-blue-400 hover:underline"
-                                        >
-                                            View on block explorer
-                                        </a>
-                                    </>
-                                )}
-                            </p>
-                        )}
-                        {error && (
-                            <p className="text-red-300">
-                                Error: {(error as BaseError).shortMessage || "An unknown error occurred"}
-                            </p>
-                        )}
-                        {!isPending && !isConfirming && !isConfirmed && !isPolkadotPending && !error && !polkadotTransactionStatus && (
-                            <p className="text-gray-300">No transactions yet</p>
-                        )}
+                        <TransactionStatus 
+                            isPending={isPending}
+                            isConfirming={isConfirming}
+                            isConfirmed={isConfirmed}
+                            hash={hash}
+                            error={error}
+                            isPolkadotPending={isPolkadotPending}
+                            polkadotTransactionStatus={polkadotTransactionStatus}
+                            polkadotTransactionHash={polkadotTransactionHash}
+                            blockexplorer={blockexplorer}
+                        />
                     </div>
                 </div>
                 <Spacer className='h-[3vw] max-phonescreen:h-[4vw]' />

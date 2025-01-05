@@ -35,6 +35,9 @@ importers:
       '@unique-nft/sdk':
         specifier: ^2.5.0
         version: 2.5.0
+      '@unique-nft/solidity-interfaces':
+        specifier: ^1.0.1
+        version: 1.0.1(bufferutil@4.0.9)(utf-8-validate@5.0.10)
       '@unique-nft/utils':
         specifier: ^0.3.20
         version: 0.3.20
@@ -2160,6 +2163,9 @@ packages:
 
   '@unique-nft/sdk@2.5.0':
     resolution: {integrity: sha512-YLSXTis/blprcMuG0SSBo0pGhVGl1Dha6YUkSseaVmUkJ6RD9FfWt6NZWUcGuKlAAWy4imG1FYUov2y3kwzdew==}
+
+  '@unique-nft/solidity-interfaces@1.0.1':
+    resolution: {integrity: sha512-Ub54hvQWpNMIrMN5MJFKqxaUs4/k6ePLh7w1k2T0PfogIPXQ1tv8TcbJfJ7N+VNg5SI8aDny6TjjGSbXZcthrQ==}
 
   '@unique-nft/sr25519@0.0.2':
     resolution: {integrity: sha512-41DJwU8aX56MAlNgmhAOYaE3ie+7HoETsVhqv5d3Pk7dpr1Aezmzihl5fqfLDgx0XeD8Q1QHY9pYAmsNmgQd2A==}
@@ -8579,6 +8585,14 @@ snapshots:
       zod: 3.24.1
     transitivePeerDependencies:
       - debug
+
+  '@unique-nft/solidity-interfaces@1.0.1(bufferutil@4.0.9)(utf-8-validate@5.0.10)':
+    dependencies:
+      '@unique-nft/utils': 0.3.20
+      ethers: 6.13.4(bufferutil@4.0.9)(utf-8-validate@5.0.10)
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
 
   '@unique-nft/sr25519@0.0.2':
     dependencies:

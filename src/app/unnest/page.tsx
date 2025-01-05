@@ -31,17 +31,10 @@ import { SdkContext } from "@/sdk/SdkContext";
 import { parseEther } from "viem";
 import { SignerTypeEnum, Account } from "@/accounts/types";
 import { toast } from '@/components/ui/use-toast';
+import { UniqueNFTFactory } from "@unique-nft/solidity-interfaces";
+import { TransactionStatus } from "@/components/TransactionStatus";
+import { ArrowDownIcon } from "lucide-react";
 
-const FileUploadIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg {...props} width="12" height="12" viewBox="0 0 24 24" fill="none" role="img" color="white"><path fillRule="evenodd" clipRule="evenodd" d="M13.25 1.26003C12.9109 1.25 12.5071 1.25 11.997 1.25H11.25C8.44974 1.25 7.04961 1.25 5.98005 1.79497C5.03924 2.27433 4.27433 3.03924 3.79497 3.98005C3.25 5.04961 3.25 6.44974 3.25 9.25V14.75C3.25 17.5503 3.25 18.9504 3.79497 20.02C4.27433 20.9608 5.03924 21.7257 5.98005 22.205C7.04961 22.75 8.44974 22.75 11.25 22.75H12.75C15.5503 22.75 16.9504 22.75 18.02 22.205C18.9608 21.7257 19.7257 20.9608 20.205 20.02C20.75 18.9504 20.75 17.5503 20.75 14.75V10.003C20.75 9.49288 20.75 9.08913 20.74 8.75001H17.2H17.1695H17.1695C16.6354 8.75002 16.1895 8.75003 15.8253 8.72027C15.4454 8.68924 15.0888 8.62212 14.7515 8.45028C14.2341 8.18663 13.8134 7.76593 13.5497 7.24849C13.3779 6.91122 13.3108 6.55457 13.2797 6.17468C13.25 5.81045 13.25 5.3646 13.25 4.83044V4.80001V1.26003ZM20.5164 7.25001C20.3941 6.86403 20.2252 6.4939 20.0132 6.14791C19.704 5.64333 19.2716 5.21096 18.4069 4.34621L18.4069 4.34619L17.6538 3.59315L17.6538 3.59314C16.789 2.72839 16.3567 2.29601 15.8521 1.9868C15.5061 1.77478 15.136 1.6059 14.75 1.48359V4.80001C14.75 5.37244 14.7506 5.75666 14.7748 6.05253C14.7982 6.33966 14.8401 6.47694 14.8862 6.5675C15.0061 6.8027 15.1973 6.99393 15.4325 7.11377C15.5231 7.15991 15.6604 7.2018 15.9475 7.22526C16.2434 7.24943 16.6276 7.25001 17.2 7.25001H20.5164ZM12.5303 10.4697C12.2374 10.1768 11.7626 10.1768 11.4697 10.4697L8.96967 12.9697C8.67678 13.2626 8.67678 13.7374 8.96967 14.0303C9.26256 14.3232 9.73744 14.3232 10.0303 14.0303L11.25 12.8107V17C11.25 17.4142 11.5858 17.75 12 17.75C12.4142 17.75 12.75 17.4142 12.75 17V12.8107L13.9697 14.0303C14.2626 14.3232 14.7374 14.3232 15.0303 14.0303C15.3232 13.7374 15.3232 13.2626 15.0303 12.9697L12.5303 10.4697Z" fill="currentColor"></path></svg>
-);
-const ArrowDownIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" className="injected-svg" data-src="https://cdn.hugeicons.com/icons/arrow-down-01-stroke-sharp.svg"  role="img" color="#000000">
-    <path d="M5.99977 9.00005L11.9998 15L17.9998 9" stroke="#000000" strokeWidth="2" stroke-miterlimit="16"></path>
-    </svg>
-);
-
-// Thêm interface để định nghĩa kiểu dữ liệu cho nested NFT
 interface NestedNFT {
     tokenId: number;
     imageUri: string;
@@ -68,7 +61,8 @@ function UnnestPage() {
     const [localImagePreview, setLocalImagePreview] = useState('');
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [uriArray, setUriArray] = useState<Array<[string | bigint, string, bigint, NestedNFT[]]>>([]);
-    const [TokenIdBundle, setTokenIdBundle] = useState('');
+    const [TokenIdNested, setTokenIdNested] = useState('');
+    const [TokenIdParent, setTokenIdParent] = useState('');
 
     const [isOptionsVisible, setOptionsVisible] = useState(false); 
     const optionsRef = useRef<HTMLDivElement | null>(null); 
@@ -77,17 +71,9 @@ function UnnestPage() {
         visible: { opacity: 1, y: 0 },   
     };
 
-    const { sdk } = useContext(SdkContext);
-
     const { chain, scan } = useChainAndScan();
 
     const [isLoading, setIsLoading] = useState(false);
-
-    const { 
-        data: hashTransaction, 
-        isPending: isPendingTransaction, 
-        sendTransaction 
-      } = useSendTransaction()
 
     const toggleOptions = () => {
         setOptionsVisible(!isOptionsVisible); 
@@ -135,163 +121,6 @@ function UnnestPage() {
         setLocalImagePreview(URL.createObjectURL(file));
     }, []);
 
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({
-        onDrop,
-        accept: {'image/*': []},
-        multiple: false
-    });
-
-
-    const { data: hash, error, isPending, writeContract } = useWriteContract();
-
-    const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
-        hash,
-    });
-
-    const generateCombinedImage = async (): Promise<Blob | null> => {
-        return new Promise((resolve) => {
-            const canvas = canvasRef.current;
-            if (!canvas) {
-                resolve(null);
-                return;
-            }
-    
-            const ctx = canvas.getContext('2d');
-            if (!ctx) {
-                resolve(null);
-                return;
-            }
-    
-            const img = new Image();
-            img.onload = () => {
-                const aspectRatio = 0.718;
-                const cardWidth = 400;
-                const cardHeight = cardWidth / aspectRatio;
-                canvas.width = cardWidth;
-                canvas.height = cardHeight;
-    
-                // Create gradient background for the frame
-                const gradient = ctx.createLinearGradient(0, 0, cardWidth, cardHeight);
-                gradient.addColorStop(0, '#2a0845');
-                gradient.addColorStop(1, '#6441A5');
-                ctx.fillStyle = gradient;
-                ctx.fillRect(0, 0, cardWidth, cardHeight);
-    
-                // Draw image with object-fit: cover
-                const frameMargin = 20;
-                const imageWidth = cardWidth - frameMargin * 2;
-                const imageHeight = cardHeight - frameMargin * 3;
-                const imageAspectRatio = img.width / img.height;
-                let drawWidth, drawHeight, offsetX, offsetY;
-    
-                if (imageAspectRatio > imageWidth / imageHeight) {
-                    drawHeight = imageHeight;
-                    drawWidth = drawHeight * imageAspectRatio;
-                    offsetX = frameMargin + (imageWidth - drawWidth) / 2;
-                    offsetY = frameMargin * 2;
-                } else {
-                    drawWidth = imageWidth;
-                    drawHeight = drawWidth / imageAspectRatio;
-                    offsetX = frameMargin;
-                    offsetY = frameMargin * 2 + (imageHeight - drawHeight) / 2;
-                }
-    
-                ctx.save();
-                ctx.beginPath();
-                ctx.rect(frameMargin, frameMargin * 2, imageWidth, imageHeight);
-                ctx.clip();
-                ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
-                ctx.restore();
-    
-                // Outer frame
-                ctx.strokeStyle = '#8A2BE2';
-                ctx.lineWidth = 8;
-                ctx.strokeRect(10, 10, cardWidth - 20, cardHeight - 20);
-    
-                // Inner frame
-                ctx.strokeStyle = '#4B0082';
-                ctx.lineWidth = 4;
-                ctx.strokeRect(frameMargin, frameMargin, cardWidth - frameMargin * 2, cardHeight - frameMargin * 2);
-    
-                // Corner accents
-                const cornerSize = 30;
-                ctx.strokeStyle = '#9370DB';
-                ctx.lineWidth = 2;
-                // Top-left
-                ctx.beginPath();
-                ctx.moveTo(5, 35);
-                ctx.lineTo(5, 5);
-                ctx.lineTo(35, 5);
-                ctx.stroke();
-                // Top-right
-                ctx.beginPath();
-                ctx.moveTo(cardWidth - 35, 5);
-                ctx.lineTo(cardWidth - 5, 5);
-                ctx.lineTo(cardWidth - 5, 35);
-                ctx.stroke();
-                // Bottom-left
-                ctx.beginPath();
-                ctx.moveTo(5, cardHeight - 35);
-                ctx.lineTo(5, cardHeight - 5);
-                ctx.lineTo(35, cardHeight - 5);
-                ctx.stroke();
-                // Bottom-right
-                ctx.beginPath();
-                ctx.moveTo(cardWidth - 35, cardHeight - 5);
-                ctx.lineTo(cardWidth - 5, cardHeight - 5);
-                ctx.lineTo(cardWidth - 5, cardHeight - 35);
-                ctx.stroke();
-    
-                // Draw name at the top
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-                ctx.fillRect(0, 0, cardWidth, 40);
-                ctx.fillStyle = '#ce8eeb';
-                ctx.font = 'bold 24px "Courier New", monospace';
-                ctx.textAlign = 'center';
-                // ctx.fillText(nftName, cardWidth / 2, 28);
-    
-                // Draw title at the bottom
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-                ctx.fillRect(0, cardHeight - 40, cardWidth, 40);
-                ctx.fillStyle = '#E6E6FA';
-                ctx.font = '20px "Courier New", monospace';
-                ctx.textAlign = 'center';
-                // ctx.fillText(nftTitle, cardWidth / 2, cardHeight - 15);
-    
-                // Add some tech-inspired details
-                ctx.strokeStyle = 'rgba(147, 112, 219, 0.5)';
-                ctx.lineWidth = 1;
-                for (let i = 0; i < 3; i++) {
-                    ctx.beginPath();
-                    ctx.moveTo(frameMargin, 50 + i * 20);
-                    ctx.lineTo(cardWidth - frameMargin, 50 + i * 20);
-                    ctx.stroke();
-                }
-    
-                // Circular element
-                ctx.strokeStyle = '#9370DB';
-                ctx.beginPath();
-                ctx.arc(cardWidth - 40, 60, 15, 0, Math.PI * 2);
-                ctx.stroke();
-    
-                // Data-like lines
-                ctx.beginPath();
-                ctx.moveTo(40, 60);
-                ctx.lineTo(cardWidth - 70, 60);
-                ctx.moveTo(40, 70);
-                ctx.lineTo(cardWidth - 90, 70);
-                ctx.moveTo(40, 80);
-                ctx.lineTo(cardWidth - 80, 80);
-                ctx.stroke();
-    
-                canvas.toBlob((blob) => {
-                    resolve(blob);
-                });
-            };
-            img.src = localImagePreview;
-        });
-    };
-
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setIsSubmitting(true);
@@ -310,7 +139,11 @@ function UnnestPage() {
                 title: "Success",
                 description: "NFT has been minted successfully!",
             });
-        
+
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+            
         } catch (error) {
             console.error("Unnest error:", error);
             toast({
@@ -329,20 +162,20 @@ function UnnestPage() {
 
         try {
             setIsPolkadotPending(true);
-            
+            setPolkadotTransactionStatus("Processing...");
+            setError(null);
+
             // Check token IDs
-            if (!TokenIdBundle) {
+            if (!TokenIdNested) {
                 throw new Error("Invalid Token ID");
             }
 
             // Check if tokens exist
             const bundleExists = await chain.token.get({
                 collectionId: 4794,
-                tokenId: Number(TokenIdBundle)
+                tokenId: Number(TokenIdNested)
             });
             
-            console.log("bundleExists", bundleExists);
-
             if (!bundleExists) {
                 throw new Error("Bundle token does not exist");
             }
@@ -350,16 +183,15 @@ function UnnestPage() {
             // Check ownership
             const tokenInfo = await chain.token.get({
                 collectionId: 4794,
-                tokenId: Number(TokenIdBundle)
+                tokenId: Number(TokenIdNested)
             });
 
             const tokenIds = tokenInfo.children?.map(child => child.tokenId) || [];
-            console.log("Nested token IDs:", tokenIds);
 
             // Perform Unnest
             const result = await chain.token.unnest(
                 {
-                    nested: { collectionId: 4794, tokenId: Number(TokenIdBundle) }
+                    nested: { collectionId: 4794, tokenId: Number(TokenIdNested) }
                 },
                 { 
                     signerAddress: selectedAccount.address 
@@ -373,14 +205,21 @@ function UnnestPage() {
                 throw new Error("Unnest transaction failed");
             }
 
-            setPolkadotTransactionStatus("Transaction successful!");
+            setPolkadotTransactionStatus("Success!");
             setPolkadotTransactionHash(result.extrinsicOutput.hash);
+
+            toast({
+                title: "Success",
+                description: "NFT has been unnested successfully!",
+                duration: 5000,
+            });
 
         } catch (error) {
             console.error("Error during Unnest:", error);
             const errorMessage = error instanceof Error ? error.message : "Unknown error";
             setPolkadotTransactionStatus("Transaction failed: " + errorMessage);
-            throw new Error("Cannot nest NFT: " + errorMessage);
+            setError(error instanceof Error ? error : new Error(errorMessage));
+            throw new Error("Cannot unnest NFT: " + errorMessage);
         } finally {
             setIsPolkadotPending(false);
         }
@@ -389,70 +228,59 @@ function UnnestPage() {
     const unnestWithEVM = async () => {
         try {
             if (!wagmiAddress) throw new Error("Please connect EVM wallet");
-            if (!TokenIdBundle) throw new Error("Please enter Token ID");
 
-            setIsPolkadotPending(true);
+            setIsPending(true);
+            setIsSubmitting(true);
+            setError(null);
+
+            const collectionAddress = Address.collection.idToAddress(4794);
+            const tokenAddress = Address.nesting.idsToAddress(4794, Number(TokenIdParent));
+
+            const provider = new ethers.BrowserProvider(window.ethereum);
+            const signer = await provider.getSigner();
+
+            const collectionContract = await UniqueNFTFactory(
+                collectionAddress,
+                signer
+            );
             
-            // Convert EVM address to appropriate format
-            const ethereumAddress = Address.extract.substrateOrMirrorIfEthereumNormalized(wagmiAddress);
-            
-            // Create account object with required information
-            const account: Account = {
-                address: ethereumAddress,
-                signerType: SignerTypeEnum.Ethereum,
-                name: '',
-                normalizedAddress: wagmiAddress,
-                // Add signer from window.ethereum
-                signer: window.ethereum
-            };
-
-            // Check balance (if needed)
-            const balanceResponse = await sdk.balance.get({ address: ethereumAddress });
-            account.balance = Number(balanceResponse.available) / Math.pow(10, Number(balanceResponse.decimals));
-
-            console.log("Unnest NFT with params:", {
-                nested: { collectionId: 4794, tokenId: Number(TokenIdBundle) },
-                signerAddress: ethereumAddress
-            });
-
-            // Perform unnest
-            const result = await chain.token.unnest(
-                {
-                    nested: { collectionId: 4794, tokenId: Number(TokenIdBundle) }
-                },
-                { 
-                    signerAddress: ethereumAddress 
-                },
-                {
-                    signer: account.signer
-                }
+            const result = await collectionContract.transferFrom(
+                tokenAddress,
+                wagmiAddress,
+                Number(TokenIdNested)
             );
 
-            setPolkadotTransactionStatus("Unnest successful!");
-            setPolkadotTransactionHash(result.extrinsicOutput?.hash);
+            setHash(result.hash);
+            setIsConfirming(true);
+            setIsPending(false);
+
+            const receipt = await result.wait();
             
-            // Add success notification
-            toast({
-                title: "Success",
-                description: "NFT has been nested successfully!",
-                duration: 5000,
-            });
+            if (receipt.status === 1) {
+                setIsConfirmed(true);
+                setIsConfirming(false);
+                toast({
+                    title: "Success",
+                    description: "NFT has been unnested successfully!",
+                    duration: 5000,
+                });
+            } else {
+                throw new Error("Transaction failed");
+            }
 
         } catch (error) {
             console.error("Unnest error:", error);
-            setPolkadotTransactionStatus("Unnest failed: " + (error as Error).message);
-            
-            // Add error notification
+            setError(error instanceof Error ? error : new Error("Unknown error"));
             toast({
-                variant: "destructive",
-                title: "Unnest Error",
-                description: error instanceof Error ? error.message : "Cannot perform NFT Unnest",
+                variant: "destructive", 
+                title: "Error Unnest NFT",
+                description: error instanceof Error ? error.message : "Cannot unnest NFT",
                 duration: 5000,
             });
-            
             throw error;
         } finally {
-            setIsPolkadotPending(false);
+            setIsSubmitting(false);
+            setIsLoading(false);
         }
     };
 
@@ -469,7 +297,6 @@ function UnnestPage() {
 
                         const tokenIds = result.map(token => token.tokenId);
                         
-                        // Lọc và lấy thông tin của bundle tokens
                         const bundleTokens = await Promise.all(
                             tokenIds.map(async (tokenId) => {
                                 const tokenInfo = await chain.token.get({
@@ -492,7 +319,6 @@ function UnnestPage() {
                                 withChildren: true
                             });
 
-                            // Lấy thông tin của các nested NFTs
                             const nestedTokens = await Promise.all(
                                 (tokenInfo.children || []).map(async (child) => {
                                     const nestedUri = await readContract(config, {
@@ -528,31 +354,68 @@ function UnnestPage() {
 
                         setUriArray(tokenUriForContributorAndLevel);
                     } else {
-                        const result = await readContract(config, {
-                            abi: nftAbi,
-                            address: contractAddress,
-                            functionName: 'getTokenIdsByOwner',
-                            args: [currentAddress as `0x${string}`],
+                        const result = await chain.collection.accountTokens({
+                            address: currentAddress,
+                            collectionId: 4794
                         });
-    
-                        console.log("result", result);
-    
-                        const tokenUriForContributorAndLevel = await Promise.all(result.map(async (tokenId) => {
+
+                        const tokenIds = result.map(token => token.tokenId);
+                        
+                        const bundleTokens = await Promise.all(
+                            tokenIds.map(async (tokenId) => {
+                                const tokenInfo = await chain.token.get({
+                                    collectionId: 4794,
+                                    tokenId: tokenId,
+                                    withChildren: true
+                                });
+                                
+                                const isBundle = tokenInfo.children && tokenInfo.children.length > 0;
+                                return isBundle ? tokenId : null;
+                            })
+                        );
+
+                        const bundleTokenIds = bundleTokens.filter(tokenId => tokenId !== null);
+
+                        const tokenUriForContributorAndLevel = await Promise.all(bundleTokenIds.map(async (tokenId) => {
+                            const tokenInfo = await chain.token.get({
+                                collectionId: 4794,
+                                tokenId: tokenId,
+                                withChildren: true
+                            });
+
+                            const nestedTokens = await Promise.all(
+                                (tokenInfo.children || []).map(async (child) => {
+                                    const nestedUri = await readContract(config, {
+                                        abi: nftAbi,
+                                        address: contractAddress,
+                                        functionName: 'getTokenImage',
+                                        args: [BigInt(child.tokenId)],
+                                    });
+                                    
+                                    return {
+                                        tokenId: child.tokenId,
+                                        imageUri: ethers.toUtf8String(nestedUri)
+                                    };
+                                })
+                            );
+                            
                             const uri = await readContract(config, {
                                 abi: nftAbi,
                                 address: contractAddress,
                                 functionName: 'getTokenImage',
-                                args: [tokenId],
+                                args: [BigInt(tokenId)],
                             });
+                            
                             const level = await readContract(config, {
                                 abi: nftAbi,
                                 address: contractAddress,
                                 functionName: 'getTokenLevel',
-                                args: [tokenId],
+                                args: [BigInt(tokenId)],
                             });
-                            return [tokenId, uri, BigInt(level), []] as [string | bigint, string, bigint, NestedNFT[]];
+
+                            return [BigInt(tokenId), uri, BigInt(level), nestedTokens] as [string | bigint, string, bigint, NestedNFT[]];
                         }));
-    
+
                         setUriArray(tokenUriForContributorAndLevel);
                     }
                     
@@ -569,9 +432,12 @@ function UnnestPage() {
     const [isPolkadotPending, setIsPolkadotPending] = useState(false);
     const [polkadotTransactionHash, setPolkadotTransactionHash] = useState<string | null>(null);
 
-    useEffect(() => {
-        console.log("Selected Account in MintPage:", selectedAccount);
-    }, [selectedAccount]);
+    // Thêm states cho EVM transaction
+    const [isPending, setIsPending] = useState(false);
+    const [isConfirming, setIsConfirming] = useState(false); 
+    const [isConfirmed, setIsConfirmed] = useState(false);
+    const [hash, setHash] = useState<string | null>(null);
+    const [error, setError] = useState<Error | null>(null);
 
     return (
         <>
@@ -715,11 +581,26 @@ function UnnestPage() {
                                                     {item[3].length > 0 ? (
                                                         <div className="space-y-2">
                                                             {item[3].map((nestedNft, idx) => (
-                                                                <div key={idx} className="bg-primary/10 p-2 rounded flex items-center gap-2">
+                                                                <div 
+                                                                    key={idx} 
+                                                                    className={`
+                                                                        bg-primary/10 p-2 rounded flex items-center gap-2 cursor-pointer
+                                                                        hover:bg-primary/20 transition-all duration-200
+                                                                        ${TokenIdNested === nestedNft.tokenId.toString() ? 'ring-2 ring-primary' : ''}
+                                                                    `}
+                                                                    onClick={() => {
+                                                                        setTokenIdNested(nestedNft.tokenId.toString());
+                                                                        setTokenIdParent(item[0].toString());
+                                                                    }}
+                                                                >
                                                                     <img 
                                                                         src={nestedNft.imageUri}
                                                                         alt={`Nested NFT ${nestedNft.tokenId}`}
-                                                                        className="w-12 h-12 rounded-full object-cover border border-primary"
+                                                                        className={`
+                                                                            w-12 h-12 rounded-full object-cover border 
+                                                                            ${TokenIdNested === nestedNft.tokenId.toString() ? 'border-2 border-primary' : 'border border-primary/50'}
+                                                                            transition-all duration-200
+                                                                        `}
                                                                     />
                                                                     <div>
                                                                         <p className="text-primary font-pixel text-sm">
@@ -736,18 +617,6 @@ function UnnestPage() {
                                                     )}
                                                 </div>
                                             </div>
-
-                                            {/* Action Button */}
-                                            <button 
-                                                onClick={() => setTokenIdBundle(item[0].toString())}
-                                                className="w-full mt-4 bg-primary text-white font-pixel py-2 px-4 rounded-md 
-                                                 hover:bg-secondary transition-colors flex items-center justify-center gap-2"
-                                            >
-                                                <span>Select for Unnesting</span>
-                                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                                </svg>
-                                            </button>
                                         </div>
                                     ))}
                                 </div>
@@ -763,25 +632,27 @@ function UnnestPage() {
                     <div className="add-profile-form">
                         <h2 className="text-primary font-bold font-pixel text-2xl mb-4">Unnest NFT</h2>
                         <form onSubmit={handleSubmit} className="space-y-4">
-                            {/* <div>
-                                <label htmlFor="nftName" className="block text-primary font-pixel mb-2">NFT Name</label>
-                                <input
-                                    type="text"
-                                    id="nftName"
-                                    value={nftName}
-                                    onChange={(e) => setNftName(e.target.value)}
-                                    className="w-full px-4 py-2 bg-black text-white rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
-                                    required
-                                    disabled={isSubmitting}
-                                />
-                            </div> */}
+                            {!selectedAccount && (
+                                <div className="flex flex-col">
+                                    <label htmlFor="parentTokenId" className="block text-primary font-pixel mb-2">Parent NFT Token ID</label>
+                                    <input
+                                        type="text"
+                                        id="parentTokenId"
+                                        value={TokenIdParent}
+                                        onChange={(e) => setTokenIdParent(e.target.value)}
+                                        className="w-full px-4 py-2 bg-black text-white rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
+                                        required
+                                        disabled={isSubmitting}
+                                    />
+                                </div>
+                            )}
                             <div className="flex flex-col">
-                                <label htmlFor="nftValue" className="block text-primary font-pixel mb-2">Token ID of Bundle NFT</label>
+                                <label htmlFor="nftValue" className="block text-primary font-pixel mb-2">Nested NFT Token ID</label>
                                 <input
                                     type="text"
                                     id="nftValue"
-                                    value={TokenIdBundle}
-                                    onChange={(e) => setTokenIdBundle(e.target.value)}
+                                    value={TokenIdNested}
+                                    onChange={(e) => setTokenIdNested(e.target.value)}
                                     className="w-full px-4 py-2 bg-black text-white rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
                                     required
                                     disabled={isSubmitting}
@@ -795,7 +666,7 @@ function UnnestPage() {
                                 {isSubmitting ? (
                                     <>
                                         <FaSpinner className="animate-spin mr-2" />
-                                        Unnest...
+                                        Unnesting...
                                     </>
                                 ) : (
                                     'Unnest'
@@ -804,51 +675,17 @@ function UnnestPage() {
                         </form>
                     </div>
                     
-                    <div className="mt-8 bg-secondary p-8 rounded-lg">
-                        <h3 className="text-xl font-semibold text-white mb-4">Transaction Status</h3>
-                        {isPending && <p className="text-yellow-300">Waiting for signature...</p>}
-                        {isConfirming && <p className="text-yellow-300">Confirming...</p>}
-                        {isConfirmed && (
-                            <p className="text-green-300">
-                                Transaction successful!{' '}
-                                <a
-                                    href={`${blockexplorer}/tx/${hash}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-blue-400 hover:underline"
-                                >
-                                    View on block explorer
-                                </a>
-                            </p>
-                        )}
-                        {isPolkadotPending && <p className="text-yellow-300">Polkadot transaction is processing...</p>}
-                        {polkadotTransactionStatus && (
-                            <p className={`text-${polkadotTransactionStatus.includes("successful") ? "green" : "red"}-300`}>
-                                {polkadotTransactionStatus}
-                                {polkadotTransactionStatus.includes("successful") && polkadotTransactionHash && (
-                                    <>
-                                        {' '}
-                                        <a
-                                            href={`${blockexplorer}/tx/${polkadotTransactionHash}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-blue-400 hover:underline"
-                                        >
-                                            View on block explorer
-                                        </a>
-                                    </>
-                                )}
-                            </p>
-                        )}
-                        {error && (
-                            <p className="text-red-300">
-                                Error: {(error as BaseError).shortMessage || "An unknown error occurred"}
-                            </p>
-                        )}
-                        {!isPending && !isConfirming && !isConfirmed && !isPolkadotPending && !error && !polkadotTransactionStatus && (
-                            <p className="text-gray-300">No transactions yet</p>
-                        )}
-                    </div>
+                    <TransactionStatus 
+                        isPending={isPending}
+                        isConfirming={isConfirming}
+                        isConfirmed={isConfirmed}
+                        hash={hash}
+                        error={error}
+                        isPolkadotPending={isPolkadotPending}
+                        polkadotTransactionStatus={polkadotTransactionStatus}
+                        polkadotTransactionHash={polkadotTransactionHash}
+                        blockexplorer={blockexplorer}
+                    />
                 </div>
             </div>
             <Spacer className='h-[3vw] max-phonescreen:h-[4vw]' />

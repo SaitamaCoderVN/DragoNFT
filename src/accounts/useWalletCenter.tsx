@@ -61,7 +61,6 @@ const setConnectedWallets = (connectedWallets: string[]) => {
  * await connectWallet('polkadot-js');
  * 
  * // Access the connected wallets and their accounts
- * console.log(connectedWallets);
  * ```
  */
 export const useWalletCenter = (chainProperties?: any) => {

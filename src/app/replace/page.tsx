@@ -24,8 +24,8 @@ import { AccountsContext } from "@/accounts/AccountsContext";
 import { useChainAndScan } from "@/hooks/useChainAndScan";
 import { ethers } from "ethers";
 
-
 import { AnimatePresence, motion } from "framer-motion";
+import { TransactionStatus } from "@/components/TransactionStatus";
 const FileUploadIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg {...props} width="12" height="12" viewBox="0 0 24 24" fill="none" role="img" color="white"><path fillRule="evenodd" clipRule="evenodd" d="M13.25 1.26003C12.9109 1.25 12.5071 1.25 11.997 1.25H11.25C8.44974 1.25 7.04961 1.25 5.98005 1.79497C5.03924 2.27433 4.27433 3.03924 3.79497 3.98005C3.25 5.04961 3.25 6.44974 3.25 9.25V14.75C3.25 17.5503 3.25 18.9504 3.79497 20.02C4.27433 20.9608 5.03924 21.7257 5.98005 22.205C7.04961 22.75 8.44974 22.75 11.25 22.75H12.75C15.5503 22.75 16.9504 22.75 18.02 22.205C18.9608 21.7257 19.7257 20.9608 20.205 20.02C20.75 18.9504 20.75 17.5503 20.75 14.75V10.003C20.75 9.49288 20.75 9.08913 20.74 8.75001H17.2H17.1695H17.1695C16.6354 8.75002 16.1895 8.75003 15.8253 8.72027C15.4454 8.68924 15.0888 8.62212 14.7515 8.45028C14.2341 8.18663 13.8134 7.76593 13.5497 7.24849C13.3779 6.91122 13.3108 6.55457 13.2797 6.17468C13.25 5.81045 13.25 5.3646 13.25 4.83044V4.80001V1.26003ZM20.5164 7.25001C20.3941 6.86403 20.2252 6.4939 20.0132 6.14791C19.704 5.64333 19.2716 5.21096 18.4069 4.34621L18.4069 4.34619L17.6538 3.59315L17.6538 3.59314C16.789 2.72839 16.3567 2.29601 15.8521 1.9868C15.5061 1.77478 15.136 1.6059 14.75 1.48359V4.80001C14.75 5.37244 14.7506 5.75666 14.7748 6.05253C14.7982 6.33966 14.8401 6.47694 14.8862 6.5675C15.0061 6.8027 15.1973 6.99393 15.4325 7.11377C15.5231 7.15991 15.6604 7.2018 15.9475 7.22526C16.2434 7.24943 16.6276 7.25001 17.2 7.25001H20.5164ZM12.5303 10.4697C12.2374 10.1768 11.7626 10.1768 11.4697 10.4697L8.96967 12.9697C8.67678 13.2626 8.67678 13.7374 8.96967 14.0303C9.26256 14.3232 9.73744 14.3232 10.0303 14.0303L11.25 12.8107V17C11.25 17.4142 11.5858 17.75 12 17.75C12.4142 17.75 12.75 17.4142 12.75 17V12.8107L13.9697 14.0303C14.2626 14.3232 14.7374 14.3232 15.0303 14.0303C15.3232 13.7374 15.3232 13.2626 15.0303 12.9697L12.5303 10.4697Z" fill="currentColor"></path></svg>
 );
@@ -35,10 +35,6 @@ const ArrowDownIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
 );
 function ReplacePage() {
-    const dispatch = useAppDispatch();
-    const { cards } = useAppSelector((state) => state.card);
-    // const [nftName, setNftName] = useState('');
-    // const [nftTitle, setNftTitle] = useState('');
     const [address, setAddress] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [localImageFile, setLocalImageFile] = useState(null);
@@ -289,13 +285,16 @@ function ReplacePage() {
 
                     const data = await response.json();
                     cloudinaryUrl = data.url;
-                    console.log("cloudinaryUrl", cloudinaryUrl);
 
                     if (selectedAccount) {
                         await replaceWithPolkadot(cloudinaryUrl);
                     } else if (isConnected) {
                         await replaceWithEVM(cloudinaryUrl);
                     }
+
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
 
                     toast({
                         title: "Success",
@@ -320,7 +319,6 @@ function ReplacePage() {
 
     const replaceWithEVM = async (cloudinaryUrl: string) => {
         if (!wagmiAddress) throw new Error("EVM address not found");
-        console.log("evmAddress", wagmiAddress);
 
         const codeContribute = await readContract(config, {
             address: contractAddress,
@@ -348,7 +346,6 @@ function ReplacePage() {
 
     const replaceWithPolkadot = async (cloudinaryUrl: string) => {
         if (!selectedAccount) throw new Error("Polkadot address not found");
-        console.log("polkadotAddress", selectedAccount);
         setIsPolkadotPending(true);
         try {
             const codeContribute = await readContract(config, {
@@ -375,7 +372,6 @@ function ReplacePage() {
                 { signerAddress: selectedAccount.address },
                 { signer: selectedAccount.signer }
             );
-            console.log("result", result);
 
             if (!result.result.isSuccessful) {
                 throw new Error("Replace transaction failed");
@@ -405,10 +401,7 @@ function ReplacePage() {
                             }
                         );
 
-                        console.log("resultCollection", result);
-
                         const tokenIds = result.map(token => token.tokenId)
-                        console.log("tokenIds", tokenIds);
 
                         const tokenUriForContributorAndLevel = await Promise.all(tokenIds.map(async (tokenId) => {
                             const uri = await readContract(config, {
@@ -435,8 +428,6 @@ function ReplacePage() {
                             args: [address as `0x${string}`],
 
                         });
-    
-                        console.log("result", result);
     
                         const tokenUriForContributorAndLevel = await Promise.all(result.map(async (tokenId) => {
                             const uri = await readContract(config, {
@@ -467,7 +458,6 @@ function ReplacePage() {
     const { address: wagmiAddress, isConnected } = useAccount();
 
     useEffect(() => {
-        console.log("Selected Account in MintPage:", selectedAccount);
     }, [selectedAccount]);
 
     // Thêm state để theo dõi NFT được chọn
@@ -698,41 +688,17 @@ function ReplacePage() {
                             </button>
 
                             {/* Transaction Status Section */}
-                            <div className="mt-4 bg-secondary/20 p-4 rounded-lg text-sm">
-                                <h3 className="text-lg font-semibold text-white mb-2">Transaction Status</h3>
-                                {isPending && <p className="text-yellow-300">Waiting for signature...</p>}
-                                {isConfirming && <p className="text-yellow-300">Confirming...</p>}
-                                {isConfirmed && (
-                                    <p className="text-green-300">
-                                        Transaction successful!{' '}
-                                        <a href={`${blockexplorer}/tx/${hash}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
-                                            View on explorer
-                                        </a>
-                                    </p>
-                                )}
-                                {isPolkadotPending && <p className="text-yellow-300">Polkadot transaction is processing...</p>}
-                                {polkadotTransactionStatus && (
-                                    <p className={`text-${polkadotTransactionStatus.includes("successful") ? "green" : "red"}-300`}>
-                                        {polkadotTransactionStatus}
-                                        {polkadotTransactionStatus.includes("successful") && polkadotTransactionHash && (
-                                            <>
-                                                {' '}
-                                                <a href={`${blockexplorer}/tx/${polkadotTransactionHash}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
-                                                    View on explorer
-                                                </a>
-                                            </>
-                                        )}
-                                    </p>
-                                )}
-                                {error && (
-                                    <p className="text-red-300">
-                                        Error: {(error as BaseError).shortMessage || "An unknown error occurred"}
-                                    </p>
-                                )}
-                                {!isPending && !isConfirming && !isConfirmed && !isPolkadotPending && !error && !polkadotTransactionStatus && (
-                                    <p className="text-gray-300">No transactions yet</p>
-                                )}
-                            </div>
+                            <TransactionStatus 
+                                isPending={isPending}
+                                isConfirming={isConfirming}
+                                isConfirmed={isConfirmed}
+                                hash={hash}
+                                error={error}
+                                isPolkadotPending={isPolkadotPending}
+                                polkadotTransactionStatus={polkadotTransactionStatus}
+                                polkadotTransactionHash={polkadotTransactionHash}
+                                blockexplorer={blockexplorer}
+                            />
                         </form>
                     </div>
                 </div>

@@ -152,7 +152,6 @@ function MintSection() {
   }, []);
   useEffect(() => {
     if (currentUser) {
-      console.log('Connected User:', currentUser);
     }
   }, [currentUser]);
 

@@ -197,26 +197,19 @@ const Card: React.FC<CardProps> = ({
   };
   useEffect(() => {
     if (activeCardId === id) {
-        // console.log('popover');
         popover();
-    //   setActive(true);
     } else {
-        // console.log('retreat');
         retreat();
-    //   setActive(false);
     }
   }, [activeCardId, id]);
   
   const setCenter = () => {
     const rect = cardRef.current!.getBoundingClientRect();
     const view = document.documentElement;
-    // console.log('view', view.clientWidth, view.clientHeight);
-    // console.log('rect', rect.x, rect.y, rect.width, rect.height);
     const delta = {
       x: round(view.clientWidth / 2 - rect.x - rect.width / 2),
       y: round(view.clientHeight / 2 - rect.y - rect.height / 2),
     };
-    // console.log('delta', delta);
     setInitialDelta(delta);
     setScrollOffset(window.scrollY);
     setSpringTranslate({ x: delta.x, y: delta.y });
@@ -256,7 +249,6 @@ const Card: React.FC<CardProps> = ({
 //     const logZIndex = () => {
 //       if (cardRef.current) {
 //         const zIndex = window.getComputedStyle(cardRef.current).getPropertyValue('z-index');
-//         console.log(`Card ${id} z-index:`, zIndex);
 //       }
 //     };
 

@@ -59,7 +59,6 @@ export const CustomConnectButton: React.FC = () => {
       dispatch(setUser(user));
 
       const accountId = Array.from(accounts.keys()).indexOf(firstAccount.normalizedAddress);
-      console.log(accountId);
 
       setSelectedAccountId(accountId);
       setIsOpen(false);
@@ -142,6 +141,14 @@ export const CustomConnectButton: React.FC = () => {
     }
   }, [connectWallet, accounts, dispatch, setSelectedAccountId]);
 
+  useEffect(() => {
+    if (isEvmConnected && evmAddress) {
+      const user = new User(evmAddress);
+      user.walletType = 'evm';
+      dispatch(setUser(user));
+    }
+  }, [isEvmConnected, evmAddress, dispatch]);
+
   const dropdownVariants = {
     hidden: { opacity: 0, y: -10 },
     visible: { opacity: 1, y: 0 }
@@ -177,7 +184,7 @@ export const CustomConnectButton: React.FC = () => {
           </div>
         );
       } else {
-        console.log("No connected wallet found or address is undefined.");
+        throw new Error("No connected wallet found or address is undefined.");
       }
     }
     return <ConnectButton />;
@@ -187,7 +194,7 @@ export const CustomConnectButton: React.FC = () => {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="max-phonescreen:h-[7vw] max-phonescreen:w-[20vw] max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw]
+        className="max-phonescreen:h-[7vw] max-phonescreen:w-[36vw] max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw]
         fu-btn profile flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300"
       >
         CONNECT WALLET
@@ -207,7 +214,7 @@ export const CustomConnectButton: React.FC = () => {
               <button
                 onClick={handlePolkadotConnect}
                 disabled={isConnecting}
-                className="max-phonescreen:h-[7vw] max-phonescreen:w-[20vw] max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw]
+                className="max-phonescreen:h-[7vw] max-phonescreen:w-[36vw] max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw]
                 fu-btn profile flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300"
               >
                 {isConnecting ? 'Connecting...' : 'POLKADOT WALLET'}

@@ -1,5 +1,4 @@
 "use client";
-import { signIn } from "next-auth/react"; 
 import { nftAbi } from "@/components/contract/abi";
 import { BLOCK_EXPLORER_OPAL, BLOCK_EXPLORER_QUARTZ, BLOCK_EXPLORER_UNIQUE, CHAINID, CONTRACT_ADDRESS_OPAL, CONTRACT_ADDRESS_QUARTZ, CONTRACT_ADDRESS_UNIQUE } from "@/components/contract/contracts";
 import { CustomConnectButton } from "@/components/ui/ConnectButton";
@@ -7,7 +6,6 @@ import Spacer from "@/components/ui/Spacer";
 import Link from "next/link";
 import { useState, useEffect, useContext } from 'react';
 import {
-    type BaseError,
     useChainId,
     useAccount,
     useWriteContract,
@@ -15,13 +13,11 @@ import {
 } from "wagmi";
 import { useToast } from "@/components/ui/use-toast";
 import { readContract } from '@wagmi/core/actions'; // Import hàm readContract
-import { isPending } from "@reduxjs/toolkit/react";
 import { config } from "@/components/contract/config";
 import { useSearchParams } from "next/navigation";
 import { AccountsContext } from '@/accounts/AccountsContext';
 import { useChainAndScan } from "@/hooks/useChainAndScan";
-import { Address } from "@unique-nft/utils";
-import { ethers } from "ethers";
+import { TransactionStatus } from "@/components/TransactionStatus";
 
 function AddIDDiscordPage() {
     const searchParams = useSearchParams();
@@ -44,29 +40,25 @@ function AddIDDiscordPage() {
     const [polkadotTransactionHash, setPolkadotTransactionHash] = useState<string | null>(null);
 
     const handleLogin = async () => {
-        const clientId = '1306227974579949568'; // Replace with your Discord client ID
         const redirectUri = 'https://discord.com/oauth2/authorize?client_id=1306227974579949568&response_type=code&redirect_uri=https%3A%2F%2Fdragonft.org%2Fapi%2Fauth%2Fdiscord%2Fcallback&scope=identify'; // Replace with your redirect URI
-        const scope = 'identify'; // Add any other scopes you need
         
-        window.location.href = redirectUri; // Redirect to Discord OAuth2
-        setIsAuthenticated(true); // Đánh dấu là đã xác thực
+        window.location.href = redirectUri;
+        setIsAuthenticated(true);
     };
     useEffect(() => {
-        const discordId = searchParams.get('discordId'); // Get the discordId from the search parameters
+        const discordId = searchParams.get('discordId');
 
         if (discordId) {
-            setDiscordIdAuth(discordId); // Set the authenticated Discord ID
-            console.log("discord Id", discordId); // Ghi log discordId
-            setIsAuthenticated(true); // Đặt trạng thái xác thực thành true
+            setDiscordIdAuth(discordId);
+            setIsAuthenticated(true);
         } else {
-            console.warn("No discordId found in search parameters."); // Cảnh báo nếu không tìm thấy discordId
+            console.warn("No discordId found in search parameters.");
         }
     }, [searchParams]);
 
     useEffect(() => {
         if (isAuthenticated && discordIdAuth && currentDiscordId === null && account.address) {
-            console.log("Submitting with discordIdAuth:", discordIdAuth); // Ghi log discordIdAuth trước khi gọi handleSubmit
-            handleSubmit(); // Gọi handleSubmit chỉ khi đã xác thực, có discordIdAuth và ví đã được kết nối
+            handleSubmit();
         } else {
             console.warn("Conditions not met for handleSubmit:", { isAuthenticated, discordIdAuth, currentDiscordId, accountAddress: account.address }); // Cảnh báo nếu điều kiện không được thỏa mãn
         }
@@ -99,14 +91,12 @@ function AddIDDiscordPage() {
             if (!contractAddress || !account.address) return;
 
             try {
-                console.log(account.address);
                 const result = await readContract(config, {
                     abi: nftAbi,
                     address: contractAddress,
                     functionName: 'getDiscordId',
                     args: [account.address],
                 });
-                console.log("result", result);
 
                 setCurrentDiscordId(result as string);
             } catch (error) {
@@ -118,7 +108,6 @@ function AddIDDiscordPage() {
     }, [account.address, contractAddress]);
 
     useEffect(() => {
-        console.log("Current Discord ID:", currentDiscordId);
     }, [currentDiscordId]);
 
     const handleSubmit = async (e?: React.FormEvent<HTMLFormElement>) => {
@@ -277,48 +266,17 @@ function AddIDDiscordPage() {
                     max-phonescreen:w-[calc(100%-20px)]
                     mt-8 bg-secondary p-6 rounded-lg max-w-2xl mx-auto">
                         <h3 className="text-xl font-semibold text-white mb-4">Transaction Status</h3>
-                        {isPending && <p className="text-yellow-300">Waiting for signature...</p>}
-                        {isConfirming && <p className="text-yellow-300">Confirming...</p>}
-                        {isConfirmed && (
-                            <p className="text-green-300">
-                                Transaction successful!{' '}
-                                <a
-                                    href={`${blockexplorer}/tx/${hash}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-blue-400 hover:underline"
-                                >
-                                    View on block explorer
-                                </a>
-                            </p>
-                        )}
-                        {error && (
-                            <p className="text-red-300">
-                                Error: {(error as BaseError).shortMessage || "An unknown error occurred"}
-                            </p>
-                        )}
-                        {!isPending && !isConfirming && !isConfirmed && !error && (
-                            <p className="text-gray-300">No transactions yet</p>
-                        )}
-                        {isPolkadotPending && <p className="text-yellow-300">Polkadot transaction is pending...</p>}
-                        {polkadotTransactionStatus && (
-                            <p className={`text-${polkadotTransactionStatus.includes("successful") ? "green" : "red"}-300`}>
-                                {polkadotTransactionStatus}
-                                {polkadotTransactionStatus.includes("successful") && polkadotTransactionHash && (
-                                    <>
-                                        {' '}
-                                        <a
-                                            href={`${blockexplorer}/tx/${polkadotTransactionHash}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-blue-400 hover:underline"
-                                        >
-                                            View on block explorer
-                                        </a>
-                                    </>
-                                )}
-                            </p>
-                        )}
+                        <TransactionStatus 
+                            isPending={isPending}
+                            isConfirming={isConfirming}
+                            isConfirmed={isConfirmed}
+                            hash={hash}
+                            error={error}
+                            isPolkadotPending={isPolkadotPending}
+                            polkadotTransactionStatus={polkadotTransactionStatus}
+                            polkadotTransactionHash={polkadotTransactionHash}
+                            blockexplorer={blockexplorer}
+                        />
                     </div>
                 </div>
                 <Spacer className='h-[3vw] max-phonescreen:h-[4vw]' />

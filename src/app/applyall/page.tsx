@@ -4,6 +4,7 @@ import Spacer from "@/components/ui/Spacer";
 import Link from "next/link";
 import { motion, AnimatePresence } from 'framer-motion';
 import { CustomConnectButton } from "@/components/ui/ConnectButton";
+import { TransactionStatus } from "@/components/TransactionStatus";
 
 import { nftAbi } from "@/components/contract/abi";
 import { BLOCK_EXPLORER_OPAL, BLOCK_EXPLORER_QUARTZ, BLOCK_EXPLORER_UNIQUE, CHAINID, CONTRACT_ADDRESS_OPAL, CONTRACT_ADDRESS_QUARTZ, CONTRACT_ADDRESS_UNIQUE } from "@/components/contract/contracts";
@@ -11,7 +12,6 @@ import { useCallback, useRef, useState, useEffect, useContext } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FaSpinner } from 'react-icons/fa';
 import {
-    type BaseError,
     useWaitForTransactionReceipt,
     useWriteContract,
     useChainId,
@@ -45,7 +45,6 @@ function ApplyAll() {
     const [isLoadingIds, setIsLoadingIds] = useState(false);
     const fetchUserIdsFromLink = async (link: string) => {
         const match = link.match(/(\d+)/); // Extract ID from the link
-        console.log(match);
         if (match) {
             const id = match[0]; // Get the matched ID
             setIsLoadingIds(true); // Set loading state to true
@@ -112,6 +111,14 @@ function ApplyAll() {
         case CHAINID.OPAL:
             contractAddress = CONTRACT_ADDRESS_OPAL;
             blockexplorer = BLOCK_EXPLORER_OPAL;
+            break;
+        case CHAINID.QUARTZ:
+            contractAddress = CONTRACT_ADDRESS_QUARTZ;
+            blockexplorer = BLOCK_EXPLORER_QUARTZ;
+            break;
+        case CHAINID.UNIQUE:
+            contractAddress = CONTRACT_ADDRESS_UNIQUE;
+            blockexplorer = BLOCK_EXPLORER_UNIQUE;
             break;
     }
 
@@ -357,7 +364,7 @@ function ApplyAll() {
         }
     };
 
-    const mintWithPolkadot = async (hexRepresentation: string) => {
+    const mintWithPolkadot = async (codeContribute: string) => {
         if (!selectedAccount) throw new Error("Polkadot account not found");
 
         try {
@@ -376,7 +383,7 @@ function ApplyAll() {
                                 eth: ethers.ZeroAddress,
                                 sub: Address.extract.substratePublicKey(selectedAccount.address)
                             },
-                            hexRepresentation,
+                            codeContribute,
                             Number(0),
                             uri
                         ],
@@ -385,7 +392,6 @@ function ApplyAll() {
                     { signerAddress: selectedAccount.address },
                     { signer: selectedAccount.signer }
                 );
-                console.log("result", result);
 
             if (!result.result.isSuccessful) {
                 throw new Error("Mint transaction failed");
@@ -405,12 +411,10 @@ function ApplyAll() {
         }
     };
 
-    const mintWithEVM = async (hexRepresentation: string) => {
+    const mintWithEVM = async (codeContribute: string) => {
         if (!wagmiAddress) throw new Error("EVM address not found");
-        console.log("evmAddress", wagmiAddress);
 
         await Promise.all(toAddresses.map(async (address) => {
-            console.log("address", address);
             await writeContract({
                 address: contractAddress,
                 abi: nftAbi,
@@ -439,7 +443,6 @@ function ApplyAll() {
     const { address: wagmiAddress, isConnected } = useAccount();
 
     useEffect(() => {
-        console.log("Selected Account in MintPage:", selectedAccount);
     }, [selectedAccount]);
 
     const [polkadotTransactionStatus, setPolkadotTransactionStatus] = useState<string | null>(null);
@@ -473,7 +476,6 @@ function ApplyAll() {
     //     fetchUserIds();
     // }, []);
 
-    // Hàm mới để lấy địa chỉ từ các ID Discord
     const getAddressesFromIds = async (ids: string[]) => {
         try {
             const addresses = await Promise.all(ids.map(async id => {
@@ -488,10 +490,9 @@ function ApplyAll() {
                 }
                 return null;
             }));
-            console.log("addresses", addresses);
 
             const validAddresses = addresses.filter(address => address !== null);
-            setToAddresses(validAddresses); // Sử dụng validAddresses thay cho toAddresses
+            setToAddresses(validAddresses);
         } catch (error) {
             console.error('Error fetching addresses:', error);
         }
@@ -665,8 +666,8 @@ function ApplyAll() {
                                     onChange={(e) => setLink(e.target.value)}
                                     onKeyDown={(e) => {
                                         if (e.key === 'Enter') {
-                                            fetchUserIdsFromLink(link); // Fetch IDs when Enter is pressed
-                                            getAddressesFromIds(userIds); // Gọi hàm để lấy địa chỉ từ các ID
+                                            fetchUserIdsFromLink(link);
+                                            getAddressesFromIds(userIds);
                                         }
                                     }}
                                     placeholder="Enter link"
@@ -701,48 +702,17 @@ function ApplyAll() {
 
                     <div className="mt-8 bg-secondary p-6 rounded-lg max-w-2xl mx-auto">
                         <h3 className="text-xl font-semibold text-white mb-4">Transaction Status</h3>
-                        {isPending && <p className="text-yellow-300">Waiting for signature...</p>}
-                        {isConfirming && <p className="text-yellow-300">Confirming...</p>}
-                        {isConfirmed && (
-                            <p className="text-green-300">
-                                Transaction successful!{' '}
-                                <a
-                                    href={`${blockexplorer}/tx/${hash}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-blue-400 hover:underline"
-                                >
-                                    View on block explorer
-                                </a>
-                            </p>
-                        )}
-                        {isPolkadotPending && <p className="text-yellow-300">Polkadot transaction is pending...</p>}
-                        {polkadotTransactionStatus && (
-                            <p className={`text-${polkadotTransactionStatus.includes("successful") ? "green" : "red"}-300`}>
-                                {polkadotTransactionStatus}
-                                {polkadotTransactionStatus.includes("successful") && polkadotTransactionHash && (
-                                    <>
-                                        {' '}
-                                        <a
-                                            href={`${blockexplorer}/tx/${polkadotTransactionHash}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-blue-400 hover:underline"
-                                        >
-                                            View on block explorer
-                                        </a>
-                                    </>
-                                )}
-                            </p>
-                        )}
-                        {error && (
-                            <p className="text-red-300">
-                                Error: {(error as BaseError).shortMessage || "An unknown error occurred"}
-                            </p>
-                        )}
-                        {!isPending && !isConfirming && !isConfirmed && !isPolkadotPending && !error && !polkadotTransactionStatus && (
-                        <p className="text-gray-300">No transactions yet</p>
-                        )}
+                        <TransactionStatus 
+                            isPending={isPending}
+                            isConfirming={isConfirming}
+                            isConfirmed={isConfirmed}
+                            hash={hash}
+                            error={error}
+                            isPolkadotPending={isPolkadotPending}
+                            polkadotTransactionStatus={polkadotTransactionStatus}
+                            polkadotTransactionHash={polkadotTransactionHash}
+                            blockexplorer={blockexplorer}
+                        />
                     </div>
                 </div>
                 <Spacer className='h-[3vw] max-phonescreen:h-[4vw]' />

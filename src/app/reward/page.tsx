@@ -1,7 +1,7 @@
 "use client";
 
 import { nftAbi } from "@/components/contract/abi";
-import { BLOCK_EXPLORER_OPAL, CHAINID, CONTRACT_ADDRESS_OPAL } from "@/components/contract/contracts";
+import { BLOCK_EXPLORER_OPAL, BLOCK_EXPLORER_QUARTZ, BLOCK_EXPLORER_UNIQUE, CONTRACT_ADDRESS_QUARTZ, CONTRACT_ADDRESS_UNIQUE, CHAINID, CONTRACT_ADDRESS_OPAL } from "@/components/contract/contracts";
 import { CustomConnectButton } from "@/components/ui/ConnectButton";
 import Spacer from "@/components/ui/Spacer";
 import Link from "next/link";
@@ -17,21 +17,13 @@ import { useToast } from "@/components/ui/use-toast";
 import { config } from "@/components/contract/config";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowDownIcon } from "lucide-react";
-import { UniqueChain } from "@unique-nft/sdk";
-import { Address } from "@unique-nft/utils";
 import { useChainAndScan } from "@/hooks/useChainAndScan";
-import { ethers } from "ethers";
 import { AccountsContext } from '@/accounts/AccountsContext';
-import { readContract } from "@wagmi/core/actions";
+import { TransactionStatus } from "@/components/TransactionStatus";
 
 function RewardPage() {
-    const [uri, setUri] = useState('');
-    const [toAddress, setToAddress] = useState('');
-    const [level, setLevel] = useState('');
     const [codeContribute, setCodeContribute] = useState('');
     const [amount, setAmount] = useState<number>(0);
-    const [token, setToken] = useState('');
-    const [tokenAddress, setTokenAddress] = useState('');
     const [tokenIdOfNFT, setTokenIdOfNFT] = useState<number>(0);
     const [levelFrom, setLevelFrom] = useState<number>(0);
     const [levelTo, setLevelTo] = useState<number>(0);
@@ -80,6 +72,14 @@ function RewardPage() {
             contractAddress = CONTRACT_ADDRESS_OPAL;
             blockexplorer = BLOCK_EXPLORER_OPAL;
             break;
+        case CHAINID.QUARTZ:
+            contractAddress = CONTRACT_ADDRESS_QUARTZ;
+            blockexplorer = BLOCK_EXPLORER_QUARTZ;
+            break;
+        case CHAINID.UNIQUE:
+            contractAddress = CONTRACT_ADDRESS_UNIQUE;
+            blockexplorer = BLOCK_EXPLORER_UNIQUE;
+            break;
     }
 
     const { data: hash, error, isPending, writeContract } = useWriteContract();
@@ -113,6 +113,10 @@ function RewardPage() {
             } else if (isConnected) {
                 await rewardWithEVM(rewardType);
             }
+
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
 
             
         } catch (error) {
@@ -150,7 +154,6 @@ function RewardPage() {
                     { signerAddress: selectedAccount.address },
                     { signer: selectedAccount.signer }
                 );
-                console.log("result", result);
     
                 if (!result.result.isSuccessful) {
                     throw new Error("Mint transaction failed");
@@ -178,7 +181,6 @@ function RewardPage() {
                     { signerAddress: selectedAccount.address },
                     { signer: selectedAccount.signer }
                 );
-                console.log("result", result);
     
                 if (!result.result.isSuccessful) {
                     throw new Error("Mint transaction failed");
@@ -202,7 +204,6 @@ function RewardPage() {
 
         try {
             if (rewardType === 'nft') {
-                console.log(tokenIdOfNFT, amount);
                 await writeContract({
                     address: contractAddress,
                     abi: nftAbi,
@@ -481,54 +482,17 @@ function RewardPage() {
                         </form>
                     </div>
 
-                    <div className="
-                    max-phonescreen:w-[calc(100%-20px)]
-                    
-                    mt-8 bg-secondary p-6 rounded-lg max-w-2xl mx-auto">
-                        <h3 className="text-xl font-semibold text-white mb-4">Transaction Status</h3>
-                        {isPending && <p className="text-yellow-300">Waiting for signature...</p>}
-                        {isConfirming && <p className="text-yellow-300">Confirming...</p>}
-                        {isConfirmed && (
-                            <p className="text-green-300">
-                                Transaction successful!{' '}
-                                <a
-                                    href={`${blockexplorer}/tx/${hash}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-blue-400 hover:underline"
-                                >
-                                    View on block explorer
-                                </a>
-                            </p>
-                        )}
-                        {isPolkadotPending && <p className="text-yellow-300">Polkadot transaction is pending...</p>}
-                        {polkadotTransactionStatus && (
-                            <p className={`text-${polkadotTransactionStatus.includes("successful") ? "green" : "red"}-300`}>
-                                {polkadotTransactionStatus}
-                                {polkadotTransactionStatus.includes("successful") && polkadotTransactionHash && (
-                                    <>
-                                        {' '}
-                                        <a
-                                            href={`${blockexplorer}/tx/${polkadotTransactionHash}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-blue-400 hover:underline"
-                                        >
-                                            View on block explorer
-                                        </a>
-                                    </>
-                                )}
-                            </p>
-                        )}
-                        {error && (
-                            <p className="text-red-300">
-                                Error: {(error as BaseError).shortMessage || "An unknown error occurred"}
-                            </p>
-                        )}
-                        {!isPending && !isConfirming && !isConfirmed && !isPolkadotPending && !error && !polkadotTransactionStatus && (
-                            <p className="text-gray-300">No transactions yet</p>
-                        )}
-                    </div>
+                    <TransactionStatus 
+                        isPending={isPending}
+                        isConfirming={isConfirming}
+                        isConfirmed={isConfirmed}
+                        hash={hash}
+                        error={error}
+                        isPolkadotPending={isPolkadotPending}
+                        polkadotTransactionStatus={polkadotTransactionStatus}
+                        polkadotTransactionHash={polkadotTransactionHash}
+                        blockexplorer={blockexplorer}
+                    />
                 </div>
                 <Spacer className='h-[3vw] max-phonescreen:h-[4vw]' />
 
