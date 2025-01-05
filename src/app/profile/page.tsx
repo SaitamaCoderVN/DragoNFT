@@ -8,7 +8,7 @@ import { CustomConnectButton } from '@/components/ui/ConnectButton';
 import Link from 'next/link';
 import { useToast } from '@/components/ui/use-toast';
 import { useAccount, useChainId } from 'wagmi';
-import { BLOCK_EXPLORER_OPAL, CHAINID, CONTRACT_ADDRESS_OPAL } from '@/components/contract/contracts';
+import { BLOCK_EXPLORER_OPAL, BLOCK_EXPLORER_QUARTZ, BLOCK_EXPLORER_UNIQUE, CHAINID, CONTRACT_ADDRESS_OPAL, CONTRACT_ADDRESS_QUARTZ, CONTRACT_ADDRESS_UNIQUE } from '@/components/contract/contracts';
 import { nftAbi } from '@/components/contract/abi';
 import { readContract } from '@wagmi/core/actions';
 import { config } from '@/components/contract/config';
@@ -17,6 +17,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { AccountsContext } from '@/accounts/AccountsContext';
 import { useChainAndScan } from '@/hooks/useChainAndScan';
 import { ethers } from 'ethers';
+import { ArrowDownIcon } from 'lucide-react';
 
 interface TokenData {
     tokenId: number;
@@ -24,12 +25,6 @@ interface TokenData {
     level: number;
     codeContribute: string;
 }
-
-const ArrowDownIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" className="injected-svg" data-src="https://cdn.hugeicons.com/icons/arrow-down-01-stroke-sharp.svg"  role="img" color="#000000">
-    <path d="M5.99977 9.00005L11.9998 15L17.9998 9" stroke="#000000" strokeWidth="2" stroke-miterlimit="16"></path>
-    </svg>
-);
 
 export default function ProfilelPage() {
     const dispatch = useAppDispatch();
@@ -56,6 +51,8 @@ export default function ProfilelPage() {
     const [isOptionsVisible, setOptionsVisible] = useState(false); 
     const optionsRef = useRef<HTMLDivElement | null>(null); 
     const [uriArray, setUriArray] = useState<TokenData[]>([]);
+    const [hiddenCards, setHiddenCards] = useState<Set<number>>(new Set());
+    const [delayedVisibleCards, setDelayedVisibleCards] = useState<Set<number>>(new Set());
 
     const dropdownVariants = {
         hidden: { opacity: 0, y: -10 }, 
@@ -83,6 +80,14 @@ export default function ProfilelPage() {
         case CHAINID.OPAL:
             contractAddress = CONTRACT_ADDRESS_OPAL;
             blockexplorer = BLOCK_EXPLORER_OPAL;
+            break;
+        case CHAINID.QUARTZ:
+            contractAddress = CONTRACT_ADDRESS_QUARTZ;
+            blockexplorer = BLOCK_EXPLORER_QUARTZ;
+            break;
+        case CHAINID.UNIQUE:
+            contractAddress = CONTRACT_ADDRESS_UNIQUE;
+            blockexplorer = BLOCK_EXPLORER_UNIQUE;
             break;
     }
 
@@ -287,7 +292,47 @@ export default function ProfilelPage() {
 
                     <CardGrid>
                         {uriArray.map((tokenData, index) => (
-                            <div key={index} className="relative transform-gpu transition-all duration-300 hover:scale-105 hover:z-10">
+                            <div 
+                                key={index} 
+                                className="relative transform-gpu transition-all duration-300 hover:scale-105 hover:z-10"
+                                onClick={() => {
+                                    setHiddenCards(prev => {
+                                        const newSet = new Set(prev);
+                                        if (newSet.has(index)) {
+                                            newSet.delete(index);
+                                        } else {
+                                            newSet.add(index);
+                                        }
+                                        return newSet;
+                                    });
+                                }}
+                                onMouseEnter={() => {
+                                    setHiddenCards(prev => {
+                                        const newSet = new Set(prev);
+                                        newSet.add(index);
+                                        return newSet;
+                                    });
+                                    setDelayedVisibleCards(prev => {
+                                        const newDelayedSet = new Set(prev);
+                                        newDelayedSet.add(index);
+                                        return newDelayedSet;
+                                    });
+                                }}
+                                onMouseLeave={() => {
+                                    setTimeout(() => {
+                                        setHiddenCards(prev => {
+                                            const newSet = new Set(prev);
+                                            newSet.delete(index);
+                                            return newSet;
+                                        });
+                                        setDelayedVisibleCards(prev => {
+                                            const newDelayedSet = new Set(prev);
+                                            newDelayedSet.delete(index);
+                                            return newDelayedSet;
+                                        });
+                                    }, 2000);
+                                }}
+                            >
                                 <div className="transform-none w-full h-full">
                                     <div className="relative w-full h-full">
                                         <Card 
@@ -301,7 +346,7 @@ export default function ProfilelPage() {
                                             supertype={cards[1].supertype} 
                                             rarity={cards[1].rarity} 
                                         />
-                                        <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 text-center transition-opacity duration-300 hover:bg-black/70">
+                                        <div className={`absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 text-center transition-opacity duration-300 hover:bg-black/70 ${hiddenCards.has(index) || delayedVisibleCards.has(index) ? 'hidden' : ''}`}>
                                             <div className="text-primary font-pixel">Token ID: {tokenData.tokenId}</div>
                                             <div className="text-primary font-pixel">Level: {tokenData.level}</div>
                                             <div className="text-primary font-pixel">Code Contribution: {tokenData.codeContribute}</div>

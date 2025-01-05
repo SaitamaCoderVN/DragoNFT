@@ -331,8 +331,6 @@ function RewardPage() {
                 </div>
 
                 <div className="w-full mt-10">
-                    
-
                     <div className="
                     max-phonescreen:w-[calc(100%-20px)]
                     
@@ -481,18 +479,22 @@ function RewardPage() {
                             </div>
                         </form>
                     </div>
-
-                    <TransactionStatus 
-                        isPending={isPending}
-                        isConfirming={isConfirming}
-                        isConfirmed={isConfirmed}
-                        hash={hash}
-                        error={error}
-                        isPolkadotPending={isPolkadotPending}
-                        polkadotTransactionStatus={polkadotTransactionStatus}
-                        polkadotTransactionHash={polkadotTransactionHash}
-                        blockexplorer={blockexplorer}
-                    />
+                    
+                    <div className="
+                    max-phonescreen:max-w-[400px]   
+                    mt-8 bg-secondary p-6 rounded-lg max-w-2xl mx-auto">
+                        <TransactionStatus 
+                            isPending={isPending}
+                            isConfirming={isConfirming}
+                            isConfirmed={isConfirmed}
+                            hash={hash}
+                            error={error}
+                            isPolkadotPending={isPolkadotPending}
+                            polkadotTransactionStatus={polkadotTransactionStatus}
+                            polkadotTransactionHash={polkadotTransactionHash}
+                            blockexplorer={blockexplorer}
+                        />
+                    </div>
                 </div>
                 <Spacer className='h-[3vw] max-phonescreen:h-[4vw]' />
 

@@ -3,7 +3,7 @@
 import { useParams } from 'next/navigation';
 import { useEffect, useState, useContext } from 'react';
 import { nftAbi } from "@/components/contract/abi";
-import { CONTRACT_ADDRESS_OPAL } from "@/components/contract/contracts";
+import { CONTRACT_ADDRESS_OPAL, CONTRACT_ADDRESS_QUARTZ, CONTRACT_ADDRESS_UNIQUE } from "@/components/contract/contracts";
 import { readContract } from '@wagmi/core/actions';
 import { config } from '@/components/contract/config';
 import Spacer from '@/components/ui/Spacer';
@@ -31,6 +31,8 @@ export default function PublishProfilePage() {
     const sdk = UniqueChain({
         baseUrl: "https://rest.unique.network/v2/opal", 
     });
+    const [hiddenCards, setHiddenCards] = useState<Set<number>>(new Set());
+    const [delayedVisibleCards, setDelayedVisibleCards] = useState<Set<number>>(new Set());
 
     const fetchTotalOwnerNFT = async () => {
         if (addressString) {
@@ -152,6 +154,30 @@ export default function PublishProfilePage() {
         fetchTotalOwnerNFT();
     }, [address]);
 
+    const toggleCardInfo = (index: number) => {
+        setHiddenCards(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(index)) {
+                setTimeout(() => {
+                    setDelayedVisibleCards(prev => {
+                        const newDelayedSet = new Set(prev);
+                        newDelayedSet.delete(index);
+                        return newDelayedSet;
+                    });
+                }, 2000);
+                newSet.delete(index);
+            } else {
+                newSet.add(index);
+                setDelayedVisibleCards(prev => {
+                    const newDelayedSet = new Set(prev);
+                    newDelayedSet.add(index);
+                    return newDelayedSet;
+                });
+            }
+            return newSet;
+        });
+    };
+
     if (isLoading) {
         return <div>Loading...</div>;
     }
@@ -173,7 +199,37 @@ export default function PublishProfilePage() {
                 </div>
                 <CardGrid>
                     {tokenDataArray.map((tokenData, index) => (
-                        <div key={index} className="relative transform-gpu transition-all duration-300 hover:scale-105 hover:z-10">
+                        <div 
+                            key={index} 
+                            className="relative transform-gpu transition-all duration-300 hover:scale-105 hover:z-10"
+                            onClick={() => toggleCardInfo(index)}
+                            onMouseEnter={() => {
+                                setHiddenCards(prev => {
+                                    const newSet = new Set(prev);
+                                    newSet.add(index);
+                                    return newSet;
+                                });
+                                setDelayedVisibleCards(prev => {
+                                    const newDelayedSet = new Set(prev);
+                                    newDelayedSet.add(index);
+                                    return newDelayedSet;
+                                });
+                            }}
+                            onMouseLeave={() => {
+                                setTimeout(() => {
+                                    setHiddenCards(prev => {
+                                        const newSet = new Set(prev);
+                                        newSet.delete(index);
+                                        return newSet;
+                                    });
+                                    setDelayedVisibleCards(prev => {
+                                        const newDelayedSet = new Set(prev);
+                                        newDelayedSet.delete(index);
+                                        return newDelayedSet;
+                                    });
+                                }, 2000);
+                            }}
+                        >
                             <div className="transform-none w-full h-full">
                                 <div className="relative w-full h-full">
                                     <Card 
@@ -187,7 +243,7 @@ export default function PublishProfilePage() {
                                         supertype={cards[1].supertype} 
                                         rarity={cards[1].rarity} 
                                     />
-                                    <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 text-center transition-opacity duration-300 hover:bg-black/70">
+                                    <div className={`absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 text-center transition-opacity duration-300 hover:bg-black/70 ${hiddenCards.has(index) || delayedVisibleCards.has(index) ? 'hidden' : ''}`}>
                                         <div>Level: {tokenData.level}</div>
                                         <div>Code Contribution: {tokenData.codeContribute}</div>
                                     </div>

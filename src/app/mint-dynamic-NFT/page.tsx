@@ -24,6 +24,8 @@ import { AccountsContext } from '@/accounts/AccountsContext';
 import { useChainAndScan } from "@/hooks/useChainAndScan";
 import { ArrowDownIcon } from "lucide-react";
 import { TransactionStatus } from "@/components/TransactionStatus";
+import { generateCombinedImage } from '@/components/CardGenerator';
+
 
 const FileUploadIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg {...props} width="12" height="12" viewBox="0 0 24 24" fill="none" role="img" color="white">
@@ -54,6 +56,7 @@ function MintDynamicNFTPage() {
 
     const [isOptionsVisible, setOptionsVisible] = useState(false); 
     const optionsRef = useRef<HTMLDivElement | null>(null);
+    const { data: hash, error, isPending, writeContract } = useWriteContract();
 
     const [isLoading, setIsLoading] = useState(false);
 
@@ -117,166 +120,19 @@ function MintDynamicNFTPage() {
         disabled: uploadSuccess,
     });
 
-    const generateCombinedImage = async (): Promise<Blob | null> => {
-        return new Promise((resolve) => {
-            const canvas = canvasRef.current;
-            if (!canvas) {
-                resolve(null);
-                return;
-            }
-
-            const ctx = canvas.getContext('2d');
-            if (!ctx) {
-                resolve(null);
-                return;
-            }
-
-            const img = new Image();
-            img.onload = () => {
-                const aspectRatio = 0.718;
-                const cardWidth = 400;
-                const cardHeight = cardWidth / aspectRatio;
-                canvas.width = cardWidth;
-                canvas.height = cardHeight;
-
-                // Create gradient background for the frame
-                const gradient = ctx.createLinearGradient(0, 0, cardWidth, cardHeight);
-                gradient.addColorStop(0, '#2a0845');
-                gradient.addColorStop(1, '#6441A5');
-                ctx.fillStyle = gradient;
-                ctx.fillRect(0, 0, cardWidth, cardHeight);
-
-                // Draw image with object-fit: cover
-                const frameMargin = 20;
-                const imageWidth = cardWidth - frameMargin * 2;
-                const imageHeight = cardHeight - frameMargin * 3;
-                const imageAspectRatio = img.width / img.height;
-                let drawWidth, drawHeight, offsetX, offsetY;
-
-                if (imageAspectRatio > imageWidth / imageHeight) {
-                    drawHeight = imageHeight;
-                    drawWidth = drawHeight * imageAspectRatio;
-                    offsetX = frameMargin + (imageWidth - drawWidth) / 2;
-                    offsetY = frameMargin * 2;
-                } else {
-                    drawWidth = imageWidth;
-                    drawHeight = drawWidth / imageAspectRatio;
-                    offsetX = frameMargin;
-                    offsetY = frameMargin * 2 + (imageHeight - drawHeight) / 2;
-                }
-
-                ctx.save();
-                ctx.beginPath();
-                ctx.rect(frameMargin, frameMargin * 2, imageWidth, imageHeight);
-                ctx.clip();
-                ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
-                ctx.restore();
-
-                // Outer frame
-                ctx.strokeStyle = '#8A2BE2';
-                ctx.lineWidth = 8;
-                ctx.strokeRect(10, 10, cardWidth - 20, cardHeight - 20);
-
-                // Inner frame
-                ctx.strokeStyle = '#4B0082';
-                ctx.lineWidth = 4;
-                ctx.strokeRect(frameMargin, frameMargin, cardWidth - frameMargin * 2, cardHeight - frameMargin * 2);
-
-                // Corner accents
-                const cornerSize = 30;
-                ctx.strokeStyle = '#9370DB';
-                ctx.lineWidth = 2;
-                // Top-left
-                ctx.beginPath();
-                ctx.moveTo(5, 35);
-                ctx.lineTo(5, 5);
-                ctx.lineTo(35, 5);
-                ctx.stroke();
-                // Top-right
-                ctx.beginPath();
-                ctx.moveTo(cardWidth - 35, 5);
-                ctx.lineTo(cardWidth - 5, 5);
-                ctx.lineTo(cardWidth - 5, 35);
-                ctx.stroke();
-                // Bottom-left
-                ctx.beginPath();
-                ctx.moveTo(5, cardHeight - 35);
-                ctx.lineTo(5, cardHeight - 5);
-                ctx.lineTo(35, cardHeight - 5);
-                ctx.stroke();
-                // Bottom-right
-                ctx.beginPath();
-                ctx.moveTo(cardWidth - 35, cardHeight - 5);
-                ctx.lineTo(cardWidth - 5, cardHeight - 5);
-                ctx.lineTo(cardWidth - 5, cardHeight - 35);
-                ctx.stroke();
-
-                // Draw name at the top
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-                ctx.fillRect(0, 0, cardWidth, 40);
-                ctx.fillStyle = '#ce8eeb';
-                ctx.font = 'bold 24px "Courier New", monospace';
-                ctx.textAlign = 'center';
-                ctx.fillText("", cardWidth / 2, 28);
-
-                // Draw title at the bottom
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-                ctx.fillRect(0, cardHeight - 40, cardWidth, 40);
-                ctx.fillStyle = '#E6E6FA';
-                ctx.font = '20px "Courier New", monospace';
-                ctx.textAlign = 'center';
-                ctx.fillText("", cardWidth / 2, cardHeight - 15);
-
-                // Add some tech-inspired details
-                ctx.strokeStyle = 'rgba(147, 112, 219, 0.5)';
-                ctx.lineWidth = 1;
-                for (let i = 0; i < 3; i++) {
-                    ctx.beginPath();
-                    ctx.moveTo(frameMargin, 50 + i * 20);
-                    ctx.lineTo(cardWidth - frameMargin, 50 + i * 20);
-                    ctx.stroke();
-                }
-
-                // Circular element
-                ctx.strokeStyle = '#9370DB';
-                ctx.beginPath();
-                ctx.arc(cardWidth - 40, 60, 15, 0, Math.PI * 2);
-                ctx.stroke();
-
-                // Data-like lines
-                ctx.beginPath();
-                ctx.moveTo(40, 60);
-                ctx.lineTo(cardWidth - 70, 60);
-                ctx.moveTo(40, 70);
-                ctx.lineTo(cardWidth - 90, 70);
-                ctx.moveTo(40, 80);
-                ctx.lineTo(cardWidth - 80, 80);
-                ctx.stroke();
-
-                canvas.toBlob((blob) => {
-                    resolve(blob);
-                });
-            };
-            img.src = localImagePreview;
-        });
-    };
-
-    const { data: hash, error, isPending, writeContract } = useWriteContract();
-
-    const { isLoading: isConfirming, isSuccess: isConfirmed } =
-        useWaitForTransactionReceipt({
-            hash,
-        });
-
     const handleUpload = async () => {
-        if (!localImageFile) return;
+        if (!localImageFile || !canvasRef.current) return;
 
         setIsUploading(true);
         try {
-            const combinedImageBlob = await generateCombinedImage(); // Use the existing function
-            if (combinedImageBlob) {
+            const blob = await generateCombinedImage(canvasRef.current, localImagePreview, {
+                level: Number(level),
+                codeContribute: codeContribute
+            });
+            
+            if (blob) {
                 const formData = new FormData();
-                formData.append('file', combinedImageBlob, 'combined_image.png');
+                formData.append('file', blob, 'combined_image.png');
 
                 const response = await fetch('/api/upload', {
                     method: 'POST',
@@ -288,8 +144,8 @@ function MintDynamicNFTPage() {
                 }
 
                 const data = await response.json();
-                setUri(data.url); // Set the uri to the uploaded image URL
-                setUploadSuccess(true); // Set upload success to true
+                setUri(data.url);
+                setUploadSuccess(true);
             }
         } catch (error) {
             console.error('Error uploading image:', error);
@@ -401,6 +257,11 @@ function MintDynamicNFTPage() {
         });
     };
 
+
+    const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+        hash: hash as `0x${string}`,
+    });
+
     useEffect(() => {
         if (isConfirmed) {
             resetForm();
@@ -415,7 +276,6 @@ function MintDynamicNFTPage() {
     const [polkadotTransactionStatus, setPolkadotTransactionStatus] = useState<string | null>(null);
     const [isPolkadotPending, setIsPolkadotPending] = useState(false);
     const [polkadotTransactionHash, setPolkadotTransactionHash] = useState<string | null>(null);
-
 
     const resetForm = () => {
         setLocalImageFile(null);
@@ -608,11 +468,10 @@ function MintDynamicNFTPage() {
                     </div>
 
                     <div className="mt-8 bg-secondary p-6 rounded-lg max-w-2xl mx-auto">
-                        <h3 className="text-xl font-semibold text-white mb-4">Transaction Status</h3>
                         <TransactionStatus 
                             isPending={isPending}
-                            isConfirming={isConfirming}
                             isConfirmed={isConfirmed}
+                            isConfirming={isConfirming}
                             hash={hash}
                             error={error}
                             isPolkadotPending={isPolkadotPending}

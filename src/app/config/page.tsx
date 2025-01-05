@@ -630,7 +630,6 @@ function ConfigPage() {
                     max-phonescreen:w-[calc(100%-20px)]
                     
                     mt-8 bg-secondary p-6 rounded-lg max-w-2xl mx-auto">
-                        <h3 className="text-xl font-semibold text-white mb-4">Transaction Status</h3>
                         <TransactionStatus 
                             isPending={isPending}
                             isConfirming={isConfirming}

@@ -686,10 +686,13 @@ function ReplacePage() {
                                     'Replace'
                                 )}
                             </button>
-
-                            {/* Transaction Status Section */}
-                            <TransactionStatus 
-                                isPending={isPending}
+                            
+                            <div className="
+                            max-phonescreen:max-w-[400px]   
+                            mt-8 bg-secondary p-6 rounded-lg max-w-2xl mx-auto">
+                                {/* Transaction Status Section */}
+                                <TransactionStatus 
+                                    isPending={isPending}
                                 isConfirming={isConfirming}
                                 isConfirmed={isConfirmed}
                                 hash={hash}
@@ -698,7 +701,8 @@ function ReplacePage() {
                                 polkadotTransactionStatus={polkadotTransactionStatus}
                                 polkadotTransactionHash={polkadotTransactionHash}
                                 blockexplorer={blockexplorer}
-                            />
+                                />
+                            </div>
                         </form>
                     </div>
                 </div>
