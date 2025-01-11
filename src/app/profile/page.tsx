@@ -277,6 +277,11 @@ export default function ProfilelPage() {
                                         >
                                             <span className='text-black'>Publish Profile</span>
                                         </Link>
+                                        <Link href="/profile/donate" className='
+                                        max-phonescreen:text-[3vw] max-phonescreen:leading-[3vw] max-phonescreen:h-[27px]
+                                        fu-btn flex items-center justify-center bg-primary text-secondary-background font-silkscreen font-semibold h-[3vw] uppercase text-[1.5vw] leading-[1.5vw] whitespace-nowrap py-[8px] px-[10px] hover:scale-[1.05] transition-all duration-300'>
+                                            Donate
+                                        </Link>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
