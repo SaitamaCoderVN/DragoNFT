@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@next/third-parties": "^15.1.4",
     "@polkadot/extension-dapp": "^0.44.9",
     "@polkadot/extension-inject": "^0.44.9",
     "@polkadot/util": "^13.2.3",
@@ -30,6 +31,7 @@
     "crypto-browserify": "^3.12.1",
     "ethers": "^6.13.4",
     "framer-motion": "^11.11.9",
+    "google": "@next/third-parties/google",
     "gsap": "^3.12.5",
     "https-browserify": "^1.0.0",
     "i": "^0.3.7",

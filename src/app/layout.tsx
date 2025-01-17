@@ -34,6 +34,7 @@ import { Suspense } from "react";
 import { SdkProvider } from "@/sdk/SdkContext";
 import dynamic from 'next/dynamic';
 import { BrowserRouter as Router } from "react-router-dom";
+import { GoogleAnalytics } from '@next/third-parties/google'
 
 const pixelifySans = Pixelify_Sans({
   subsets: ['latin'],
@@ -78,6 +79,7 @@ export default function RootLayout({
             </DynamicAccountsContextProvider>
           </SdkProvider>
         </Providers>
+        <GoogleAnalytics gaId="G-M739W3RLHN" />
       </body>
     </html>
   );
